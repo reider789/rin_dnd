@@ -1,7 +1,7 @@
 <div id="hg-v29-embed" style="font-family:system-ui,sans-serif;color:#e8dcc3;width:100%;min-width:0">
  <div class="hg-embed-bar" style="border:2px solid #a98551;border-radius:10px;background:linear-gradient(115deg,#4d3c2d,#1d332a);padding:12px;margin-bottom:10px">
   <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-   <div style="color:#f8d8a1;font:20px Georgia,serif">⚔ Хейвенгард · v29</div>
+   <div style="color:#f8d8a1;font:20px Georgia,serif">⚔ Рин Вейр · v29R</div>
    <span style="color:#e2cd9f;font-size:11px">Тестовый бой, не канон</span>
   </div>
   <p id="hg-embed-status" role="status" aria-live="polite" style="margin:9px 0;font-size:12px;line-height:1.5">Подготовка полного боевого движка…</p>
@@ -18,11 +18,11 @@
  const battle=wrapper.querySelector('#hg-embed-battle'),
        status=wrapper.querySelector('#hg-embed-status'),
        retry=wrapper.querySelector('#hg-embed-retry');
- const revision='71ae31efa6aa53756620ea6fdfc645d0786e7b11'; // Verified immutable v29 bundle. // Immutable verified v29 bundle.
- const path='prototypes/chat-combat/current-chat-battle.html';
+ const revision='ab8c7cd985e27364505b411d79350913b7e38e7e'; // Pinned verified independent Rin v29R bundle.
+ const path='index.html';
  const providers=[
-   'https://cdn.jsdelivr.net/gh/reider789/havengard-campaign-engine@'+revision+'/'+path,
-   'https://raw.githubusercontent.com/reider789/havengard-campaign-engine/'+revision+'/'+path
+   'https://cdn.jsdelivr.net/gh/reider789/rin_dnd@'+revision+'/'+path,
+   'https://raw.githubusercontent.com/reider789/rin_dnd/'+revision+'/'+path
  ];
  let running=false;
  let currentGeneration=0;
@@ -35,8 +35,8 @@
        const res=await fetch(url,{method:'GET',cache:'force-cache',signal:controller.signal});
        if(!res.ok)throw Error('HTTP '+res.status);
        const body=await res.text();
-       if(body.length<160000||body.length>550000||!body.includes('class CombatVisualFX')||
-          !body.includes('class CombatReactionResolver')||!body.includes('data-hg-runtime')||
+       if(body.length<1700000||body.length>2600000||!body.includes('class CombatVisualFX')||
+          !body.includes('class CombatReactionResolver')||!body.includes('data-hg-runtime')||!body.includes('data-rin-default-scene')||
           !body.includes('БОЕВОЙ ИНТЕРФЕЙС V29'))
          throw Error('неполная или неподходящая сборка');
        return body;
@@ -56,7 +56,7 @@
    activeController=controller;
    retry.disabled=true;
    battle.replaceChildren();
-   message('Загружаю полный боевой движок v29 из GitHub…');
+   message('Загружаю полный боевой движок Рина v29R из GitHub…');
    const timeout=setTimeout(()=>controller.abort(),18000);
    try{
      const source=await getSource(controller);
@@ -97,7 +97,7 @@
        probe();
      });
      await waitForBoot();
-     message('✓ Полный v29 запущен: 88 клеток, четыре героя, заклинания, реакции, сохранения и анимации. Выбирай действия в панели ниже.');
+     message('✓ Полный v29R запущен: 88 клеток, Рин и союзники, монашеские способности, реакции, сохранения и анимации. Выбирай действия в панели ниже.');
    }catch(error){
      if(generation===currentGeneration){
        battle.replaceChildren();
