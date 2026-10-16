@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "engine": "rin-veir-combat-v29R",
+  "main_ui_path": "index.html",
+  "source_engine": "upstream_snapshot/engine-v29.html",
+  "runtime": "config/rin_runtime.json",
+  "default_training": "encounters/caravan_ambush_training.json",
+  "visuals": "art/hayvengard_art_v1.json + assets/rin-portrait-256.webp",
+  "source_modules": "core/",
+  "canonical": false,
+  "mode": "offline-plus-chat",
+  "narrative_handoff": "rin-veir-battle-handoff-v1",
+  "save_session": "rin-veir-combat-session-v12"
+}

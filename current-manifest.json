@@ -1,0 +1,19 @@
+{
+  "schema_version": 2,
+  "engine": "v29R",
+  "base": "Havengard v29 full engine + 12 modules",
+  "player": "Рин Вейр",
+  "current_ui_path": "index.html",
+  "source_state": "config/rin_runtime.json",
+  "scene": "encounters/caravan_ambush_training.json",
+  "mode": "training",
+  "canonical": false,
+  "visuals": {
+    "embedded": true,
+    "original_assets": 24,
+    "rin_portrait": 1
+  },
+  "battle_handoff": "rin-veir-battle-handoff-v1",
+  "bundle_sha256": "07ce28e337fc806bf124b4e5bf60e6e083f27072288934bf63c95e2e0d2419f0",
+  "bundle_size_bytes": 1921987
+}

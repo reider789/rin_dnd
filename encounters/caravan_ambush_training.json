@@ -1,0 +1,114 @@
+{
+  "name": "Засада у лесной дороги — учебный бой",
+  "kind": "training",
+  "battle_id": "rin-ambush-replay-training",
+  "source_revision": 2,
+  "chronicle_anchor": "Учебная реконструкция уже завершённой засады",
+  "narrative_context": "Только тест механики. Не повторять бой в летописи. На караван напали трое пеших разбойников и двое лучников.",
+  "theme": "forest",
+  "walls": [
+    "F1",
+    "F2",
+    "F7",
+    "F8"
+  ],
+  "rubble": [
+    "E3",
+    "G5"
+  ],
+  "heroes": {
+    "rin": {
+      "cell": "B6",
+      "initiative": 20
+    },
+    "guard_a": {
+      "cell": "C4",
+      "initiative": 13
+    },
+    "guard_b": {
+      "cell": "C5",
+      "initiative": 9
+    },
+    "guard_c": {
+      "cell": "C6",
+      "initiative": 8
+    }
+  },
+  "enemies": [
+    {
+      "name": "Главарь",
+      "cell": "H4",
+      "hp": 14,
+      "ac": 12,
+      "initiative": 15,
+      "attack": {
+        "bonus": 3,
+        "count": 1,
+        "die": 6,
+        "flat": 1,
+        "range": 5
+      },
+      "tokenKey": "warrior"
+    },
+    {
+      "name": "Налётчик 1",
+      "cell": "I5",
+      "hp": 11,
+      "ac": 12,
+      "initiative": 5,
+      "attack": {
+        "bonus": 3,
+        "count": 1,
+        "die": 6,
+        "flat": 1,
+        "range": 5
+      },
+      "tokenKey": "rogue"
+    },
+    {
+      "name": "Налётчик 2",
+      "cell": "H6",
+      "hp": 11,
+      "ac": 12,
+      "initiative": 3,
+      "attack": {
+        "bonus": 3,
+        "count": 1,
+        "die": 6,
+        "flat": 1,
+        "range": 5
+      },
+      "tokenKey": "rogue"
+    },
+    {
+      "name": "Лучник 1",
+      "cell": "G2",
+      "hp": 11,
+      "ac": 12,
+      "initiative": 14,
+      "attack": {
+        "bonus": 3,
+        "count": 1,
+        "die": 6,
+        "flat": 1,
+        "range": 80
+      },
+      "tokenKey": "archer"
+    },
+    {
+      "name": "Лучник 2",
+      "cell": "J7",
+      "hp": 11,
+      "ac": 12,
+      "initiative": 18,
+      "attack": {
+        "bonus": 3,
+        "count": 1,
+        "die": 6,
+        "flat": 1,
+        "range": 80
+      },
+      "tokenKey": "archer"
+    }
+  ]
+}

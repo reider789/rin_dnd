@@ -1,0 +1,200 @@
+{
+  "schema_version": 2,
+  "source_state_revision": 2,
+  "source": "rin-veir-master-sheet-2026-10-16",
+  "is_canonical": false,
+  "characters": {
+    "rin": {
+      "name": "Рин Вейр",
+      "class_and_level": "Разбойник 1 / Монах 3 — Воин Тени",
+      "ac_description": "16",
+      "speed": "40 фт",
+      "resources": {
+        "hp": {
+          "current": 31,
+          "max": 31
+        },
+        "focus": {
+          "current": 0,
+          "max": 3
+        },
+        "luck": {
+          "current": 2,
+          "max": 2
+        },
+        "arrows": {
+          "current": 20,
+          "max": 20
+        },
+        "heroic": {
+          "current": 1,
+          "max": 1
+        }
+      },
+      "consumables": {},
+      "inventory": [
+        {
+          "id": "shortsword",
+          "name": "«Черта»",
+          "quantity": 1
+        },
+        {
+          "id": "dagger",
+          "name": "Кинжал",
+          "quantity": 4
+        },
+        {
+          "id": "shortbow",
+          "name": "Короткий лук",
+          "quantity": 1
+        },
+        {
+          "id": "arrows",
+          "name": "Стрелы",
+          "quantity": 20
+        },
+        {
+          "id": "thieves_tools",
+          "name": "Воровские инструменты",
+          "quantity": 1
+        }
+      ],
+      "skills_attacks_spells": [
+        {
+          "name": "«Черта»",
+          "description": "+5 · 1d6+3 · короткий меч · Уязвимость (Vex)"
+        },
+        {
+          "name": "Кинжал",
+          "description": "+5 · 1d6+3 · Быстрота (Nick), Лёгкое"
+        },
+        {
+          "name": "Короткий лук",
+          "description": "+5 · 1d6+3 · 80/320 футов, стрелы 20"
+        },
+        {
+          "name": "Безоружный удар",
+          "description": "+5 · 1d6+3 · приём Боевых искусств"
+        },
+        {
+          "name": "Скрытая атака",
+          "description": "Дополнительный урон 1к6 один раз за ход при выполнении условий"
+        },
+        {
+          "name": "Боевые искусства",
+          "description": "Безоружный удар бонусным действием, без необходимости действия Атака"
+        },
+        {
+          "name": "Шквал ударов",
+          "description": "За 1 фокус — 2 безоружных удара бонусным действием"
+        },
+        {
+          "name": "Терпеливая защита",
+          "description": "Бонусное действие: Отход бесплатно; за 1 фокус Отход и Уклонение"
+        },
+        {
+          "name": "Шаг ветра",
+          "description": "Бонусное действие: Рывок бесплатно; за 1 фокус Рывок и Отход, удвоение прыжка"
+        },
+        {
+          "name": "Отражение атак",
+          "description": "Реакция: уменьшить дробящий, колющий или рубящий урон на 1к10+6; при снижении до нуля можно перенаправить за 1 фокус"
+        },
+        {
+          "name": "Искусства Тени: Тьма",
+          "description": "1 фокус, действие, 60 футов, радиус 15 футов, концентрация до 10 минут. Рин видит в собственной Тьме; в начале хода может перенести её бесплатно"
+        },
+        {
+          "name": "Малая иллюзия",
+          "description": "Заговор, визуальная или звуковая иллюзия. Действие Магия"
+        },
+        {
+          "name": "Удачливый",
+          "description": "2 использования после длительного отдыха — преимущество на собственный d20 или помеха по себе"
+        },
+        {
+          "name": "Бдительный",
+          "description": "Инициатива +5, можно обменяться инициативой с согласным союзником"
+        }
+      ]
+    },
+    "guard_a": {
+      "name": "Охранник A",
+      "class_and_level": "Караванный охранник",
+      "ac_description": "16",
+      "speed": "30 фт",
+      "resources": {
+        "hp": {
+          "current": 11,
+          "max": 11
+        }
+      },
+      "consumables": {},
+      "inventory": [
+        {
+          "id": "spear",
+          "name": "Копьё",
+          "quantity": 1
+        }
+      ],
+      "skills_attacks_spells": [
+        {
+          "name": "Копьё",
+          "description": "+3 · 1d6+1"
+        }
+      ]
+    },
+    "guard_b": {
+      "name": "Охранник B",
+      "class_and_level": "Караванный охранник",
+      "ac_description": "16",
+      "speed": "30 фт",
+      "resources": {
+        "hp": {
+          "current": 11,
+          "max": 11
+        }
+      },
+      "consumables": {},
+      "inventory": [
+        {
+          "id": "spear",
+          "name": "Копьё",
+          "quantity": 1
+        }
+      ],
+      "skills_attacks_spells": [
+        {
+          "name": "Копьё",
+          "description": "+3 · 1d6+1"
+        }
+      ]
+    },
+    "guard_c": {
+      "name": "Охранник C",
+      "class_and_level": "Караванный охранник",
+      "ac_description": "16",
+      "speed": "30 фт",
+      "resources": {
+        "hp": {
+          "current": 11,
+          "max": 11
+        }
+      },
+      "consumables": {},
+      "inventory": [
+        {
+          "id": "spear",
+          "name": "Копьё",
+          "quantity": 1
+        }
+      ],
+      "skills_attacks_spells": [
+        {
+          "name": "Копьё",
+          "description": "+3 · 1d6+1"
+        }
+      ]
+    }
+  }
+}
