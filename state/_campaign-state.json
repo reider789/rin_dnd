@@ -1,0 +1,1054 @@
+{
+  "schema_version": 2,
+  "state_revision": 1,
+  "campaign": {
+    "id": "rin-veir",
+    "title": "Рин Вейр"
+  },
+  "party": {
+    "members": [
+      "rin"
+    ],
+    "location": "Лесная дорога к Вейлхольму"
+  },
+  "characters": {
+    "rin": {
+      "name": "Рин Вейр",
+      "role": "персонаж игрока, путешественник",
+      "location": "Лесная дорога, третий фургон каравана",
+      "state": "Невредим; вечером после отражённой засады; разговор с Элирой и Оли",
+      "goal": "Направиться в Вейлхольм; разобраться с Изнанкой и документами монастыря",
+      "resources": {
+        "hp": {
+          "current": 31,
+          "max": 31
+        },
+        "focus": {
+          "current": 0,
+          "max": 3
+        },
+        "arrows": {
+          "current": 20,
+          "max": 20
+        },
+        "luck": {
+          "current": 2,
+          "max": 2
+        },
+        "heroic": {
+          "current": 1,
+          "max": 1
+        },
+        "personal_money_cp": 18289,
+        "unusual_metabolism": {
+          "current": 1,
+          "max": 1
+        }
+      },
+      "character_sheet": {
+        "class_and_level": "Разбойник 1 / Монах 3 (Воин Тени), D&D 2024",
+        "armor_class": "16",
+        "speed": "40 фт",
+        "abilities": {
+          "СИЛ": "8 (-1)",
+          "ЛОВ": "17 (+3)",
+          "ТЕЛ": "14 (+2)",
+          "ИНТ": "8 (-1)",
+          "МДР": "16 (+3)",
+          "ХАР": "10 (+0)"
+        },
+        "combat_reference": [
+          {
+            "source_row": 1,
+            "cells": [
+              "«Черта», короткий меч",
+              "+5 к попаданию",
+              "1к6+3",
+              "Vex"
+            ]
+          },
+          {
+            "source_row": 2,
+            "cells": [
+              "Безоружный удар",
+              "+5 к попаданию",
+              "1к6+3"
+            ]
+          },
+          {
+            "source_row": 3,
+            "cells": [
+              "Скрытая атака",
+              "1к6 один раз за ход при выполнении условий"
+            ]
+          },
+          {
+            "source_row": 4,
+            "cells": [
+              "Тьма Воина Тени",
+              "1 фокус, действие, 15 фт радиус, 60 фт дальность, концентрация до 10 минут; видит внутри своей Тьмы"
+            ]
+          },
+          {
+            "source_row": 5,
+            "cells": [
+              "Шквал ударов",
+              "1 фокус, две безоружные атаки"
+            ]
+          }
+        ]
+      },
+      "inventory": [
+        "cherta",
+        "daggers",
+        "shortbow",
+        "arrows",
+        "quiver",
+        "thieves_tools",
+        "burglars_pack",
+        "pouches",
+        "clothes",
+        "bedroll",
+        "game_set",
+        "monastery_documents",
+        "edric_letter",
+        "edric_plate",
+        "circle_vii",
+        "circle_orders",
+        "horse",
+        "saddle",
+        "saddlebags",
+        "food_wraps",
+        "rope",
+        "blank_tokens",
+        "route_map",
+        "circle_notebook",
+        "sealed_cylinder",
+        "unclear_flasks",
+        "needle_case",
+        "thin_pick",
+        "bandit_sabers",
+        "bandit_bows",
+        "bandit_armors",
+        "bandit_arrows",
+        "bandit_quivers",
+        "bandit_pouches"
+      ],
+      "inventory_catalog": {
+        "cherta": {
+          "name": "«Черта» (короткий меч)",
+          "quantity": 1,
+          "description": "Основное оружие, Vex",
+          "status": "при себе",
+          "origin": "канон кампании"
+        },
+        "daggers": {
+          "name": "Кинжалы",
+          "quantity": 4,
+          "description": "Один может применять Nick",
+          "status": "при себе",
+          "origin": "канон кампании"
+        },
+        "shortbow": {
+          "name": "Короткий лук",
+          "quantity": 1,
+          "description": "",
+          "status": "при себе",
+          "origin": "канон кампании"
+        },
+        "arrows": {
+          "name": "Стрелы",
+          "quantity": 20,
+          "description": "В рабочем колчане; не смешивать с найденными до перекладки",
+          "status": "при себе",
+          "origin": "канон кампании"
+        },
+        "quiver": {
+          "name": "Колчан",
+          "quantity": 1,
+          "description": "",
+          "status": "при себе",
+          "origin": "канон кампании"
+        },
+        "thieves_tools": {
+          "name": "Воровские инструменты",
+          "quantity": 1,
+          "description": "",
+          "status": "при себе",
+          "origin": "канон кампании"
+        },
+        "burglars_pack": {
+          "name": "Набор взломщика",
+          "quantity": 1,
+          "description": "",
+          "status": "при себе",
+          "origin": "канон кампании"
+        },
+        "pouches": {
+          "name": "Поясные сумки",
+          "quantity": 2,
+          "description": "",
+          "status": "при себе",
+          "origin": "канон кампании"
+        },
+        "clothes": {
+          "name": "Дорожная одежда и серое пальто",
+          "quantity": 1,
+          "description": "",
+          "status": "при себе",
+          "origin": "канон кампании"
+        },
+        "bedroll": {
+          "name": "Постельные принадлежности",
+          "quantity": 1,
+          "description": "",
+          "status": "при себе",
+          "origin": "канон кампании"
+        },
+        "game_set": {
+          "name": "Игровой набор",
+          "quantity": 1,
+          "description": "",
+          "status": "при себе",
+          "origin": "канон кампании"
+        },
+        "monastery_documents": {
+          "name": "Документы Последнего Света",
+          "quantity": 1,
+          "description": "Похищены при уходе; часть содержания неизвестна",
+          "status": "скрыто при себе",
+          "origin": "канон кампании"
+        },
+        "edric_letter": {
+          "name": "Письмо Эдрика для Сайрена",
+          "quantity": 1,
+          "description": "Прочитано вместе с Сайреном",
+          "status": "при себе",
+          "origin": "канон кампании"
+        },
+        "edric_plate": {
+          "name": "Контактная пластинка Эдрика",
+          "quantity": 1,
+          "description": "Контакт Остен Рей, пароль о книге без последней страницы",
+          "status": "при себе",
+          "origin": "канон кампании"
+        },
+        "circle_vii": {
+          "name": "Жетон VII",
+          "quantity": 1,
+          "description": "",
+          "status": "при себе",
+          "origin": "канон кампании"
+        },
+        "circle_orders": {
+          "name": "Записка с приказом Разомкнутого Круга",
+          "quantity": 1,
+          "description": "",
+          "status": "при себе",
+          "origin": "канон кампании"
+        },
+        "horse": {
+          "name": "Верховая лошадь",
+          "quantity": 1,
+          "description": "Оставлена в Сером Броде на конюшне; местоположение подлежит сверке",
+          "status": "конюшня Серого Брода",
+          "origin": "канон кампании"
+        },
+        "saddle": {
+          "name": "Верховое седло",
+          "quantity": 1,
+          "description": "На лошади",
+          "status": "конюшня Серого Брода",
+          "origin": "канон кампании"
+        },
+        "saddlebags": {
+          "name": "Седельные сумки",
+          "quantity": 1,
+          "description": "На лошади",
+          "status": "конюшня Серого Брода",
+          "origin": "канон кампании"
+        },
+        "food_wraps": {
+          "name": "Сухие дорожные свёртки",
+          "quantity": 2,
+          "description": "На лошади",
+          "status": "конюшня Серого Брода",
+          "origin": "канон кампании"
+        },
+        "rope": {
+          "name": "Тонкая верёвка",
+          "quantity": 1,
+          "description": "На лошади",
+          "status": "конюшня Серого Брода",
+          "origin": "канон кампании"
+        },
+        "blank_tokens": {
+          "name": "Жетоны без номера",
+          "quantity": 3,
+          "description": "На лошади",
+          "status": "конюшня Серого Брода",
+          "origin": "канон кампании"
+        },
+        "route_map": {
+          "name": "Карта Серый Брод — Вейлхольм",
+          "quantity": 1,
+          "description": "Отмечена старая обсерватория и «VII — активен»",
+          "status": "при себе",
+          "origin": "канон кампании"
+        },
+        "circle_notebook": {
+          "name": "Записная книжка Разомкнутого Круга",
+          "quantity": 1,
+          "description": "",
+          "status": "при себе",
+          "origin": "канон кампании"
+        },
+        "sealed_cylinder": {
+          "name": "Запечатанный металлический цилиндр",
+          "quantity": 1,
+          "description": "Не вскрыт",
+          "status": "при себе",
+          "origin": "канон кампании"
+        },
+        "unclear_flasks": {
+          "name": "Флаконы мутной жидкости",
+          "quantity": 3,
+          "description": "2 у Мары; 1 в седельной сумке",
+          "status": "частично у Мары",
+          "origin": "канон кампании"
+        },
+        "needle_case": {
+          "name": "Футляр с тремя иглами",
+          "quantity": 1,
+          "description": "Возможно опасное содержимое",
+          "status": "у Мары",
+          "origin": "канон кампании"
+        },
+        "thin_pick": {
+          "name": "Тонкая металлическая отмычка",
+          "quantity": 1,
+          "description": "Найдена у Лорена",
+          "status": "у Мары",
+          "origin": "канон кампании"
+        },
+        "bandit_sabers": {
+          "name": "Трофейные сабли",
+          "quantity": 3,
+          "description": "С пяти дорожных разбойников",
+          "status": "караванная повозка",
+          "origin": "засада на дороге"
+        },
+        "bandit_bows": {
+          "name": "Трофейные короткие луки",
+          "quantity": 2,
+          "description": "С дорожных разбойников",
+          "status": "караванная повозка",
+          "origin": "засада на дороге"
+        },
+        "bandit_armors": {
+          "name": "Поношенные кожаные доспехи",
+          "quantity": 5,
+          "description": "С дорожных разбойников",
+          "status": "караванная повозка",
+          "origin": "засада на дороге"
+        },
+        "bandit_arrows": {
+          "name": "Трофейные стрелы",
+          "quantity": 32,
+          "description": "Ещё не зачислены в личный колчан",
+          "status": "караванная повозка",
+          "origin": "засада на дороге"
+        },
+        "bandit_quivers": {
+          "name": "Трофейные колчаны",
+          "quantity": 2,
+          "description": "С дорожных разбойников",
+          "status": "караванная повозка",
+          "origin": "засада на дороге"
+        },
+        "bandit_pouches": {
+          "name": "Трофейные кошели",
+          "quantity": 5,
+          "description": "Монеты учтены в личном кошельке",
+          "status": "караванная повозка",
+          "origin": "засада на дороге"
+        }
+      },
+      "source_coverage": {
+        "inventory": {
+          "status": "partial",
+          "source_key": "master_sheet_and_roadside_inventory"
+        },
+        "sheet": {
+          "status": "partial",
+          "source_key": "rin_veir_master_and_played_scenes"
+        }
+      },
+      "relationships": {}
+    }
+  },
+  "world": {
+    "current_region": "Тракт между Серым Бродом и Вейлхольмом",
+    "current_scene": "Третья повозка каравана. Рин беседует с Элирой и Оли после засады, вечер второго дня пути.",
+    "date_label": "Вечер второго дня пути (календарная дата мира не установлена)",
+    "time_label": "Поздний вечер после засады",
+    "timekeeping": {
+      "anchor_event": "RIN-CARAVAN-AFTER-AMBUSH-BASELINE",
+      "anchor_label": "Сцена у третьей повозки после засады",
+      "elapsed_seconds_from_anchor": 0,
+      "elapsed_hours_from_anchor": 0,
+      "elapsed_full_days_from_anchor": 0,
+      "policy": "Время от этой сцены; прошлые дни не домысливать. Только advance_time."
+    },
+    "scene_participants": [
+      "rin",
+      "npc:elira",
+      "npc:oli",
+      "npc:bran",
+      "npc:harren"
+    ],
+    "scene_knowledge_branches": [
+      "BR-CARAVAN",
+      "BR-INHERITANCE"
+    ],
+    "scene_knowledge_notice": "Секреты GM доступны в репозитории с маркировкой [СПОЙЛЕРЫ], но не знания Рина.",
+    "travel_event": {
+      "kind": "ambush_resolved",
+      "status": "resolved",
+      "destination": "Вейлхольм",
+      "caravan_wagons": 4,
+      "captives": [
+        "npc:tessan",
+        "npc:gart"
+      ],
+      "recovered_goods": "pending_owner_identification"
+    }
+  },
+  "knowledge": {
+    "K001": {
+      "fact": "Рин покинул Монастырь Последнего Света после отказа убить чиновника; забрал документы.",
+      "known_by": [
+        "rin"
+      ],
+      "source_event": "RIN-BASELINE-2026-10-16",
+      "status": "canonical",
+      "temporal_status": "current",
+      "visibility": "public",
+      "branch": "monastery"
+    },
+    "K002": {
+      "fact": "Сайрен и Рин исследуют связь документов, Изнанки и Разомкнутого Круга.",
+      "known_by": [
+        "rin"
+      ],
+      "source_event": "RIN-BASELINE-2026-10-16",
+      "status": "canonical",
+      "temporal_status": "current",
+      "visibility": "party",
+      "branch": "circle"
+    },
+    "K003": {
+      "fact": "Эдрик был ранен; Рин передал его на попечение Мары в Сером Броде.",
+      "known_by": [
+        "rin"
+      ],
+      "source_event": "RIN-BASELINE-2026-10-16",
+      "status": "canonical",
+      "temporal_status": "current",
+      "visibility": "party",
+      "branch": "circle"
+    },
+    "K004": {
+      "fact": "Элира и Оли едут в Вейлхольм, где надеются получить дом в наследство от покойного Корвина Венна.",
+      "known_by": [
+        "rin"
+      ],
+      "source_event": "RIN-BASELINE-2026-10-16",
+      "status": "canonical",
+      "temporal_status": "current",
+      "visibility": "party",
+      "branch": "inheritance"
+    },
+    "K005": {
+      "fact": "Рин оплатил перевозку Элиры и Оли — 3 золотых.",
+      "known_by": [
+        "rin"
+      ],
+      "source_event": "RIN-BASELINE-2026-10-16",
+      "status": "canonical",
+      "temporal_status": "current",
+      "visibility": "party",
+      "branch": "caravan"
+    },
+    "K006": {
+      "fact": "Караван подвергся нападению пяти разбойников; Тессан и Гарт захвачены живыми.",
+      "known_by": [
+        "rin"
+      ],
+      "source_event": "RIN-BASELINE-2026-10-16",
+      "status": "canonical",
+      "temporal_status": "current",
+      "visibility": "party",
+      "branch": "caravan"
+    },
+    "K007": {
+      "fact": "Из лагеря разбойников возвращён чужой товар и деньги 20 зм 9 см 9 мм; вещи везут для поиска владельцев.",
+      "known_by": [
+        "rin"
+      ],
+      "source_event": "RIN-BASELINE-2026-10-16",
+      "status": "canonical",
+      "temporal_status": "current",
+      "visibility": "party",
+      "branch": "caravan"
+    },
+    "K008": {
+      "fact": "Сайрен планировал встречу с Рином в трактире «Медный колокол» в Вейлхольме по условленному знаку.",
+      "known_by": [
+        "rin"
+      ],
+      "source_event": "RIN-BASELINE-2026-10-16",
+      "status": "canonical",
+      "temporal_status": "current",
+      "visibility": "party",
+      "branch": "circle"
+    },
+    "K009": {
+      "fact": "Рин объяснил Оли способ справляться со страхом: разрешить себе бояться пять ударов сердца, затем действовать.",
+      "known_by": [
+        "rin"
+      ],
+      "source_event": "RIN-BASELINE-2026-10-16",
+      "status": "canonical",
+      "temporal_status": "current",
+      "visibility": "party",
+      "branch": "caravan"
+    },
+    "K010": {
+      "fact": "Элира и Оли остались в повозке во время нападения; Оли выполнил обещание не выходить.",
+      "known_by": [
+        "rin"
+      ],
+      "source_event": "RIN-BASELINE-2026-10-16",
+      "status": "canonical",
+      "temporal_status": "current",
+      "visibility": "party",
+      "branch": "caravan"
+    },
+    "K011": {
+      "fact": "На тканях из разбойничьего лагеря есть торговая метка Мартена Лосса; владелец пока не установлен.",
+      "known_by": [
+        "rin"
+      ],
+      "source_event": "RIN-BASELINE-2026-10-16",
+      "status": "canonical",
+      "temporal_status": "current",
+      "visibility": "party",
+      "branch": "caravan"
+    },
+    "K012": {
+      "fact": "Два флакона мутной жидкости и футляр с иглами оставлены у Мары; состав не установлен.",
+      "known_by": [
+        "rin"
+      ],
+      "source_event": "RIN-BASELINE-2026-10-16",
+      "status": "canonical",
+      "temporal_status": "current",
+      "visibility": "party",
+      "branch": "circle"
+    },
+    "K900": {
+      "fact": "Согласно предварительной подготовке, дом Корвина мог быть занят Освином Керром, а Тавин мог оказаться удерживаемым. Это НЕ установленный сыгранный факт.",
+      "known_by": [],
+      "source_event": "GM-PREP-UNPLAYED",
+      "status": "candidate",
+      "temporal_status": "current",
+      "visibility": "gm",
+      "hidden_from_party": true,
+      "spoiler": true
+    }
+  },
+  "knowledge_graph": {
+    "schema_version": 1,
+    "campaign_id": "rin-veir",
+    "graph_revision": 1,
+    "policy": {
+      "do_not_infer_unseen_information": true,
+      "knowledge_requires_source": true,
+      "relationships_do_not_grant_knowledge": true
+    },
+    "principals": {
+      "npc:sayren": {
+        "kind": "npc",
+        "name": "Сайрен",
+        "description": "Уже направляется отдельно в Вейлхольм; условлена встреча в «Медном колоколе»."
+      },
+      "npc:elira": {
+        "kind": "npc",
+        "name": "Элира Венн",
+        "description": "19 лет, сестра Оли. Едет в Вейлхольм разбираться с наследством."
+      },
+      "npc:oli": {
+        "kind": "npc",
+        "name": "Оли",
+        "description": "7 лет, брат Элиры; напуган засадой, учится справляться со страхом."
+      },
+      "npc:harren": {
+        "kind": "npc",
+        "name": "Харрен Досс",
+        "description": "Глава каравана; отвечает за груз и безопасность."
+      },
+      "npc:bran": {
+        "kind": "npc",
+        "name": "Бран",
+        "description": "Возница каравана."
+      },
+      "npc:tessan": {
+        "kind": "npc",
+        "name": "Тессан",
+        "description": "Разбойник, взят живым; пленник каравана."
+      },
+      "npc:gart": {
+        "kind": "npc",
+        "name": "Гарт",
+        "description": "Разбойник, взят живым; ушиблен, способен ходить."
+      },
+      "npc:edric": {
+        "kind": "npc",
+        "name": "Эдрик Маррен",
+        "description": "Раненый человек, оставлен под присмотром Мары в Сером Броде."
+      },
+      "npc:mara": {
+        "kind": "npc",
+        "name": "Мара Элден",
+        "description": "Лекарка Серого Брода."
+      },
+      "npc:doren": {
+        "kind": "npc",
+        "name": "Дорен Касс",
+        "description": "Человек, преследовавший Рина; состоялся разговор."
+      },
+      "npc:corvin": {
+        "kind": "npc",
+        "name": "Корвин Венн",
+        "description": "Покойный дядя Элиры, оставил ей наследство в Вейлхольме."
+      },
+      "npc:oswin": {
+        "kind": "npc",
+        "name": "Освин Керр",
+        "description": "Имя из подготовки к возможной линии наследства; Рину пока неизвестно."
+      },
+      "npc:tavin": {
+        "kind": "npc",
+        "name": "Тавин",
+        "description": "Имя из подготовки к возможной линии наследства; Рину пока неизвестно."
+      },
+      "group:circle": {
+        "kind": "group",
+        "name": "Разомкнутый Круг",
+        "description": "Фракция, связанная с событиями Серого Брода."
+      },
+      "group:monastery": {
+        "kind": "group",
+        "name": "Монастырь Последнего Света",
+        "description": "Орден, воспитавший Рина; причины задания не раскрыты."
+      },
+      "group:caravan": {
+        "kind": "group",
+        "name": "Караван Харрена",
+        "description": "Четыре повозки и охрана; едет в Вейлхольм."
+      }
+    },
+    "branches": {
+      "BR-MONASTERY": {
+        "title": "Последний Свет и исчезнувшие мотивы",
+        "status": "active",
+        "knowledge_ids": [
+          "K001"
+        ],
+        "key_principals": [
+          "rin",
+          "group:monastery"
+        ]
+      },
+      "BR-CIRCLE": {
+        "title": "Разомкнутый Круг и Изнанка",
+        "status": "active",
+        "knowledge_ids": [
+          "K002",
+          "K003",
+          "K008",
+          "K012"
+        ],
+        "key_principals": [
+          "rin",
+          "npc:sayren",
+          "group:circle"
+        ]
+      },
+      "BR-CARAVAN": {
+        "title": "Засада и дорога в Вейлхольм",
+        "status": "active",
+        "knowledge_ids": [
+          "K005",
+          "K006",
+          "K007",
+          "K009",
+          "K010",
+          "K011"
+        ],
+        "key_principals": [
+          "rin",
+          "npc:harren",
+          "npc:elira",
+          "npc:oli"
+        ]
+      },
+      "BR-INHERITANCE": {
+        "title": "Наследство Веннов",
+        "status": "active",
+        "knowledge_ids": [
+          "K004"
+        ],
+        "key_principals": [
+          "rin",
+          "npc:elira",
+          "npc:oli",
+          "npc:corvin"
+        ]
+      },
+      "BR-GM-ESTATE": {
+        "title": "[СПОЙЛЕРЫ GM] Подготовка линии дома Корвина",
+        "status": "dormant",
+        "knowledge_ids": [
+          "K900"
+        ],
+        "key_principals": [
+          "npc:oswin",
+          "npc:tavin"
+        ]
+      }
+    },
+    "awareness": {
+      "K001": {},
+      "K002": {
+        "npc:sayren": {
+          "state": "knows",
+          "source": "RIN-BASELINE-2026-10-16"
+        }
+      },
+      "K003": {
+        "npc:sayren": {
+          "state": "knows",
+          "source": "RIN-BASELINE-2026-10-16"
+        },
+        "npc:edric": {
+          "state": "knows",
+          "source": "RIN-BASELINE-2026-10-16"
+        },
+        "npc:mara": {
+          "state": "knows",
+          "source": "RIN-BASELINE-2026-10-16"
+        }
+      },
+      "K004": {
+        "npc:elira": {
+          "state": "knows",
+          "source": "RIN-BASELINE-2026-10-16"
+        },
+        "npc:oli": {
+          "state": "knows",
+          "source": "RIN-BASELINE-2026-10-16"
+        }
+      },
+      "K005": {
+        "npc:elira": {
+          "state": "knows",
+          "source": "RIN-BASELINE-2026-10-16"
+        }
+      },
+      "K006": {
+        "npc:harren": {
+          "state": "knows",
+          "source": "RIN-BASELINE-2026-10-16"
+        },
+        "npc:tessan": {
+          "state": "knows",
+          "source": "RIN-BASELINE-2026-10-16"
+        },
+        "npc:gart": {
+          "state": "knows",
+          "source": "RIN-BASELINE-2026-10-16"
+        }
+      },
+      "K007": {
+        "npc:harren": {
+          "state": "knows",
+          "source": "RIN-BASELINE-2026-10-16"
+        }
+      },
+      "K008": {
+        "npc:sayren": {
+          "state": "knows",
+          "source": "RIN-BASELINE-2026-10-16"
+        }
+      },
+      "K009": {
+        "npc:oli": {
+          "state": "knows",
+          "source": "RIN-BASELINE-2026-10-16"
+        },
+        "npc:elira": {
+          "state": "knows",
+          "source": "RIN-BASELINE-2026-10-16"
+        }
+      },
+      "K010": {
+        "npc:oli": {
+          "state": "knows",
+          "source": "RIN-BASELINE-2026-10-16"
+        },
+        "npc:elira": {
+          "state": "knows",
+          "source": "RIN-BASELINE-2026-10-16"
+        }
+      },
+      "K011": {
+        "npc:harren": {
+          "state": "knows",
+          "source": "RIN-BASELINE-2026-10-16"
+        }
+      },
+      "K012": {
+        "npc:mara": {
+          "state": "knows",
+          "source": "RIN-BASELINE-2026-10-16"
+        }
+      }
+    }
+  },
+  "beliefs": {},
+  "threads": {
+    "T001": {
+      "title": "Последний Свет и приказ",
+      "status": "active",
+      "summary": "Скрытые мотивы порученного убийства и найденные документы.",
+      "pressure": "не установлен",
+      "visibility": "party"
+    },
+    "T002": {
+      "title": "Изнанка и Разомкнутый Круг",
+      "status": "active",
+      "summary": "Контакты Эдрика, сведения о Седьмом пороге, встреча с Сайреном.",
+      "pressure": "не установлен",
+      "visibility": "party"
+    },
+    "T003": {
+      "title": "Наследство Элиры Венн",
+      "status": "active",
+      "summary": "В Вейлхольме ищут наследный дом и правоустанавливающие документы.",
+      "pressure": "не установлен",
+      "visibility": "party"
+    },
+    "T004": {
+      "title": "Разбойники и возврат имущества",
+      "status": "active",
+      "summary": "Доставить Тессана и Гарта и товары в город, установить владельцев.",
+      "pressure": "на дороге задерживаться нежелательно",
+      "visibility": "party"
+    }
+  },
+  "world_pressures": {},
+  "relationships": {
+    "REL-RIN-ELIRA": {
+      "participants": [
+        "rin",
+        "npc:elira"
+      ],
+      "status": "active",
+      "visibility": "party",
+      "kind": "acquaintance",
+      "label": "Рин — Элира",
+      "formal_status": "Попутчики",
+      "emotional_stage": "Взаимная благодарность после защиты каравана",
+      "pace": "естественный",
+      "dynamics": [
+        "забота об Оли"
+      ],
+      "player_summary": "Рин оплатил дорогу Элиры и Оли, защитил караван и поддержал мальчика. Не навязывать романтическую линию.",
+      "directional": {
+        "npc:elira": {
+          "summary": "Благодарна Рину за помощь брату и безопасную дорогу."
+        }
+      },
+      "evidence": [
+        "K004",
+        "K005",
+        "K010"
+      ]
+    },
+    "REL-RIN-OLI": {
+      "participants": [
+        "rin",
+        "npc:oli"
+      ],
+      "status": "active",
+      "visibility": "party",
+      "kind": "friendship",
+      "label": "Рин — Оли",
+      "formal_status": "Старший защитник и юный попутчик",
+      "emotional_stage": "Оли доверяет Рину",
+      "pace": "формируется",
+      "dynamics": [
+        "учится справляться со страхом"
+      ],
+      "player_summary": "Оли считает Рина примером и попросил рассказать секрет против страха.",
+      "directional": {
+        "npc:oli": {
+          "summary": "Восхищается умением Рина защищать других."
+        }
+      },
+      "evidence": [
+        "K009",
+        "K010"
+      ]
+    },
+    "REL-RIN-SAYREN": {
+      "participants": [
+        "rin",
+        "npc:sayren"
+      ],
+      "status": "active",
+      "visibility": "party",
+      "kind": "alliance",
+      "label": "Рин — Сайрен",
+      "formal_status": "Осторожное сотрудничество",
+      "emotional_stage": "Формирующееся доверие",
+      "pace": "медленно",
+      "dynamics": [
+        "общее расследование"
+      ],
+      "player_summary": "Договорились разделиться по пути в Вейлхольм, встретиться в «Медном колоколе».",
+      "directional": {},
+      "evidence": [
+        "K002",
+        "K008"
+      ]
+    }
+  },
+  "loot_bundles": {
+    "caravan_stolen_property": {
+      "owner": "unknown",
+      "status": "custody_pending_restitution",
+      "currency_cp": 2099,
+      "items": [
+        "2 рулона льна",
+        "крашеная шерсть",
+        "набор портного",
+        "серебряная брошь-лист с синей лентой",
+        "сумка с торговым гербом",
+        "счёт Мартену Лоссу",
+        "флаконы ароматических масел",
+        "плотницкий инструмент",
+        "2 тетивы",
+        "14 стрел",
+        "провизия и походные вещи"
+      ],
+      "notes": "Не личная добыча Рина. Везут в Вейлхольм для возвращения владельцам."
+    }
+  },
+  "scene_context": {
+    "mode": "social",
+    "thread_ids": [
+      "T003",
+      "T004"
+    ],
+    "fact_ids": [
+      "K004",
+      "K006",
+      "K009",
+      "K010"
+    ],
+    "resource_keys": {
+      "rin": [
+        "hp",
+        "focus",
+        "personal_money_cp"
+      ]
+    },
+    "handoff": {
+      "last_player_input": "Когда чувствуешь, что тебя окутывает страх, не борись с ним. Скажи себе - разрешаю бояться ровно пять ударов сердца. Отсчитываешь. Потом всё. Ты взял его под контроль.",
+      "last_narrative_excerpt": "— Рин, а тебя кто научил этому секрету? Или ты сам придумал?",
+      "open_question": "Оли спросил Рина, кто научил его этому приёму против страха. Игрок ещё не ответил. Не решать за Рина.",
+      "player_intent": null,
+      "source": "Текущая кампания Рина, разговор с Оли и Элирой после засады, 2026-10-16",
+      "source_note": "Сайрен едет отдельно; Эдрик остался у Мары. Новые товары разбойников не принадлежат Рину. События после этой сцены не сыграны."
+    }
+  },
+  "recent_events": [
+    {
+      "id": "RIN-ORIGIN",
+      "summary": "Рин ушёл из Монастыря Последнего Света после отказа выполнить приказ об убийстве, сохранил документы.",
+      "visibility": "party"
+    },
+    {
+      "id": "RIN-GREY-FORD",
+      "summary": "В Сером Броде встретил Сайрена; помог раненому Эдрику, оставил его у Мары; получил контакты и сведения об Изнанке.",
+      "visibility": "party"
+    },
+    {
+      "id": "RIN-DEPARTURE",
+      "summary": "Рин едет с караваном Харрена в Вейлхольм. Оплатил проезд Элиры и Оли.",
+      "visibility": "party"
+    },
+    {
+      "id": "RIN-AMBUSH",
+      "summary": "Пятеро разбойников атаковали караван. Два пленника Тессан и Гарт захвачены живыми. Отдельно учтён возврат предполагаемо украденного имущества и трофейного снаряжения.",
+      "visibility": "party"
+    },
+    {
+      "id": "RIN-OLI-FEAR",
+      "summary": "Рин похвалил Оли за защиту сестры и объяснил способ выдержать пять ударов сердца во время страха. Оли спросил, кто научил Рина.",
+      "visibility": "party"
+    }
+  ],
+  "play_rules": {
+    "narrative_control": {
+      "rin_controlled_by_player": true,
+      "player_words_are_woven_into_first_person_narrative": true,
+      "do_not_invent_rin_decisions": true
+    },
+    "combat_control": {
+      "party_controlled_by_player": [
+        "rin"
+      ],
+      "gm_controls": [
+        "enemies",
+        "environment",
+        "npc_reactions",
+        "consequences"
+      ],
+      "stop_before_each_player_character_turn": true,
+      "optional_reactions_require_player_choice": true
+    },
+    "loot_policy": {
+      "retain_consumables": true,
+      "do_not_auto_claim_recovered_stolen_goods": true
+    }
+  },
+  "applied_events": {
+    "RIN-BASELINE-2026-10-16": {
+      "revision": 1,
+      "source": "played scenes + Rin master sheet",
+      "kind": "initialization"
+    }
+  },
+  "commit_history": [
+    {
+      "revision": 1,
+      "event_id": "RIN-BASELINE-2026-10-16",
+      "summary": "Инициализация состояния кампании Рина на основании сыгранного."
+    }
+  ],
+  "event_unique_keys": {}
+}
