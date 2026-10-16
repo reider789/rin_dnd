@@ -1,0 +1,6 @@
+{
+  "origin": "havengard-campaign-engine/rules/_prompt-audit.json",
+  "campaign": "rin-veir",
+  "status": "ported and adapted",
+  "note": "Source-specific legacy audit is preserved in upstream_campaign/; current Rin rules override it."
+}
