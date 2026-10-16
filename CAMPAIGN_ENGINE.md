@@ -1,0 +1,47 @@
+# Кампания Рина Вейра — полный Campaign Engine
+
+На базе **всех рабочих модулей** `reider789/havengard-campaign-engine`, но **без переноса персонажей, зданий, населения, денег и событий Хейвенгарда в канон Рина**. Оригинальные реализации и проверки сохранены в `upstream_campaign/` для аудита. Боевой движок v29R (`index.html`, `core/`, `rin_rules.js`) сохранён независимо.
+
+## Основное сохранение
+
+- `state/_campaign-state.json` — **единственный авторитетный текущий источник**: мир, герои, NPC, знания/убеждения, отношения, имущество, экономика, часы, сюжетные линии, история и квитанции транзакций.
+- `rules/_campaign-rules.json` — правила ведения Рина: повествование от первого лица, полный контроль игрока над Рином, D&D 2024 и границы знания NPC.
+- `views/scene-context.md` — **первый файл при продолжении**, точка сюжета, входящие персонажи и вопрос Оли. Остальные `views` — полный GM-контекст, игрок и граф знаний.
+- `transactions/live/*.json` — очередь проверяемых игровых изменений; транзакции прикладывать **по одной** на подтверждённое событие и не считать опубликованную в live транзакцию исполненной до receipt.
+- `transactions/applied/*.json` — архив применённых операций.
+- `gm/` — **⚠️ СПОЙЛЕРЫ**, доступные в публичном GitHub, но не знания Рина.
+- `map/` — оригинальный функциональный шаблон интерактивной карты и новый генератор, использующий только реальное поселение; пока город Рином не получен, планировка пустая.
+- `config/rin_runtime.json` — **производный боевой снимок** из канона. Его обновляет `tools/sync_combat_runtime.py`; открытые боевые сессии не перезаписываются.
+
+## Возобновление игры
+
+1. Прочитать текущий `views/scene-context.md` и номер `state_revision`.
+2. При необходимости открыть соответствующие сюжетные ветки через `state/_campaign-state.json`, а также `rules/_campaign-rules.json`.
+3. Продолжить **точно** с последней сцены. Не писать действия, эмоции или реплики Рина за игрока.
+4. После подтверждённого результата создать транзакцию с текущим `expected_state_revision`. В бой входить из актуальной `config/rin_runtime.json`, не из старой тестовой сцены.
+5. Проверить `campaignctl check`, `check-views`, квитанцию `applied_events` и только затем считать состояние обновлённым.
+
+## Локальные команды
+
+```bash
+python tools/campaignctl.py --project . check
+python tools/campaignctl.py --project . context --mode social
+python tools/campaignctl.py --project . context --mode combat
+python tools/campaignctl.py --project . preview --transaction transactions/example_rin_update.json
+python tools/campaignctl.py --project . commit --transaction transactions/example_rin_update.json
+python tools/campaignctl.py --project . check-views
+python tools/sync_combat_runtime.py
+python tools/build_rin.py
+python tools/build_city_map.py
+python tools/run_tests.py
+```
+
+`init_rin_campaign.py` не вызывайте для существующего сохранения: он отказывается перезаписывать состояние без явного флага. В публичном репозитории существует предупреждение о спойлерах, но никакой авторизации или защиты таких сведений это не создаёт.
+
+## Что перенесено без урезания
+
+`tools/`: campaignctl, campaign_model, knowledgegraph, character_catalog, city_registry, scene_context, migrations, time sync, live apply, map importer, build_city_map, test runner, а также Rin-specific runtime bridge. 
+
+Семантика транзакций, ревизии, идемпотентность, знание персонажей, отношения, предметные каталоги и городской реестр сохранены. Полный код оригинала и исходные тесты хранятся в `upstream_campaign/` (не запускаются на живом каноне Рина, поскольку ссылались бы на Яра).
+
+Разделы планировки и городской экономики **не удалены** — просто не включаются, пока Рин не получил поселение в сыгранном сюжете. Воссоздана схема владения чужими товарами: 20 зм 9 см 9 мм и краденые вещи не являются личным кошельком Рина.
