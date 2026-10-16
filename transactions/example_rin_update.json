@@ -1,0 +1,11 @@
+{
+  "expected_state_revision": 1,
+  "event": {
+    "id": "EXAMPLE-RIN-NOT-PLAYED-DO-NOT-APPLY",
+    "summary": "ПРИМЕР: не применять в канон, пока событие не сыграно.",
+    "visibility": "party"
+  },
+  "operations": [
+    {"type": "advance_time", "minutes": 10}
+  ]
+}
