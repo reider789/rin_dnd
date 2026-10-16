@@ -1,0 +1,259 @@
+{
+  "awareness": {
+    "K001": {},
+    "K002": {
+      "npc:sayren": {
+        "source": "RIN-BASELINE-2026-10-16",
+        "state": "knows"
+      }
+    },
+    "K003": {
+      "npc:edric": {
+        "source": "RIN-BASELINE-2026-10-16",
+        "state": "knows"
+      },
+      "npc:mara": {
+        "source": "RIN-BASELINE-2026-10-16",
+        "state": "knows"
+      },
+      "npc:sayren": {
+        "source": "RIN-BASELINE-2026-10-16",
+        "state": "knows"
+      }
+    },
+    "K004": {
+      "npc:elira": {
+        "source": "RIN-BASELINE-2026-10-16",
+        "state": "knows"
+      },
+      "npc:oli": {
+        "source": "RIN-BASELINE-2026-10-16",
+        "state": "knows"
+      }
+    },
+    "K005": {
+      "npc:elira": {
+        "source": "RIN-BASELINE-2026-10-16",
+        "state": "knows"
+      }
+    },
+    "K006": {
+      "npc:gart": {
+        "source": "RIN-BASELINE-2026-10-16",
+        "state": "knows"
+      },
+      "npc:harren": {
+        "source": "RIN-BASELINE-2026-10-16",
+        "state": "knows"
+      },
+      "npc:tessan": {
+        "source": "RIN-BASELINE-2026-10-16",
+        "state": "knows"
+      }
+    },
+    "K007": {
+      "npc:harren": {
+        "source": "RIN-BASELINE-2026-10-16",
+        "state": "knows"
+      }
+    },
+    "K008": {
+      "npc:sayren": {
+        "source": "RIN-BASELINE-2026-10-16",
+        "state": "knows"
+      }
+    },
+    "K009": {
+      "npc:elira": {
+        "source": "RIN-BASELINE-2026-10-16",
+        "state": "knows"
+      },
+      "npc:oli": {
+        "source": "RIN-BASELINE-2026-10-16",
+        "state": "knows"
+      }
+    },
+    "K010": {
+      "npc:elira": {
+        "source": "RIN-BASELINE-2026-10-16",
+        "state": "knows"
+      },
+      "npc:oli": {
+        "source": "RIN-BASELINE-2026-10-16",
+        "state": "knows"
+      }
+    },
+    "K011": {
+      "npc:harren": {
+        "source": "RIN-BASELINE-2026-10-16",
+        "state": "knows"
+      }
+    },
+    "K012": {
+      "npc:mara": {
+        "source": "RIN-BASELINE-2026-10-16",
+        "state": "knows"
+      }
+    }
+  },
+  "branches": {
+    "BR-CARAVAN": {
+      "key_principals": [
+        "rin",
+        "npc:harren",
+        "npc:elira",
+        "npc:oli"
+      ],
+      "knowledge_ids": [
+        "K005",
+        "K006",
+        "K007",
+        "K009",
+        "K010",
+        "K011"
+      ],
+      "status": "active",
+      "title": "Засада и дорога в Вейлхольм"
+    },
+    "BR-CIRCLE": {
+      "key_principals": [
+        "rin",
+        "npc:sayren",
+        "group:circle"
+      ],
+      "knowledge_ids": [
+        "K002",
+        "K003",
+        "K008",
+        "K012"
+      ],
+      "status": "active",
+      "title": "Разомкнутый Круг и Изнанка"
+    },
+    "BR-GM-ESTATE": {
+      "key_principals": [
+        "npc:oswin",
+        "npc:tavin"
+      ],
+      "knowledge_ids": [
+        "K900"
+      ],
+      "status": "dormant",
+      "title": "[СПОЙЛЕРЫ GM] Подготовка линии дома Корвина"
+    },
+    "BR-INHERITANCE": {
+      "key_principals": [
+        "rin",
+        "npc:elira",
+        "npc:oli",
+        "npc:corvin"
+      ],
+      "knowledge_ids": [
+        "K004"
+      ],
+      "status": "active",
+      "title": "Наследство Веннов"
+    },
+    "BR-MONASTERY": {
+      "key_principals": [
+        "rin",
+        "group:monastery"
+      ],
+      "knowledge_ids": [
+        "K001"
+      ],
+      "status": "active",
+      "title": "Последний Свет и исчезнувшие мотивы"
+    }
+  },
+  "campaign_id": "rin-veir",
+  "graph_revision": 1,
+  "policy": {
+    "do_not_infer_unseen_information": true,
+    "knowledge_requires_source": true,
+    "relationships_do_not_grant_knowledge": true
+  },
+  "principals": {
+    "group:caravan": {
+      "description": "Четыре повозки и охрана; едет в Вейлхольм.",
+      "kind": "group",
+      "name": "Караван Харрена"
+    },
+    "group:circle": {
+      "description": "Фракция, связанная с событиями Серого Брода.",
+      "kind": "group",
+      "name": "Разомкнутый Круг"
+    },
+    "group:monastery": {
+      "description": "Орден, воспитавший Рина; причины задания не раскрыты.",
+      "kind": "group",
+      "name": "Монастырь Последнего Света"
+    },
+    "npc:bran": {
+      "description": "Возница каравана.",
+      "kind": "npc",
+      "name": "Бран"
+    },
+    "npc:corvin": {
+      "description": "Покойный дядя Элиры, оставил ей наследство в Вейлхольме.",
+      "kind": "npc",
+      "name": "Корвин Венн"
+    },
+    "npc:doren": {
+      "description": "Человек, преследовавший Рина; состоялся разговор.",
+      "kind": "npc",
+      "name": "Дорен Касс"
+    },
+    "npc:edric": {
+      "description": "Раненый человек, оставлен под присмотром Мары в Сером Броде.",
+      "kind": "npc",
+      "name": "Эдрик Маррен"
+    },
+    "npc:elira": {
+      "description": "19 лет, сестра Оли. Едет в Вейлхольм разбираться с наследством.",
+      "kind": "npc",
+      "name": "Элира Венн"
+    },
+    "npc:gart": {
+      "description": "Разбойник, взят живым; ушиблен, способен ходить.",
+      "kind": "npc",
+      "name": "Гарт"
+    },
+    "npc:harren": {
+      "description": "Глава каравана; отвечает за груз и безопасность.",
+      "kind": "npc",
+      "name": "Харрен Досс"
+    },
+    "npc:mara": {
+      "description": "Лекарка Серого Брода.",
+      "kind": "npc",
+      "name": "Мара Элден"
+    },
+    "npc:oli": {
+      "description": "7 лет, брат Элиры; напуган засадой, учится справляться со страхом.",
+      "kind": "npc",
+      "name": "Оли"
+    },
+    "npc:oswin": {
+      "description": "Имя из подготовки к возможной линии наследства; Рину пока неизвестно.",
+      "kind": "npc",
+      "name": "Освин Керр"
+    },
+    "npc:sayren": {
+      "description": "Уже направляется отдельно в Вейлхольм; условлена встреча в «Медном колоколе».",
+      "kind": "npc",
+      "name": "Сайрен"
+    },
+    "npc:tavin": {
+      "description": "Имя из подготовки к возможной линии наследства; Рину пока неизвестно.",
+      "kind": "npc",
+      "name": "Тавин"
+    },
+    "npc:tessan": {
+      "description": "Разбойник, взят живым; пленник каравана.",
+      "kind": "npc",
+      "name": "Тессан"
+    }
+  },
+  "schema_version": 1
+}
