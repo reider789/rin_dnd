@@ -38,10 +38,68 @@ const rinSourceAttack=attack;
 const rinSourceHurt=hurt;
 const rinSourceEnemyRoll=enemyRoll;
 function rinWithinDark(p){const d=s.rinDarkness;if(!d)return false;return rad(p,d)<=15;}
-function rinLineDark(a,b){const d=s.rinDarkness;if(!d)return false;
- for(let i=0;i<=12;i++){const f=i/12,p={x:a.x+(b.x-a.x)*f,y:a.y+(b.y-a.y)*f};if(rad(p,d)<=15)return true;}
+function rinLineDark(a,b){
+ const d=s.rinDarkness;if(!d||!a||!b)return false;
+ // A 15-foot-radius opaque sphere can obstruct a straight sightline even
+ // if neither creature is inside it. Use segment-to-circle geometry rather
+ // than checking only grid centres or just the first attack in a turn.
+ const dx=b.x-a.x,dy=b.y-a.y,lengthSquared=dx*dx+dy*dy;
+ const t=lengthSquared?Math.max(0,Math.min(1,((d.x-a.x)*dx+(d.y-a.y)*dy)/lengthSquared)):0;
+ return Math.hypot(a.x+dx*t-d.x,a.y+dy*t-d.y)*5<=15;
+}
+function rinCanSee(observer,target){
+ const dark=s.rinDarkness;
+ if(!dark)return true;
+ const a=s.units[observer],b=s.units[target];
+ if(!a||!b)return true;
+ if(!rinLineDark(a,b))return true;
+ // Warrior of Shadow sees creatures WITHIN their own Darkness, but
+ // the feature does not grant sight THROUGH it to targets beyond it.
+ if(observer==='rin'&&rinWithinDark(b))return true;
+ // Explicit creature senses can be added per encounter; regular Darkvision
+ // deliberately does NOT see through the Darkness spell (PHB 2024).
+ const distance=dist(a,b);
+ if((a.blindsightRange||0)>=distance||(a.truesightRange||0)>=distance||
+    (a.magicalDarkvisionRange||0)>=distance)return true;
  return false;
 }
+function rinAttackVisibility(attacker,target){
+ if(!s.rinDarkness)return {adv:false,disadv:false,description:''};
+ const attackerSees=rinCanSee(attacker,target);
+ const targetSees=rinCanSee(target,attacker);
+ return {adv:!targetSees,disadv:!attackerSees,
+  description:'Тьма: '+names[attacker]+(attackerSees?' видит ':' не видит ')+names[target]+
+     ', '+names[target]+(targetSees?' видит ':' не видит ')+names[attacker]};
+}
+// The original Havengard engine resolves NPC allied guards through a separate
+// melee routine. Preserve its pathfinding/decision flow and apply the same
+// vision rule to EACH attack, independently of its initiative and round.
+rinGuardTurn=function(id){
+ const u=s.units[id];if(!u||u.hp<=0)return;
+ const targets=foes.filter(k=>s.units[k]?.hp>0).sort((a,b)=>dist(u,s.units[a])-dist(u,s.units[b]));
+ if(!targets.length)return;
+ let target=targets.find(k=>dist(u,s.units[k])<=5&&wallLOS(u,s.units[k]));
+ if(!target){const candidate=targets[0],t=s.units[candidate],around=[];
+  for(let y=0;y<8;y++)for(let x=0;x<11;x++)if(!wall(x,y)&&!at(x,y)&&dist({x,y},t)<=5){
+   const path=nearestPath({x,y});if(path&&pathCost(path)<=u.move)around.push({path,cost:pathCost(path),x,y});}
+  around.sort((a,b)=>a.cost-b.cost||a.path.length-b.path.length);
+  if(around.length){const q=around[0];u.x=q.x;u.y=q.y;log(names[id]+': проходит '+q.cost+' фт к '+names[candidate]+' ('+pos(u.x,u.y)+').');}
+  target=targets.find(k=>dist(u,s.units[k])<=5&&wallLOS(u,s.units[k]));
+ }
+ if(target){
+  const vis=rinAttackVisibility(id,target);
+  const disadvantage=vis.disadv||hasStatus(id,'restrained');
+  const advantage=vis.adv||hasStatus(target,'restrained');
+  const d1=die(20),d2=advantage!==disadvantage?die(20):null;
+  const d=d2===null?d1:advantage?Math.max(d1,d2):Math.min(d1,d2);
+  const total=d+3,hit=d===20||(d!==1&&total>=AC(target));
+  log(names[id]+': копьё → '+names[target]+'; '+
+   (advantage&&disadvantage?'ПРЕИМУЩЕСТВО И ПОМЕХА ВЗАИМНО ОТМЕНЕНЫ':advantage?'ПРЕИМУЩЕСТВО':disadvantage?'ПОМЕХА':'обычный бросок')+
+   '; к20 '+(d2===null?'['+d1+']':'['+d1+', '+d2+'] → '+d)+' +3 = '+total+
+   ' против КД '+AC(target)+(hit?' — попадание.':' — промах.')+(vis.description?' '+vis.description+'.':''));
+  if(hit){const dmg=die(6)+(d===20?die(6):0)+1;log(names[id]+': урон копьём '+dmg+'.');hurt(target,dmg,'оружие');}
+ }else log(names[id]+': удерживает оборону каравана.');
+};
 function rinRollAttack(target,weapon='unarmed',bonusAttack=false){
  const u=s.units.rin,t=s.units[target],w=weapons.rin.find(v=>v[0]===weapon);
  if(!t||t.hp<=0||!foes.includes(target)){s.info='Выбери живого противника';return false;}
@@ -50,16 +108,14 @@ function rinRollAttack(target,weapon='unarmed',bonusAttack=false){
  if(weapon==='bow'&&u.arrows<=0){s.info='Нет стрел';return false;}
  let adv=Boolean(u.hidden||u.vex===target||hasStatus(target,'restrained')||hasStatus(target,'prone')&&distance<=5||s.rinLuckNextAttack);
  let disadv=Boolean(hasStatus('rin','restrained')||hasStatus(target,'prone')&&distance>5||distance>(weapon==='bow'?80:5)&&weapon==='bow');
- if(s.rinDarkness){
-   const selfDark=rinWithinDark(u),targetDark=rinWithinDark(t),lineDark=rinLineDark(u,t);
-   // Rin sees in his own darkness. Enemies without special sight cannot see through it.
-   if(selfDark||targetDark||lineDark)adv=true;
- }
+ const sight=rinAttackVisibility('rin',target);
+ adv=adv||sight.adv;
+ disadv=disadv||sight.disadv;
  const rolled=[die(20)],second=adv!==disadv?die(20):null;
  if(second!==null)rolled.push(second);
  const d=second===null?rolled[0]:adv?Math.max(...rolled):Math.min(...rolled),total=d+5;
  const hit=d===20||(d!==1&&total>=AC(target));
- log('Рин: '+w[1]+' → '+names[target]+'; '+(adv&&disadv?'преимущество и помеха отменены':adv?'ПРЕИМУЩЕСТВО':disadv?'ПОМЕХА':'обычная атака')+'; к20 ['+rolled.join(', ')+'] → '+d+' +5 = '+total+' против КД '+AC(target)+(hit?' — ПОПАДАНИЕ'+(d===20?', КРИТИЧЕСКОЕ':'')+'.':' — ПРОМАХ.'));
+ log('Рин: '+w[1]+' → '+names[target]+'; '+(adv&&disadv?'преимущество и помеха отменены':adv?'ПРЕИМУЩЕСТВО':disadv?'ПОМЕХА':'обычная атака')+'; к20 ['+rolled.join(', ')+'] → '+d+' +5 = '+total+' против КД '+AC(target)+(hit?' — ПОПАДАНИЕ'+(d===20?', КРИТИЧЕСКОЕ':'')+'.':' — ПРОМАХ.')+(sight.description?' '+sight.description+'.':''));
  s.rinLuckNextAttack=false;u.hidden=false;
  if(weapon==='bow')u.arrows--;
  if(!hit){u.vex=null;return true;}
@@ -97,9 +153,10 @@ hurt=function(target,amount,kind){
  }
 };
 enemyRoll=function(target,test,forced,disadvantage,attacker=turn()){
- const obscure=s.rinDarkness&&rinLineDark(s.units[attacker],s.units[target]);
+ // Legacy direct rolls must not bypass the shared 2024 sight calculation.
+ if(s.rinDarkness)return v19AttackFrame(attacker,target,test,forced,Boolean(disadvantage));
  const luckD=target==='rin'&&s.rinLuckDefense;
- const outcome=rinSourceEnemyRoll(target,test,forced,Boolean(disadvantage||(target==='rin'&&(s.rinDodge||obscure||luckD))),attacker);
+ const outcome=rinSourceEnemyRoll(target,test,forced,Boolean(disadvantage||(target==='rin'&&(s.rinDodge||luckD))),attacker);
  if(luckD)s.rinLuckDefense=false;return outcome;
 };
 function rinResolveDeflect(use){const p=s.pending;if(p?.kind!=='rinDeflect')return;
@@ -193,4 +250,13 @@ root.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!roo
 if(!v21EmbeddedStory){
  const example=root.querySelector('script[data-rin-default-scene]')?.textContent;
  if(example&&!resumable){try{v21NewScenario(JSON.parse(example));}catch(err){s.info='Ошибка сцены Рина: '+String(err?.message||err);render();}}
+}
+
+// Available only under the explicit browser QA flag (never to normal players).
+if(globalThis.__HV_ENABLE_TEST_APIS===true&&globalThis.__HV_TEST_API){
+ Object.assign(globalThis.__HV_TEST_API,{
+  rinSight:(attacker,target)=>rinAttackVisibility(attacker,target),
+  rinStrike:(target,weapon='unarmed')=>rinRollAttack(target,weapon),
+  rinGuardStrike:(id)=>rinGuardTurn(id)
+ });
 }
