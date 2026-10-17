@@ -1,3 +1,4 @@
+// LEGACY V29 REFERENCE ONLY. Not loaded by v30; active rules: core/rules_engine.js.
 /* Rin Veir campaign adapter for full Havengard v29. Loaded inside the original IIFE. */
 // Preserve old tactical engine, resolvers, reaction stack, journal, renderer, effects,
 // nonlethal handler and pathfinder. Hide unrelated hero abilities from Rin.

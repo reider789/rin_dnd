@@ -2,7 +2,7 @@
   "name": "Засада у лесной дороги — учебный бой",
   "kind": "training",
   "battle_id": "rin-ambush-replay-training",
-  "source_revision": 2,
+  "source_revision": 1,
   "chronicle_anchor": "Учебная реконструкция уже завершённой засады",
   "narrative_context": "Только тест механики. Не повторять бой в летописи. На караван напали трое пеших разбойников и двое лучников.",
   "theme": "forest",
@@ -23,15 +23,18 @@
     },
     "guard_a": {
       "cell": "C4",
-      "initiative": 13
+      "initiative": 13,
+      "name": "Охранник А"
     },
     "guard_b": {
       "cell": "C5",
-      "initiative": 9
+      "initiative": 9,
+      "name": "Охранник Б"
     },
     "guard_c": {
       "cell": "C6",
-      "initiative": 8
+      "initiative": 8,
+      "name": "Охранник В"
     }
   },
   "enemies": [

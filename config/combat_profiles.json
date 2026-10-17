@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "rules_source": "D&D 2024 PHB and current campaign sheet; Rogue is the starting class",
+  "characters": {
+    "rin": {
+      "scores": {},
+      "proficiency": 2,
+      "saveProficiencies": [
+        "DEX",
+        "INT"
+      ],
+      "skillProficiencies": {
+        "stealth": [
+          "DEX",
+          2
+        ],
+        "perception": [
+          "WIS",
+          2
+        ],
+        "sleightOfHand": [
+          "DEX",
+          1
+        ]
+      },
+      "features": {
+        "martialArts": true,
+        "monkFocus": true,
+        "monkLevel": 3,
+        "martialDie": 6,
+        "flurryCount": 2,
+        "deflectAttacks": 3,
+        "shadowArts": true,
+        "uncannyMetabolism": true,
+        "sneakDice": 1,
+        "masteries": [
+          "vex",
+          "nick"
+        ],
+        "alert": true
+      },
+      "senses": {
+        "darkvision": 60
+      },
+      "deathSaves": true,
+      "attacks": [
+        {
+          "id": "shortsword",
+          "name": "«Черта»",
+          "ability": "DEX",
+          "count": 1,
+          "die": 6,
+          "kind": "melee",
+          "range": 5,
+          "damageType": "piercing",
+          "sneakEligible": true,
+          "inventoryId": "cherta",
+          "light": true,
+          "mastery": "vex"
+        },
+        {
+          "id": "dagger",
+          "name": "Кинжал",
+          "ability": "DEX",
+          "count": 1,
+          "die": 6,
+          "kind": "melee",
+          "range": 5,
+          "damageType": "piercing",
+          "sneakEligible": true,
+          "inventoryId": "daggers",
+          "light": true,
+          "mastery": "nick"
+        },
+        {
+          "id": "unarmed",
+          "name": "Безоружный удар",
+          "ability": "DEX",
+          "count": 1,
+          "die": 6,
+          "kind": "melee",
+          "range": 5,
+          "damageType": "bludgeoning",
+          "unarmed": true
+        },
+        {
+          "id": "bow",
+          "name": "Короткий лук",
+          "ability": "DEX",
+          "count": 1,
+          "die": 6,
+          "kind": "ranged",
+          "range": 320,
+          "damageType": "piercing",
+          "sneakEligible": true,
+          "inventoryId": "shortbow",
+          "ammo": "arrows",
+          "normalRange": 80,
+          "ammoInventoryId": "arrows"
+        },
+        {
+          "id": "daggerThrow",
+          "name": "Метнуть кинжал",
+          "ability": "DEX",
+          "count": 1,
+          "die": 6,
+          "kind": "ranged",
+          "range": 60,
+          "damageType": "piercing",
+          "sneakEligible": true,
+          "inventoryId": "daggers",
+          "normalRange": 20,
+          "ammoItem": "daggers"
+        }
+      ],
+      "verified_class_and_level": "Разбойник 1 / Монах 3 (Воин Тени), D&D 2024"
+    }
+  },
+  "npc_profiles": {
+    "guard": {
+      "name": "Охранник",
+      "hp": 11,
+      "ac": 16,
+      "speed": 30,
+      "scores": {
+        "STR": 13,
+        "DEX": 12,
+        "CON": 12,
+        "INT": 10,
+        "WIS": 11,
+        "CHA": 10
+      },
+      "proficiency": 2,
+      "features": {},
+      "attacks": [
+        {
+          "id": "spear",
+          "name": "Копьё",
+          "kind": "melee",
+          "bonus": 3,
+          "flat": 1,
+          "count": 1,
+          "die": 6,
+          "range": 5,
+          "damageType": "piercing"
+        }
+      ],
+      "tactics": {
+        "role": "guardian",
+        "morale": 0.15,
+        "canFlee": false,
+        "hold": false
+      }
+    }
+  }
+}

@@ -39,8 +39,8 @@ class CombatBattlefield {
       for(let d=0;d<directions.length;d++){
         const [mx,my]=directions[d],x=node.x+mx,y=node.y+my;
         if(this.isBlocked(x,y))continue;
-        // A diagonal cannot squeeze through a corner closed on both sides.
-        if(mx!==0&&my!==0&&this.isBlocked(node.x+mx,node.y)&&this.isBlocked(node.x,node.y+my))continue;
+        // PHB 2024 grid: a diagonal cannot cross a terrain corner.
+        if(mx!==0&&my!==0&&(this.isWall(node.x+mx,node.y)||this.isWall(node.x,node.y+my)))continue;
         const step=this.isDifficult(x,y)?10:5;
         const exposure=typeof this._movementRisk==='function'?
           Math.max(0,Number(this._movementRisk(node,{x,y}))||0):0;
