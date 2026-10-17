@@ -19,7 +19,7 @@ def build(root=ROOT,scene=None,check=False):
     portrait=(root/'assets/rin-portrait-256.webp').read_bytes()
     art['assets']['heroes.rin']={'mime':'image/webp','data':'data:image/webp;base64,'+base64.b64encode(portrait).decode()}
     files=MODULES+['web/shell.html','web/desktop.css','config/combat_profiles.json',str(scene_path.relative_to(root))]
-    manifest={'name':'rin-veir-combat','version':30,'engine_version':'30.0.0','rules_version':runtime['rules_version'],
+    manifest={'name':'rin-veir-combat','version':30,'engine_version':'30.1.0','rules_version':runtime['rules_version'],
       'source_state_revision':runtime['source_state_revision'],'source_state_sha256':runtime['source_state_sha256'],
       'sources':{f:hashlib.sha256((root/f).read_bytes()).hexdigest() for f in files}}
     code='\n\n'.join((root/p).read_text(encoding='utf-8') for p in MODULES)
