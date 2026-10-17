@@ -22,7 +22,7 @@ def snapshot(project=ROOT):
         chars[cid]={'name':char['name'],'class_and_level':sheet['class_and_level'],'ac_description':sheet['armor_class'],'speed':sheet['speed'],
             'resources':copy.deepcopy(char['resources']),'inventory':inv,'consumables':{},'combat_profile':profile,
             'skills_attacks_spells':[{'name':r['cells'][0],'description':' · '.join(str(c) for c in r['cells'][1:])} for r in sheet.get('combat_reference',[]) if r.get('cells')]}
-    return {'schema_version':2,'combat_schema_version':30,'campaign_id':state['campaign']['id'],'source':'state/_campaign-state.json',
+    return {'schema_version':2,'combat_schema_version':30,'campaign_id':state['campaign']['id'],'title':state['campaign'].get('title',state['campaign']['id']),'source':'state/_campaign-state.json',
         'source_state_revision':state['state_revision'],'source_state_sha256':state_hash(state),'is_canonical':False,'characters':chars,
         'npc_profiles':profiles['npc_profiles'],'rules_version':'dnd-2024-2026-10'}
 def build(project=ROOT):

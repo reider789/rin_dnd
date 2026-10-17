@@ -2,10 +2,23 @@
 (() => {
   const $ = (id) => document.getElementById(id),
     root = $("combat-app"),
-    runtime = JSON.parse($("runtime").textContent),
-    defaultScene = JSON.parse($("scene").textContent),
+    embeddedRuntime = JSON.parse($("runtime").textContent),
+    embeddedScene = JSON.parse($("scene").textContent),
     art = JSON.parse($("artpack").textContent).assets;
-  const KEY = "rin-veir-combat-session-v30";
+  const PACK_SLOT = "dnd-combat-active-pack:" + embeddedRuntime.campaign_id;
+  let runtime = embeddedRuntime,
+    defaultScene = embeddedScene,
+    KEY = runtime.campaign_id + "-combat-session-v30";
+  function sessionValue() {
+    const value = engine.export();
+    if (runtime.content_pack) value.contentPack = runtime.content_pack;
+    return value;
+  }
+  function rememberPack() {
+    if (runtime.content_pack)
+      localStorage.setItem(PACK_SLOT, JSON.stringify(runtime.content_pack));
+    else localStorage.removeItem(PACK_SLOT);
+  }
   let engine,
     selected = null,
     weapon = null,
@@ -35,9 +48,13 @@
   };
   function save() {
     try {
-      const value = engine.export();
+      const value = sessionValue();
       localStorage.setItem(KEY, JSON.stringify(value));
-      globalThis.__bindings?.setValue?.({ session: value.session });
+      globalThis.__bindings?.setValue?.({
+        session: value.session,
+        contentPack: value.contentPack,
+      });
+      rememberPack();
       $("save-status").textContent = "Сохранено в этом браузере";
       return true;
     } catch {
@@ -46,11 +63,15 @@
       return false;
     }
   }
-  function newBattle(scene) {
+  function newBattle(scene, nextRuntime = runtime) {
     const next = new CombatRulesEngine(
-      CombatCampaignAdapter.create(runtime, scene, seed()),
+      CombatCampaignAdapter.create(nextRuntime, scene, seed()),
     );
     next.initialize();
+    runtime = nextRuntime;
+    KEY = runtime.campaign_id + "-combat-session-v30";
+    if (runtime.content_pack)
+      defaultScene = CombatContentPack.encounter(runtime);
     engine = next;
     selected = engine.enemies(engine.actorId)[0] || null;
     weapon = null;
@@ -67,14 +88,23 @@
       !["dnd-combat-session", "rin-veir-combat-session"].includes(
         value?.kind,
       ) ||
-      value.version !== 30
+      ![30, 31].includes(value.version)
     )
       throw Error(
-        "Нужно сохранение v30; старые файлы v29 открываются в прежней версии",
+        "Нужно сохранение v30 или v31; файлы v29 открываются в прежней версии",
       );
+    const nextRuntime = value.contentPack
+      ? CombatContentPack.compile(value.contentPack)
+      : runtime;
     const next = new CombatRulesEngine(value.session);
-    if (next.s.meta.campaignId !== runtime.campaign_id)
+    if (next.s.meta.campaignId !== nextRuntime.campaign_id)
       throw Error("Сохранение другой кампании");
+    const nextScene = nextRuntime.content_pack
+      ? CombatContentPack.encounter(nextRuntime)
+      : defaultScene;
+    runtime = nextRuntime;
+    KEY = runtime.campaign_id + "-combat-session-v30";
+    defaultScene = nextScene;
     engine = next;
     selected = null;
     path = [];
@@ -272,6 +302,10 @@
       "</div></div>";
   }
   function render() {
+    $("campaign-label").textContent =
+      (runtime.title || runtime.campaign_id) + " · D&D 2024";
+    document.title =
+      (runtime.title || runtime.campaign_id) + " · Тактический бой";
     const s = engine.s,
       id = engine.actorId,
       u = engine.unit(id),
@@ -352,13 +386,11 @@
       b.title = visible
         ? a.name + " · " + a.hp + "/" + a.max + " ПЗ"
         : engine.cell(p);
-      const key = a?.controlled
-        ? "heroes.rin"
-        : a?.team === "party"
-          ? "enemies.warrior"
-          : "enemies." +
-            (a?.tokenKey ||
-              (a?.tactics.role === "ranged" ? "archer" : "warrior"));
+      const key = art[a?.tokenKey]
+        ? a.tokenKey
+        : "enemies." +
+          (a?.tokenKey ||
+            (a?.tactics.role === "ranged" ? "archer" : "warrior"));
       const html =
         '<span class="coord">' +
         engine.cell(p) +
@@ -771,10 +803,7 @@
     }
     if (op === "new") {
       try {
-        localStorage.setItem(
-          KEY + "-previous",
-          JSON.stringify(engine.export()),
-        );
+        localStorage.setItem(KEY + "-previous", JSON.stringify(sessionValue()));
       } catch {}
       newBattle(defaultScene);
       return;
@@ -784,7 +813,7 @@
       return;
     }
     if (op === "export") {
-      download("rin-battle-v30.json", engine.export());
+      download(runtime.campaign_id + "-battle-v30.json", sessionValue());
       return;
     }
     if (op === "import") {
@@ -798,7 +827,7 @@
     if (op === "report") {
       try {
         download(
-          "rin-battle-result.json",
+          runtime.campaign_id + "-battle-result.json",
           CombatCampaignAdapter.outcome(engine.s),
         );
       } catch (e) {
@@ -814,7 +843,7 @@
     }
     if (op === "journal-export") {
       download(
-        "rin-combat-journal.txt",
+        runtime.campaign_id + "-combat-journal.txt",
         engine.s.events.map((e) => e.text).join("\n"),
       );
       return;
@@ -823,6 +852,10 @@
       path = [];
       pointMode = null;
       render();
+      return;
+    }
+    if (op === "pack") {
+      $("pack-file").click();
       return;
     }
     if (op === "move") {
@@ -886,6 +919,22 @@
       e.target.value = "";
     }
   });
+  $("pack-file").addEventListener("change", async (e) => {
+    try {
+      if (e.target.files[0]) {
+        const nextRuntime = CombatContentPack.compile(
+          JSON.parse(await e.target.files[0].text()),
+        );
+        newBattle(CombatContentPack.encounter(nextRuntime), nextRuntime);
+      }
+    } catch (err) {
+      notice = err.message;
+      error = true;
+      render();
+    } finally {
+      e.target.value = "";
+    }
+  });
   $("scenario-file").addEventListener("change", async (e) => {
     try {
       if (e.target.files[0])
@@ -900,10 +949,21 @@
   });
   window.addEventListener("beforeunload", save);
   try {
+    const savedPack = localStorage.getItem(PACK_SLOT);
+    if (savedPack) {
+      runtime = CombatContentPack.compile(JSON.parse(savedPack));
+      defaultScene = CombatContentPack.encounter(runtime);
+      KEY = runtime.campaign_id + "-combat-session-v30";
+    }
     const stored = globalThis.__bindings?.value?.session;
     const local = localStorage.getItem(KEY);
     if (stored)
-      load({ kind: "rin-veir-combat-session", version: 30, session: stored });
+      load({
+        kind: "dnd-combat-session",
+        version: 30,
+        session: stored,
+        contentPack: globalThis.__bindings?.value?.contentPack,
+      });
     else if (local) load(JSON.parse(local));
     else newBattle(defaultScene);
   } catch (err) {

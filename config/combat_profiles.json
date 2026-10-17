@@ -113,7 +113,8 @@
           "ammoItem": "daggers"
         }
       ],
-      "verified_class_and_level": "Разбойник 1 / Монах 3 (Воин Тени), D&D 2024"
+      "verified_class_and_level": "Разбойник 1 / Монах 3 (Воин Тени), D&D 2024",
+      "tokenKey": "heroes.rin"
     }
   },
   "npc_profiles": {

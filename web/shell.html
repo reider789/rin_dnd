@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Рин Вейр · Тактический бой</title>
+    <title>Тактический бой · D&D 2024</title>
     <style>
       /*__STYLE__*/
     </style>
@@ -12,7 +12,7 @@
     <main id="combat-app">
       <header>
         <div>
-          <small>КАМПАНИЯ РИНА ВЕЙРА · D&D 2024</small>
+          <small id="campaign-label">D&D 2024</small>
           <h1 id="battle-name"></h1>
           <p id="source-status"></p>
         </div>
@@ -24,6 +24,7 @@
         ><button data-op="export">Скачать сохранение</button
         ><button data-op="import">Загрузить сохранение</button
         ><button data-op="scenario">Загрузить сценарий</button
+        ><button data-op="pack">Загрузить пакет кампании</button
         ><button data-op="report" id="report-button">Итоги для мастера</button
         ><span id="save-status"></span>
       </div>
@@ -38,6 +39,7 @@
         accept="application/json"
         hidden
       />
+      <input type="file" id="pack-file" accept="application/json" hidden />
       <div class="layout">
         <section class="map-column">
           <div id="queue" class="queue"></div>

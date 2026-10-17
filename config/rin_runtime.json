@@ -2,6 +2,7 @@
   "schema_version": 2,
   "combat_schema_version": 30,
   "campaign_id": "rin-veir",
+  "title": "Рин Вейр",
   "source": "state/_campaign-state.json",
   "source_state_revision": 1,
   "source_state_sha256": "bf8bd1f85817996db5961dd8c658c028f7c87a7632fd53f75a98812a013139e9",
@@ -467,6 +468,7 @@
           }
         ],
         "verified_class_and_level": "Разбойник 1 / Монах 3 (Воин Тени), D&D 2024",
+        "tokenKey": "heroes.rin",
         "ac": 16,
         "speed": 40
       },

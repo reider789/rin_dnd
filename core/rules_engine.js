@@ -1,24 +1,13 @@
 /* D&D 2024 combat domain. No DOM, network, character names or campaign IDs. */
 "use strict";
+const RulesCapabilities =
+  typeof module !== "undefined"
+    ? require("./capabilities").CombatCapabilities
+    : CombatCapabilities;
 class CombatRulesEngine {
-  static VERSION = "30.1.0";
-  static RULES = "dnd-2024-2026-10";
-  static FEATURES = new Set([
-    "martialArts",
-    "monkFocus",
-    "monkLevel",
-    "martialDie",
-    "flurryCount",
-    "deflectAttacks",
-    "shadowArts",
-    "uncannyMetabolism",
-    "sneakDice",
-    "masteries",
-    "alert",
-    "extraAttack",
-    "packTactics",
-    "cunningAction",
-  ]);
+  static VERSION = RulesCapabilities.ENGINE;
+  static RULES = RulesCapabilities.RULES;
+  static FEATURES = new Set(Object.keys(RulesCapabilities.FEATURES));
   constructor(state) {
     CombatRulesEngine.validate(state);
     this.state = structuredClone(state);
@@ -123,9 +112,8 @@ class CombatRulesEngine {
           a.range > 600
         )
           throw Error("Неверная атака: " + id);
-      for (const feature of Object.keys(u.features || {}))
-        if (!this.FEATURES.has(feature))
-          throw Error("Нет проверенного обработчика способности: " + feature);
+      RulesCapabilities.features(u.features);
+      for (const attack of u.attacks) RulesCapabilities.attack(attack);
     }
     if (s.pending && (!s.pending.id || !s.pending.kind))
       throw Error("Повреждено решение игрока");
@@ -1351,6 +1339,13 @@ class CombatRulesEngine {
         },
       );
       if (!hit) return;
+      if (t.spec.effects?.length)
+        this.enqueue({
+          kind: "attackEffects",
+          actor: t.actor,
+          target: t.target,
+          effects: structuredClone(t.spec.effects),
+        });
       const allied = this.s.order.some(
         (id) =>
           id !== t.actor &&
@@ -1379,6 +1374,54 @@ class CombatRulesEngine {
         bonus: t.mode === "nick" ? Math.min(0, t.spec.flat) : t.spec.flat,
         next: { ...t, kind: "damageResult", critical, sneakCount },
       });
+      return;
+    }
+    if (t.kind === "attackEffects") {
+      for (const effect of t.effects) RulesCapabilities.effect(effect);
+      if (!this.active(t.target)) return;
+      const [effect, ...rest] = t.effects;
+      if (!effect) return;
+      if (rest.length) this.enqueue({ ...t, effects: rest });
+      const next = {
+        kind: "applyAttackCondition",
+        actor: t.actor,
+        target: t.target,
+        effect,
+      };
+      if (this.unit(t.target).conditionImmunities?.includes(effect.condition)) {
+        this.emit(
+          "conditionImmune",
+          t.target,
+          this.name(t.target) +
+            ": иммунитет к эффекту «" +
+            (effect.name || effect.condition) +
+            "».",
+        );
+      } else if (effect.save)
+        this.enqueue(
+          this.saveTask(t.target, effect.save.stat, effect.save.dc, next),
+        );
+      else this.enqueue(next);
+      return;
+    }
+    if (t.kind === "applyAttackCondition") {
+      RulesCapabilities.effect(t.effect);
+      if (!this.active(t.target) || t.result?.success) return;
+      this.status(t.target, t.effect.condition, {
+        source: t.actor,
+        ...(t.effect.duration === "target-next-start"
+          ? { expiresAtStart: t.target }
+          : {}),
+      });
+      this.emit(
+        "attackCondition",
+        t.target,
+        this.name(t.target) +
+          ": " +
+          (t.effect.name || t.effect.condition) +
+          ".",
+        { condition: t.effect.condition, source: t.actor },
+      );
       return;
     }
     if (t.kind === "damageResult") {
@@ -2202,7 +2245,7 @@ class CombatRulesEngine {
   export() {
     return {
       kind: "dnd-combat-session",
-      version: 30,
+      version: this.s.meta.contentPack ? 31 : 30,
       session: structuredClone(this.s),
     };
   }

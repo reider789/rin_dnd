@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Рин Вейр · Тактический бой</title>
+    <title>Тактический бой · D&D 2024</title>
     <style>
       :root {
   color-scheme: dark;
@@ -361,7 +361,7 @@ summary {
     <main id="combat-app">
       <header>
         <div>
-          <small>КАМПАНИЯ РИНА ВЕЙРА · D&D 2024</small>
+          <small id="campaign-label">D&D 2024</small>
           <h1 id="battle-name"></h1>
           <p id="source-status"></p>
         </div>
@@ -373,6 +373,7 @@ summary {
         ><button data-op="export">Скачать сохранение</button
         ><button data-op="import">Загрузить сохранение</button
         ><button data-op="scenario">Загрузить сценарий</button
+        ><button data-op="pack">Загрузить пакет кампании</button
         ><button data-op="report" id="report-button">Итоги для мастера</button
         ><span id="save-status"></span>
       </div>
@@ -387,6 +388,7 @@ summary {
         accept="application/json"
         hidden
       />
+      <input type="file" id="pack-file" accept="application/json" hidden />
       <div class="layout">
         <section class="map-column">
           <div id="queue" class="queue"></div>
@@ -427,7 +429,7 @@ summary {
       </section>
     </main>
     <script type="application/json" id="runtime">
-      {"schema_version":2,"combat_schema_version":30,"campaign_id":"rin-veir","source":"state/_campaign-state.json","source_state_revision":1,"source_state_sha256":"bf8bd1f85817996db5961dd8c658c028f7c87a7632fd53f75a98812a013139e9","is_canonical":false,"characters":{"rin":{"name":"Рин Вейр","class_and_level":"Разбойник 1 / Монах 3 (Воин Тени), D&D 2024","ac_description":"16","speed":"40 фт","resources":{"hp":{"current":31,"max":31},"focus":{"current":0,"max":3},"arrows":{"current":20,"max":20},"luck":{"current":2,"max":2},"heroic":{"current":1,"max":1},"personal_money_cp":18289,"unusual_metabolism":{"current":1,"max":1}},"inventory":[{"id":"cherta","name":"«Черта» (короткий меч)","quantity":1,"description":"Основное оружие, Vex","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"daggers","name":"Кинжалы","quantity":4,"description":"Один может применять Nick","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"shortbow","name":"Короткий лук","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"arrows","name":"Стрелы","quantity":20,"description":"В рабочем колчане; не смешивать с найденными до перекладки","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"quiver","name":"Колчан","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"thieves_tools","name":"Воровские инструменты","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"burglars_pack","name":"Набор взломщика","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"pouches","name":"Поясные сумки","quantity":2,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"clothes","name":"Дорожная одежда и серое пальто","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"bedroll","name":"Постельные принадлежности","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"game_set","name":"Игровой набор","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"monastery_documents","name":"Документы Последнего Света","quantity":1,"description":"Похищены при уходе; часть содержания неизвестна","status":"скрыто при себе","origin":"канон кампании","combat_available":true},{"id":"edric_letter","name":"Письмо Эдрика для Сайрена","quantity":1,"description":"Прочитано вместе с Сайреном","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"edric_plate","name":"Контактная пластинка Эдрика","quantity":1,"description":"Контакт Остен Рей, пароль о книге без последней страницы","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"circle_vii","name":"Жетон VII","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"circle_orders","name":"Записка с приказом Разомкнутого Круга","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"horse","name":"Верховая лошадь","quantity":1,"description":"Оставлена в Сером Броде на конюшне; местоположение подлежит сверке","status":"конюшня Серого Брода","origin":"канон кампании","combat_available":false},{"id":"saddle","name":"Верховое седло","quantity":1,"description":"На лошади","status":"конюшня Серого Брода","origin":"канон кампании","combat_available":false},{"id":"saddlebags","name":"Седельные сумки","quantity":1,"description":"На лошади","status":"конюшня Серого Брода","origin":"канон кампании","combat_available":false},{"id":"food_wraps","name":"Сухие дорожные свёртки","quantity":2,"description":"На лошади","status":"конюшня Серого Брода","origin":"канон кампании","combat_available":false},{"id":"rope","name":"Тонкая верёвка","quantity":1,"description":"На лошади","status":"конюшня Серого Брода","origin":"канон кампании","combat_available":false},{"id":"blank_tokens","name":"Жетоны без номера","quantity":3,"description":"На лошади","status":"конюшня Серого Брода","origin":"канон кампании","combat_available":false},{"id":"route_map","name":"Карта Серый Брод — Вейлхольм","quantity":1,"description":"Отмечена старая обсерватория и «VII — активен»","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"circle_notebook","name":"Записная книжка Разомкнутого Круга","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"sealed_cylinder","name":"Запечатанный металлический цилиндр","quantity":1,"description":"Не вскрыт","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"unclear_flasks","name":"Флаконы мутной жидкости","quantity":3,"description":"2 у Мары; 1 в седельной сумке","status":"частично у Мары","origin":"канон кампании","combat_available":false},{"id":"needle_case","name":"Футляр с тремя иглами","quantity":1,"description":"Возможно опасное содержимое","status":"у Мары","origin":"канон кампании","combat_available":false},{"id":"thin_pick","name":"Тонкая металлическая отмычка","quantity":1,"description":"Найдена у Лорена","status":"у Мары","origin":"канон кампании","combat_available":false},{"id":"bandit_sabers","name":"Трофейные сабли","quantity":3,"description":"С пяти дорожных разбойников","status":"караванная повозка","origin":"засада на дороге","combat_available":false},{"id":"bandit_bows","name":"Трофейные короткие луки","quantity":2,"description":"С дорожных разбойников","status":"караванная повозка","origin":"засада на дороге","combat_available":false},{"id":"bandit_armors","name":"Поношенные кожаные доспехи","quantity":5,"description":"С дорожных разбойников","status":"караванная повозка","origin":"засада на дороге","combat_available":false},{"id":"bandit_arrows","name":"Трофейные стрелы","quantity":32,"description":"Ещё не зачислены в личный колчан","status":"караванная повозка","origin":"засада на дороге","combat_available":false},{"id":"bandit_quivers","name":"Трофейные колчаны","quantity":2,"description":"С дорожных разбойников","status":"караванная повозка","origin":"засада на дороге","combat_available":false},{"id":"bandit_pouches","name":"Трофейные кошели","quantity":5,"description":"Монеты учтены в личном кошельке","status":"караванная повозка","origin":"засада на дороге","combat_available":false}],"consumables":{},"combat_profile":{"scores":{"STR":8,"DEX":17,"CON":14,"INT":8,"WIS":16,"CHA":10},"proficiency":2,"saveProficiencies":["DEX","INT"],"skillProficiencies":{"stealth":["DEX",2],"perception":["WIS",2],"sleightOfHand":["DEX",1]},"features":{"martialArts":true,"monkFocus":true,"monkLevel":3,"martialDie":6,"flurryCount":2,"deflectAttacks":3,"shadowArts":true,"uncannyMetabolism":true,"sneakDice":1,"masteries":["vex","nick"],"alert":true},"senses":{"darkvision":60},"deathSaves":true,"attacks":[{"id":"shortsword","name":"«Черта»","ability":"DEX","count":1,"die":6,"kind":"melee","range":5,"damageType":"piercing","sneakEligible":true,"inventoryId":"cherta","light":true,"mastery":"vex"},{"id":"dagger","name":"Кинжал","ability":"DEX","count":1,"die":6,"kind":"melee","range":5,"damageType":"piercing","sneakEligible":true,"inventoryId":"daggers","light":true,"mastery":"nick"},{"id":"unarmed","name":"Безоружный удар","ability":"DEX","count":1,"die":6,"kind":"melee","range":5,"damageType":"bludgeoning","unarmed":true},{"id":"bow","name":"Короткий лук","ability":"DEX","count":1,"die":6,"kind":"ranged","range":320,"damageType":"piercing","sneakEligible":true,"inventoryId":"shortbow","ammo":"arrows","normalRange":80,"ammoInventoryId":"arrows"},{"id":"daggerThrow","name":"Метнуть кинжал","ability":"DEX","count":1,"die":6,"kind":"ranged","range":60,"damageType":"piercing","sneakEligible":true,"inventoryId":"daggers","normalRange":20,"ammoItem":"daggers"}],"verified_class_and_level":"Разбойник 1 / Монах 3 (Воин Тени), D&D 2024","ac":16,"speed":40},"skills_attacks_spells":[{"name":"«Черта», короткий меч","description":"+5 к попаданию · 1к6+3 · Vex"},{"name":"Безоружный удар","description":"+5 к попаданию · 1к6+3"},{"name":"Скрытая атака","description":"1к6 один раз за ход при выполнении условий"},{"name":"Тьма Воина Тени","description":"1 фокус, действие, 15 фт радиус, 60 фт дальность, концентрация до 10 минут; видит внутри своей Тьмы"},{"name":"Шквал ударов","description":"1 фокус, две безоружные атаки"}]}},"npc_profiles":{"guard":{"name":"Охранник","hp":11,"ac":16,"speed":30,"scores":{"STR":13,"DEX":12,"CON":12,"INT":10,"WIS":11,"CHA":10},"proficiency":2,"features":{},"attacks":[{"id":"spear","name":"Копьё","kind":"melee","bonus":3,"flat":1,"count":1,"die":6,"range":5,"damageType":"piercing"}],"tactics":{"role":"guardian","morale":0.15,"canFlee":false,"hold":false}}},"rules_version":"dnd-2024-2026-10"}
+      {"schema_version":2,"combat_schema_version":30,"campaign_id":"rin-veir","title":"Рин Вейр","source":"state/_campaign-state.json","source_state_revision":1,"source_state_sha256":"bf8bd1f85817996db5961dd8c658c028f7c87a7632fd53f75a98812a013139e9","is_canonical":false,"characters":{"rin":{"name":"Рин Вейр","class_and_level":"Разбойник 1 / Монах 3 (Воин Тени), D&D 2024","ac_description":"16","speed":"40 фт","resources":{"hp":{"current":31,"max":31},"focus":{"current":0,"max":3},"arrows":{"current":20,"max":20},"luck":{"current":2,"max":2},"heroic":{"current":1,"max":1},"personal_money_cp":18289,"unusual_metabolism":{"current":1,"max":1}},"inventory":[{"id":"cherta","name":"«Черта» (короткий меч)","quantity":1,"description":"Основное оружие, Vex","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"daggers","name":"Кинжалы","quantity":4,"description":"Один может применять Nick","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"shortbow","name":"Короткий лук","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"arrows","name":"Стрелы","quantity":20,"description":"В рабочем колчане; не смешивать с найденными до перекладки","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"quiver","name":"Колчан","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"thieves_tools","name":"Воровские инструменты","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"burglars_pack","name":"Набор взломщика","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"pouches","name":"Поясные сумки","quantity":2,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"clothes","name":"Дорожная одежда и серое пальто","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"bedroll","name":"Постельные принадлежности","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"game_set","name":"Игровой набор","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"monastery_documents","name":"Документы Последнего Света","quantity":1,"description":"Похищены при уходе; часть содержания неизвестна","status":"скрыто при себе","origin":"канон кампании","combat_available":true},{"id":"edric_letter","name":"Письмо Эдрика для Сайрена","quantity":1,"description":"Прочитано вместе с Сайреном","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"edric_plate","name":"Контактная пластинка Эдрика","quantity":1,"description":"Контакт Остен Рей, пароль о книге без последней страницы","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"circle_vii","name":"Жетон VII","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"circle_orders","name":"Записка с приказом Разомкнутого Круга","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"horse","name":"Верховая лошадь","quantity":1,"description":"Оставлена в Сером Броде на конюшне; местоположение подлежит сверке","status":"конюшня Серого Брода","origin":"канон кампании","combat_available":false},{"id":"saddle","name":"Верховое седло","quantity":1,"description":"На лошади","status":"конюшня Серого Брода","origin":"канон кампании","combat_available":false},{"id":"saddlebags","name":"Седельные сумки","quantity":1,"description":"На лошади","status":"конюшня Серого Брода","origin":"канон кампании","combat_available":false},{"id":"food_wraps","name":"Сухие дорожные свёртки","quantity":2,"description":"На лошади","status":"конюшня Серого Брода","origin":"канон кампании","combat_available":false},{"id":"rope","name":"Тонкая верёвка","quantity":1,"description":"На лошади","status":"конюшня Серого Брода","origin":"канон кампании","combat_available":false},{"id":"blank_tokens","name":"Жетоны без номера","quantity":3,"description":"На лошади","status":"конюшня Серого Брода","origin":"канон кампании","combat_available":false},{"id":"route_map","name":"Карта Серый Брод — Вейлхольм","quantity":1,"description":"Отмечена старая обсерватория и «VII — активен»","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"circle_notebook","name":"Записная книжка Разомкнутого Круга","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"sealed_cylinder","name":"Запечатанный металлический цилиндр","quantity":1,"description":"Не вскрыт","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"unclear_flasks","name":"Флаконы мутной жидкости","quantity":3,"description":"2 у Мары; 1 в седельной сумке","status":"частично у Мары","origin":"канон кампании","combat_available":false},{"id":"needle_case","name":"Футляр с тремя иглами","quantity":1,"description":"Возможно опасное содержимое","status":"у Мары","origin":"канон кампании","combat_available":false},{"id":"thin_pick","name":"Тонкая металлическая отмычка","quantity":1,"description":"Найдена у Лорена","status":"у Мары","origin":"канон кампании","combat_available":false},{"id":"bandit_sabers","name":"Трофейные сабли","quantity":3,"description":"С пяти дорожных разбойников","status":"караванная повозка","origin":"засада на дороге","combat_available":false},{"id":"bandit_bows","name":"Трофейные короткие луки","quantity":2,"description":"С дорожных разбойников","status":"караванная повозка","origin":"засада на дороге","combat_available":false},{"id":"bandit_armors","name":"Поношенные кожаные доспехи","quantity":5,"description":"С дорожных разбойников","status":"караванная повозка","origin":"засада на дороге","combat_available":false},{"id":"bandit_arrows","name":"Трофейные стрелы","quantity":32,"description":"Ещё не зачислены в личный колчан","status":"караванная повозка","origin":"засада на дороге","combat_available":false},{"id":"bandit_quivers","name":"Трофейные колчаны","quantity":2,"description":"С дорожных разбойников","status":"караванная повозка","origin":"засада на дороге","combat_available":false},{"id":"bandit_pouches","name":"Трофейные кошели","quantity":5,"description":"Монеты учтены в личном кошельке","status":"караванная повозка","origin":"засада на дороге","combat_available":false}],"consumables":{},"combat_profile":{"scores":{"STR":8,"DEX":17,"CON":14,"INT":8,"WIS":16,"CHA":10},"proficiency":2,"saveProficiencies":["DEX","INT"],"skillProficiencies":{"stealth":["DEX",2],"perception":["WIS",2],"sleightOfHand":["DEX",1]},"features":{"martialArts":true,"monkFocus":true,"monkLevel":3,"martialDie":6,"flurryCount":2,"deflectAttacks":3,"shadowArts":true,"uncannyMetabolism":true,"sneakDice":1,"masteries":["vex","nick"],"alert":true},"senses":{"darkvision":60},"deathSaves":true,"attacks":[{"id":"shortsword","name":"«Черта»","ability":"DEX","count":1,"die":6,"kind":"melee","range":5,"damageType":"piercing","sneakEligible":true,"inventoryId":"cherta","light":true,"mastery":"vex"},{"id":"dagger","name":"Кинжал","ability":"DEX","count":1,"die":6,"kind":"melee","range":5,"damageType":"piercing","sneakEligible":true,"inventoryId":"daggers","light":true,"mastery":"nick"},{"id":"unarmed","name":"Безоружный удар","ability":"DEX","count":1,"die":6,"kind":"melee","range":5,"damageType":"bludgeoning","unarmed":true},{"id":"bow","name":"Короткий лук","ability":"DEX","count":1,"die":6,"kind":"ranged","range":320,"damageType":"piercing","sneakEligible":true,"inventoryId":"shortbow","ammo":"arrows","normalRange":80,"ammoInventoryId":"arrows"},{"id":"daggerThrow","name":"Метнуть кинжал","ability":"DEX","count":1,"die":6,"kind":"ranged","range":60,"damageType":"piercing","sneakEligible":true,"inventoryId":"daggers","normalRange":20,"ammoItem":"daggers"}],"verified_class_and_level":"Разбойник 1 / Монах 3 (Воин Тени), D&D 2024","tokenKey":"heroes.rin","ac":16,"speed":40},"skills_attacks_spells":[{"name":"«Черта», короткий меч","description":"+5 к попаданию · 1к6+3 · Vex"},{"name":"Безоружный удар","description":"+5 к попаданию · 1к6+3"},{"name":"Скрытая атака","description":"1к6 один раз за ход при выполнении условий"},{"name":"Тьма Воина Тени","description":"1 фокус, действие, 15 фт радиус, 60 фт дальность, концентрация до 10 минут; видит внутри своей Тьмы"},{"name":"Шквал ударов","description":"1 фокус, две безоружные атаки"}]}},"npc_profiles":{"guard":{"name":"Охранник","hp":11,"ac":16,"speed":30,"scores":{"STR":13,"DEX":12,"CON":12,"INT":10,"WIS":11,"CHA":10},"proficiency":2,"features":{},"attacks":[{"id":"spear","name":"Копьё","kind":"melee","bonus":3,"flat":1,"count":1,"die":6,"range":5,"damageType":"piercing"}],"tactics":{"role":"guardian","morale":0.15,"canFlee":false,"hold":false}}},"rules_version":"dnd-2024-2026-10"}
     </script>
     <script type="application/json" id="scene">
       {"name":"Засада у лесной дороги — учебный бой","kind":"training","battle_id":"rin-ambush-replay-training","source_revision":1,"chronicle_anchor":"Учебная реконструкция уже завершённой засады","narrative_context":"Только тест механики. Не повторять бой в летописи. На караван напали трое пеших разбойников и двое лучников.","theme":"forest","walls":["F1","F2","F7","F8"],"rubble":["E3","G5"],"heroes":{"rin":{"cell":"B6","initiative":20},"guard_a":{"cell":"C4","initiative":13,"name":"Охранник А"},"guard_b":{"cell":"C5","initiative":9,"name":"Охранник Б"},"guard_c":{"cell":"C6","initiative":8,"name":"Охранник В"}},"enemies":[{"name":"Главарь","cell":"H4","hp":14,"ac":12,"initiative":15,"attack":{"bonus":3,"count":1,"die":6,"flat":1,"range":5},"tokenKey":"warrior"},{"name":"Налётчик 1","cell":"I5","hp":11,"ac":12,"initiative":5,"attack":{"bonus":3,"count":1,"die":6,"flat":1,"range":5},"tokenKey":"rogue"},{"name":"Налётчик 2","cell":"H6","hp":11,"ac":12,"initiative":3,"attack":{"bonus":3,"count":1,"die":6,"flat":1,"range":5},"tokenKey":"rogue"},{"name":"Лучник 1","cell":"G2","hp":11,"ac":12,"initiative":14,"attack":{"bonus":3,"count":1,"die":6,"flat":1,"range":80},"tokenKey":"archer"},{"name":"Лучник 2","cell":"J7","hp":11,"ac":12,"initiative":18,"attack":{"bonus":3,"count":1,"die":6,"flat":1,"range":80},"tokenKey":"archer"}]}
@@ -497,27 +499,529 @@ class CombatBattlefield {
 }
 
 
+"use strict";
+// The only registration point for supported data-level mechanics. No code from packs is executed.
+class CombatCapabilities {
+  static API = 1;
+  static ENGINE = "30.2.0";
+  static RULES = "dnd-2024-2026-10";
+  static FEATURES = {
+    martialArts: "boolean",
+    monkFocus: "boolean",
+    monkLevel: [1, 20],
+    martialDie: [4, 6, 8, 10, 12],
+    flurryCount: [1, 10],
+    deflectAttacks: [1, 20],
+    shadowArts: "boolean",
+    uncannyMetabolism: "boolean",
+    sneakDice: [1, 10],
+    masteries: ["vex", "nick"],
+    alert: "boolean",
+    extraAttack: [1, 4],
+    packTactics: "boolean",
+    cunningAction: "boolean",
+  };
+  static require(ok, message) {
+    if (!ok) throw Error(message);
+  }
+  static features(features = {}) {
+    for (const [key, value] of Object.entries(features)) {
+      const type = this.FEATURES[key];
+      this.require(type, "Нет проверенного обработчика способности: " + key);
+      const valid =
+        type === "boolean"
+          ? typeof value === "boolean"
+          : key === "masteries"
+            ? Array.isArray(value) && value.every((v) => type.includes(v))
+            : key === "martialDie"
+              ? type.includes(value)
+              : Number.isInteger(value) && value >= type[0] && value <= type[1];
+      this.require(valid, "Неверные параметры способности: " + key);
+    }
+  }
+  static effect(effect) {
+    this.require(
+      effect && effect.handler === "onHitCondition",
+      "Неподдержанный обработчик эффекта",
+    );
+    this.require(
+      Object.keys(effect).every((k) =>
+        ["handler", "condition", "save", "duration", "name"].includes(k),
+      ),
+      "Неизвестное поле эффекта",
+    );
+    this.require(
+      ["poisoned", "prone", "frost"].includes(effect.condition),
+      "Неподдержанное состояние эффекта",
+    );
+    this.require(
+      effect.duration === "target-next-start" ||
+        (effect.condition === "prone" && effect.duration === "until-removed"),
+      "Неподдержанная длительность эффекта",
+    );
+    if (effect.save) {
+      this.require(
+        Object.keys(effect.save).every((k) => ["stat", "dc"].includes(k)),
+        "Неизвестное поле спасброска",
+      );
+      this.require(
+        ["STR", "DEX", "CON", "INT", "WIS", "CHA"].includes(effect.save.stat) &&
+          Number.isInteger(effect.save.dc) &&
+          effect.save.dc >= 1 &&
+          effect.save.dc <= 30,
+        "Неверный спасбросок эффекта",
+      );
+    }
+  }
+  static attack(attack) {
+    this.require(
+      typeof attack.id === "string" &&
+        attack.id.length > 0 &&
+        ["melee", "ranged", "meleeSpell", "rangedSpell"].includes(
+          attack.kind,
+        ) &&
+        Number.isInteger(attack.count) &&
+        attack.count >= 1 &&
+        attack.count <= 12 &&
+        [4, 6, 8, 10, 12, 20].includes(attack.die) &&
+        Number.isInteger(attack.range) &&
+        attack.range >= 5 &&
+        attack.range <= 600,
+      "Неверные параметры атаки",
+    );
+    this.require(
+      attack.ability === undefined ||
+        ["STR", "DEX", "CON", "INT", "WIS", "CHA"].includes(attack.ability),
+      "Неизвестная характеристика атаки",
+    );
+    this.require(
+      attack.ability !== undefined ||
+        (Number.isFinite(attack.bonus) && Number.isFinite(attack.flat)),
+      "Нужны модификаторы или характеристика атаки",
+    );
+    this.require(
+      [
+        "acid",
+        "bludgeoning",
+        "cold",
+        "fire",
+        "force",
+        "lightning",
+        "necrotic",
+        "piercing",
+        "poison",
+        "psychic",
+        "radiant",
+        "slashing",
+        "thunder",
+      ].includes(attack.damageType),
+      "Неизвестный тип урона",
+    );
+    this.require(
+      attack.normalRange === undefined ||
+        (Number.isInteger(attack.normalRange) &&
+          attack.normalRange >= 5 &&
+          attack.normalRange <= attack.range),
+      "Неверная нормальная дальность",
+    );
+    this.require(
+      Object.keys(attack).every((k) =>
+        [
+          "id",
+          "name",
+          "ability",
+          "count",
+          "die",
+          "kind",
+          "range",
+          "normalRange",
+          "bonus",
+          "flat",
+          "damageType",
+          "sneakEligible",
+          "inventoryId",
+          "light",
+          "mastery",
+          "unarmed",
+          "ammo",
+          "ammoInventoryId",
+          "ammoItem",
+          "effects",
+        ].includes(k),
+      ),
+      "Неподдержанное поле атаки",
+    );
+    this.require(
+      !attack.effects ||
+        (Array.isArray(attack.effects) && attack.effects.length <= 4),
+      "Неверный набор эффектов атаки",
+    );
+    for (const effect of attack.effects || []) this.effect(effect);
+    if (attack.mastery)
+      this.require(
+        ["vex", "nick"].includes(attack.mastery),
+        "Неподдержанное свойство оружия: " + attack.mastery,
+      );
+  }
+  static manifest() {
+    return {
+      api: this.API,
+      engine: this.ENGINE,
+      rules: this.RULES,
+      features: structuredClone(this.FEATURES),
+      handlers: ["features", "onHitCondition"],
+      conditions: ["poisoned", "prone", "frost"],
+    };
+  }
+}
+if (typeof module !== "undefined") module.exports = { CombatCapabilities };
+
+
+"use strict";
+const ContentCapabilities =
+  typeof module !== "undefined"
+    ? require("./capabilities").CombatCapabilities
+    : CombatCapabilities;
+class CombatContentPack {
+  static compile(input) {
+    const C = ContentCapabilities,
+      pack = structuredClone(input);
+    C.require(
+      pack?.kind === "dnd-combat-pack" && pack.version === 1,
+      "Нужен пакет dnd-combat-pack v1",
+    );
+    C.require(
+      pack.rules_version === C.RULES && pack.api === C.API,
+      "Несовместимая версия правил или API пакета",
+    );
+    const id = (value) =>
+      typeof value === "string" &&
+      /^[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,99}$/.test(value) &&
+      !["__proto__", "constructor", "prototype"].includes(value);
+    C.require(
+      id(pack.id) && Number.isInteger(pack.revision) && pack.revision >= 1,
+      "Неверный ID или ревизия пакета",
+    );
+    const object = (v) => v && typeof v === "object" && !Array.isArray(v);
+    const fields = (value, allowed, where) =>
+      C.require(
+        Object.keys(value).every((k) => allowed.includes(k)),
+        "Неподдержанное поле: " +
+          where +
+          " / " +
+          Object.keys(value)
+            .filter((k) => !allowed.includes(k))
+            .join(", "),
+      );
+    fields(
+      pack,
+      [
+        "kind",
+        "version",
+        "api",
+        "id",
+        "revision",
+        "name",
+        "rules_version",
+        "requires",
+        "abilities",
+        "profiles",
+        "characters",
+        "default_encounter",
+        "encounters",
+        "notes",
+        "source_state_sha256",
+      ],
+      "пакет",
+    );
+    C.require(
+      object(pack.profiles) &&
+        object(pack.characters) &&
+        Object.keys(pack.characters).length,
+      "Нет профилей или персонажей пакета",
+    );
+    for (const requirement of pack.requires || [])
+      C.require(
+        requirement.startsWith("feature:")
+          ? Object.hasOwn(C.FEATURES, requirement.slice(8))
+          : C.manifest().handlers.includes(requirement),
+        "Недостающая возможность: " + requirement,
+      );
+    const definitions = pack.abilities || {},
+      profiles = {};
+    // All declarations are checked, including an ability not yet assigned to an actor.
+    for (const [key, ability] of Object.entries(definitions)) {
+      C.require(id(key) && object(ability), "Неверное описание способности");
+      if (ability.handler === "features") {
+        fields(ability, ["handler", "features"], key);
+        C.require(
+          object(ability.features),
+          "Нужны параметры способности: " + key,
+        );
+        C.features(ability.features);
+      } else if (ability.handler === "onHitCondition") {
+        C.require(
+          Array.isArray(ability.attacks) && ability.attacks.length,
+          "Нужны атаки способности " + key,
+        );
+        const { attacks, ...effect } = ability;
+        C.effect(effect);
+      } else
+        throw Error(
+          "Недостающий обработчик способности: " +
+            key +
+            " / " +
+            ability.handler,
+        );
+    }
+    for (const [key, raw] of Object.entries(pack.profiles)) {
+      C.require(id(key) && object(raw), "Неверный профиль");
+      const p = structuredClone(raw);
+      fields(
+        p,
+        [
+          "name",
+          "hp",
+          "ac",
+          "speed",
+          "scores",
+          "proficiency",
+          "features",
+          "attacks",
+          "abilities",
+          "saveProficiencies",
+          "skillProficiencies",
+          "saves",
+          "skills",
+          "senses",
+          "deathSaves",
+          "resistances",
+          "immunities",
+          "vulnerabilities",
+          "conditionImmunities",
+          "tactics",
+          "tokenKey",
+          "size",
+        ],
+        key,
+      );
+      p.features ??= {};
+      C.require(
+        p.size === undefined ||
+          (Number.isInteger(p.size) && p.size >= 0 && p.size <= 5),
+        "Неверный размер: " + key,
+      );
+      C.require(
+        typeof p.name === "string" &&
+          p.name.trim() &&
+          Number.isInteger(p.hp) &&
+          p.hp > 0 &&
+          Number.isInteger(p.ac) &&
+          p.ac >= 0 &&
+          p.ac <= 40,
+        "Нужны имя, ПЗ и КД профиля " + key,
+      );
+      C.require(
+        Number.isInteger(p.speed) &&
+          p.speed >= 0 &&
+          p.speed <= 200 &&
+          Number.isInteger(p.proficiency) &&
+          p.proficiency >= 0 &&
+          p.proficiency <= 9,
+        "Неверная скорость или мастерство: " + key,
+      );
+      C.require(
+        object(p.scores) &&
+          ["STR", "DEX", "CON", "INT", "WIS", "CHA"].every(
+            (k) =>
+              Number.isInteger(p.scores[k]) &&
+              p.scores[k] >= 1 &&
+              p.scores[k] <= 30,
+          ),
+        "Нужны шесть характеристик: " + key,
+      );
+      C.require(
+        Array.isArray(p.attacks) &&
+          p.attacks.length &&
+          new Set(p.attacks.map((a) => a.id)).size === p.attacks.length,
+        "Нужны уникальные атаки: " + key,
+      );
+      for (const abilityId of p.abilities || []) {
+        const ability = definitions[abilityId];
+        C.require(ability, "Неизвестная способность " + key + ": " + abilityId);
+        if (ability.handler === "features") {
+          for (const [feature, value] of Object.entries(ability.features)) {
+            C.require(
+              p.features[feature] === undefined ||
+                JSON.stringify(p.features[feature]) === JSON.stringify(value),
+              "Конфликт параметров: " + feature,
+            );
+            p.features[feature] = structuredClone(value);
+          }
+        } else {
+          const { attacks, ...effect } = ability;
+          for (const attackId of attacks) {
+            const attack = p.attacks.find((a) => a.id === attackId);
+            C.require(attack, "Нет атаки " + attackId + " для " + abilityId);
+            (attack.effects ??= []).push(structuredClone(effect));
+          }
+        }
+      }
+      C.features(p.features);
+      for (const a of p.attacks) C.attack(a);
+      if (p.conditionImmunities)
+        C.require(
+          Array.isArray(p.conditionImmunities) &&
+            p.conditionImmunities.every((x) =>
+              ["poisoned", "prone", "frost"].includes(x),
+            ),
+          "Неверный иммунитет к состоянию",
+        );
+      profiles[key] = p;
+    }
+    const characters = {};
+    const resourceFields = [
+      "hp",
+      "focus",
+      "luck",
+      "heroic",
+      "arrows",
+      "unusual_metabolism",
+    ];
+    for (const [key, char] of Object.entries(pack.characters)) {
+      fields(char, ["name", "profile", "resources", "inventory"], key);
+      C.require(
+        id(key) && profiles[char.profile],
+        "Неизвестный профиль персонажа: " + key,
+      );
+      const p = profiles[char.profile],
+        resources = structuredClone(
+          char.resources || { hp: { current: p.hp, max: p.hp } },
+        );
+      C.require(
+        resources.hp?.max === p.hp,
+        "Максимум ПЗ расходится с профилем: " + key,
+      );
+      for (const [name, value] of Object.entries(resources))
+        C.require(
+          resourceFields.includes(name) &&
+            Number.isInteger(value.current) &&
+            Number.isInteger(value.max) &&
+            value.current >= 0 &&
+            value.current <= value.max,
+          "Неподдержанный или неверный ресурс: " + key + "/" + name,
+        );
+      const inventory = char.inventory || [];
+      C.require(
+        Array.isArray(inventory) &&
+          new Set(inventory.map((v) => v.id)).size === inventory.length &&
+          inventory.every(
+            (v) =>
+              id(v.id) &&
+              Number.isInteger(v.quantity) &&
+              v.quantity >= 0 &&
+              typeof v.combat_available === "boolean",
+          ),
+        "Неверный инвентарь: " + key,
+      );
+      characters[key] = {
+        name: char.name || p.name,
+        resources,
+        inventory,
+        combat_profile: p,
+      };
+    }
+    C.require(
+      pack.default_encounter && pack.encounters?.[pack.default_encounter],
+      "Нет стартового сценария",
+    );
+    for (const [name, scene] of Object.entries(pack.encounters)) {
+      C.require(
+        id(name) && object(scene.heroes) && Array.isArray(scene.enemies),
+        "Неверный сценарий: " + name,
+      );
+      for (const [key, actor] of Object.entries(scene.heroes)) {
+        fields(
+          actor,
+          [
+            "cell",
+            "initiative",
+            "profile",
+            "controlled",
+            "name",
+            "tactics",
+            "tokenKey",
+          ],
+          name + "/" + key,
+        );
+        C.require(
+          characters[key] || profiles[actor.profile],
+          "Нет персонажа или профиля: " + key,
+        );
+      }
+      for (const actor of scene.enemies) {
+        fields(
+          actor,
+          [
+            "id",
+            "profile",
+            "cell",
+            "initiative",
+            "name",
+            "tactics",
+            "tokenKey",
+            "resources",
+          ],
+          name + "/противник",
+        );
+        C.require(
+          profiles[actor.profile],
+          "Нет профиля противника: " + actor.profile,
+        );
+      }
+      if (scene.kind === "story")
+        C.require(
+          /^[a-f0-9]{64}$/.test(pack.source_state_sha256 || ""),
+          "Сюжетный пакет требует SHA-256 исходного канона",
+        );
+      else C.require(scene.kind === "training", "Неверный тип сценария");
+    }
+    return {
+      schema_version: 2,
+      combat_schema_version: 30,
+      campaign_id: pack.id,
+      title: pack.name || pack.id,
+      source_state_revision: pack.revision,
+      source_state_sha256:
+        pack.source_state_sha256 ||
+        "content-pack:" + pack.id + ":" + pack.revision,
+      rules_version: pack.rules_version,
+      result_kind: "dnd-combat-result",
+      characters,
+      npc_profiles: profiles,
+      content_pack: pack,
+      is_canonical: false,
+    };
+  }
+  static encounter(runtime, name = runtime.content_pack.default_encounter) {
+    const scene = structuredClone(runtime.content_pack.encounters[name]);
+    ContentCapabilities.require(scene, "Нет сценария: " + name);
+    return scene;
+  }
+}
+if (typeof module !== "undefined") module.exports = { CombatContentPack };
+
+
 /* D&D 2024 combat domain. No DOM, network, character names or campaign IDs. */
 "use strict";
+const RulesCapabilities =
+  typeof module !== "undefined"
+    ? require("./capabilities").CombatCapabilities
+    : CombatCapabilities;
 class CombatRulesEngine {
-  static VERSION = "30.1.0";
-  static RULES = "dnd-2024-2026-10";
-  static FEATURES = new Set([
-    "martialArts",
-    "monkFocus",
-    "monkLevel",
-    "martialDie",
-    "flurryCount",
-    "deflectAttacks",
-    "shadowArts",
-    "uncannyMetabolism",
-    "sneakDice",
-    "masteries",
-    "alert",
-    "extraAttack",
-    "packTactics",
-    "cunningAction",
-  ]);
+  static VERSION = RulesCapabilities.ENGINE;
+  static RULES = RulesCapabilities.RULES;
+  static FEATURES = new Set(Object.keys(RulesCapabilities.FEATURES));
   constructor(state) {
     CombatRulesEngine.validate(state);
     this.state = structuredClone(state);
@@ -622,9 +1126,8 @@ class CombatRulesEngine {
           a.range > 600
         )
           throw Error("Неверная атака: " + id);
-      for (const feature of Object.keys(u.features || {}))
-        if (!this.FEATURES.has(feature))
-          throw Error("Нет проверенного обработчика способности: " + feature);
+      RulesCapabilities.features(u.features);
+      for (const attack of u.attacks) RulesCapabilities.attack(attack);
     }
     if (s.pending && (!s.pending.id || !s.pending.kind))
       throw Error("Повреждено решение игрока");
@@ -1850,6 +2353,13 @@ class CombatRulesEngine {
         },
       );
       if (!hit) return;
+      if (t.spec.effects?.length)
+        this.enqueue({
+          kind: "attackEffects",
+          actor: t.actor,
+          target: t.target,
+          effects: structuredClone(t.spec.effects),
+        });
       const allied = this.s.order.some(
         (id) =>
           id !== t.actor &&
@@ -1878,6 +2388,54 @@ class CombatRulesEngine {
         bonus: t.mode === "nick" ? Math.min(0, t.spec.flat) : t.spec.flat,
         next: { ...t, kind: "damageResult", critical, sneakCount },
       });
+      return;
+    }
+    if (t.kind === "attackEffects") {
+      for (const effect of t.effects) RulesCapabilities.effect(effect);
+      if (!this.active(t.target)) return;
+      const [effect, ...rest] = t.effects;
+      if (!effect) return;
+      if (rest.length) this.enqueue({ ...t, effects: rest });
+      const next = {
+        kind: "applyAttackCondition",
+        actor: t.actor,
+        target: t.target,
+        effect,
+      };
+      if (this.unit(t.target).conditionImmunities?.includes(effect.condition)) {
+        this.emit(
+          "conditionImmune",
+          t.target,
+          this.name(t.target) +
+            ": иммунитет к эффекту «" +
+            (effect.name || effect.condition) +
+            "».",
+        );
+      } else if (effect.save)
+        this.enqueue(
+          this.saveTask(t.target, effect.save.stat, effect.save.dc, next),
+        );
+      else this.enqueue(next);
+      return;
+    }
+    if (t.kind === "applyAttackCondition") {
+      RulesCapabilities.effect(t.effect);
+      if (!this.active(t.target) || t.result?.success) return;
+      this.status(t.target, t.effect.condition, {
+        source: t.actor,
+        ...(t.effect.duration === "target-next-start"
+          ? { expiresAtStart: t.target }
+          : {}),
+      });
+      this.emit(
+        "attackCondition",
+        t.target,
+        this.name(t.target) +
+          ": " +
+          (t.effect.name || t.effect.condition) +
+          ".",
+        { condition: t.effect.condition, source: t.actor },
+      );
       return;
     }
     if (t.kind === "damageResult") {
@@ -2701,7 +3259,7 @@ class CombatRulesEngine {
   export() {
     return {
       kind: "dnd-combat-session",
-      version: 30,
+      version: this.s.meta.contentPack ? 31 : 30,
       session: structuredClone(this.s),
     };
   }
@@ -3189,9 +3747,14 @@ if (typeof module !== "undefined") module.exports = { CombatTacticalAI };
 
 
 "use strict";
+const AdapterCapabilities =
+  typeof module !== "undefined"
+    ? require("./capabilities").CombatCapabilities
+    : CombatCapabilities;
 // The campaign translates its profiles here; the domain has no named hero branches.
 class CombatCampaignAdapter {
   static unit(id, p, raw = {}, r = {}) {
+    p = structuredClone(p);
     const stats = Object.fromEntries(
       Object.entries(p.scores || {}).map(([k, v]) => [
         k,
@@ -3217,13 +3780,14 @@ class CombatCampaignAdapter {
       name: raw.name || p.name || id,
       team: raw.team || "party",
       controlled: Boolean(raw.controlled),
-      tokenKey: raw.tokenKey || null,
+      tokenKey: raw.tokenKey || p.tokenKey || null,
       x: raw.x,
       y: raw.y,
       hp: r.hp?.current ?? p.hp ?? 11,
       max: r.hp?.max ?? p.hp ?? 11,
       ac: p.ac ?? 12,
       speed: p.speed ?? 30,
+      size: p.size ?? 2,
       stats,
       saves,
       skills: { ...skills, ...p.skills },
@@ -3255,6 +3819,7 @@ class CombatCampaignAdapter {
       resistances: p.resistances || [],
       immunities: p.immunities || [],
       vulnerabilities: p.vulnerabilities || [],
+      conditionImmunities: p.conditionImmunities || [],
       tactics: {
         role: "skirmisher",
         canFlee: false,
@@ -3285,6 +3850,11 @@ class CombatCampaignAdapter {
         scene.source_state_sha256 !== runtime.source_state_sha256)
     )
       throw Error("Сюжетный сценарий не соответствует текущему канону");
+    if (
+      runtime.rules_version &&
+      runtime.rules_version !== AdapterCapabilities.RULES
+    )
+      throw Error("Несовместимая версия правил снимка");
     const width = scene.width || 11,
       height = scene.height || 8,
       units = {},
@@ -3314,7 +3884,7 @@ class CombatCampaignAdapter {
       if (!p) throw Error("Нет проверенной карточки " + id);
       units[id] = this.unit(
         id,
-        p,
+        { ...p, deathSaves: p.deathSaves ?? Boolean(c) },
         {
           ...r,
           name: c?.name || r.name,
@@ -3350,7 +3920,7 @@ class CombatCampaignAdapter {
       if (units[id]) throw Error("Повторный ID участника");
       if (r.abilities?.length)
         throw Error("Способности NPC требуют проверенную карточку features");
-      const p = {
+      const inline = {
         hp: r.hp,
         ac: r.ac,
         speed: r.speed || 30,
@@ -3381,6 +3951,17 @@ class CombatCampaignAdapter {
         },
         deathSaves: false,
       };
+      const p = r.profile ? runtime.npc_profiles[r.profile] : inline;
+      if (!p) throw Error("Нет профиля противника: " + r.profile);
+      if (
+        r.profile &&
+        ["hp", "ac", "speed", "features", "attacks", "attack", "senses"].some(
+          (k) => Object.hasOwn(r, k),
+        )
+      )
+        throw Error(
+          "Параметры противника задаются в профиле, а не поверх него",
+        );
       units[id] = this.unit(
         id,
         p,
@@ -3401,13 +3982,20 @@ class CombatCampaignAdapter {
     return {
       version: 30,
       rulesVersion: "dnd-2024-2026-10",
-      engineVersion: "30.0.0",
+      engineVersion: AdapterCapabilities.ENGINE,
       meta: {
         campaignId: runtime.campaign_id,
         battleId: scene.battle_id || "training-" + Date.now(),
         kind: scene.kind === "story" ? "story" : "training",
         name: scene.name,
         theme: scene.theme || "forest",
+        resultKind: runtime.result_kind || "rin-combat-result",
+        contentPack: runtime.content_pack
+          ? {
+              id: runtime.content_pack.id,
+              revision: runtime.content_pack.revision,
+            }
+          : null,
         sourceRevision: runtime.source_state_revision,
         sourceHash: runtime.source_state_sha256,
       },
@@ -3473,7 +4061,7 @@ class CombatCampaignAdapter {
           };
     }
     return {
-      kind: "rin-combat-result",
+      kind: s.meta.resultKind || "rin-combat-result",
       version: 30,
       rules_version: s.rulesVersion,
       campaign_id: s.meta.campaignId,
@@ -3517,10 +4105,23 @@ if (typeof module !== "undefined") module.exports = { CombatCampaignAdapter };
 (() => {
   const $ = (id) => document.getElementById(id),
     root = $("combat-app"),
-    runtime = JSON.parse($("runtime").textContent),
-    defaultScene = JSON.parse($("scene").textContent),
+    embeddedRuntime = JSON.parse($("runtime").textContent),
+    embeddedScene = JSON.parse($("scene").textContent),
     art = JSON.parse($("artpack").textContent).assets;
-  const KEY = "rin-veir-combat-session-v30";
+  const PACK_SLOT = "dnd-combat-active-pack:" + embeddedRuntime.campaign_id;
+  let runtime = embeddedRuntime,
+    defaultScene = embeddedScene,
+    KEY = runtime.campaign_id + "-combat-session-v30";
+  function sessionValue() {
+    const value = engine.export();
+    if (runtime.content_pack) value.contentPack = runtime.content_pack;
+    return value;
+  }
+  function rememberPack() {
+    if (runtime.content_pack)
+      localStorage.setItem(PACK_SLOT, JSON.stringify(runtime.content_pack));
+    else localStorage.removeItem(PACK_SLOT);
+  }
   let engine,
     selected = null,
     weapon = null,
@@ -3550,9 +4151,13 @@ if (typeof module !== "undefined") module.exports = { CombatCampaignAdapter };
   };
   function save() {
     try {
-      const value = engine.export();
+      const value = sessionValue();
       localStorage.setItem(KEY, JSON.stringify(value));
-      globalThis.__bindings?.setValue?.({ session: value.session });
+      globalThis.__bindings?.setValue?.({
+        session: value.session,
+        contentPack: value.contentPack,
+      });
+      rememberPack();
       $("save-status").textContent = "Сохранено в этом браузере";
       return true;
     } catch {
@@ -3561,11 +4166,15 @@ if (typeof module !== "undefined") module.exports = { CombatCampaignAdapter };
       return false;
     }
   }
-  function newBattle(scene) {
+  function newBattle(scene, nextRuntime = runtime) {
     const next = new CombatRulesEngine(
-      CombatCampaignAdapter.create(runtime, scene, seed()),
+      CombatCampaignAdapter.create(nextRuntime, scene, seed()),
     );
     next.initialize();
+    runtime = nextRuntime;
+    KEY = runtime.campaign_id + "-combat-session-v30";
+    if (runtime.content_pack)
+      defaultScene = CombatContentPack.encounter(runtime);
     engine = next;
     selected = engine.enemies(engine.actorId)[0] || null;
     weapon = null;
@@ -3582,14 +4191,23 @@ if (typeof module !== "undefined") module.exports = { CombatCampaignAdapter };
       !["dnd-combat-session", "rin-veir-combat-session"].includes(
         value?.kind,
       ) ||
-      value.version !== 30
+      ![30, 31].includes(value.version)
     )
       throw Error(
-        "Нужно сохранение v30; старые файлы v29 открываются в прежней версии",
+        "Нужно сохранение v30 или v31; файлы v29 открываются в прежней версии",
       );
+    const nextRuntime = value.contentPack
+      ? CombatContentPack.compile(value.contentPack)
+      : runtime;
     const next = new CombatRulesEngine(value.session);
-    if (next.s.meta.campaignId !== runtime.campaign_id)
+    if (next.s.meta.campaignId !== nextRuntime.campaign_id)
       throw Error("Сохранение другой кампании");
+    const nextScene = nextRuntime.content_pack
+      ? CombatContentPack.encounter(nextRuntime)
+      : defaultScene;
+    runtime = nextRuntime;
+    KEY = runtime.campaign_id + "-combat-session-v30";
+    defaultScene = nextScene;
     engine = next;
     selected = null;
     path = [];
@@ -3787,6 +4405,10 @@ if (typeof module !== "undefined") module.exports = { CombatCampaignAdapter };
       "</div></div>";
   }
   function render() {
+    $("campaign-label").textContent =
+      (runtime.title || runtime.campaign_id) + " · D&D 2024";
+    document.title =
+      (runtime.title || runtime.campaign_id) + " · Тактический бой";
     const s = engine.s,
       id = engine.actorId,
       u = engine.unit(id),
@@ -3867,13 +4489,11 @@ if (typeof module !== "undefined") module.exports = { CombatCampaignAdapter };
       b.title = visible
         ? a.name + " · " + a.hp + "/" + a.max + " ПЗ"
         : engine.cell(p);
-      const key = a?.controlled
-        ? "heroes.rin"
-        : a?.team === "party"
-          ? "enemies.warrior"
-          : "enemies." +
-            (a?.tokenKey ||
-              (a?.tactics.role === "ranged" ? "archer" : "warrior"));
+      const key = art[a?.tokenKey]
+        ? a.tokenKey
+        : "enemies." +
+          (a?.tokenKey ||
+            (a?.tactics.role === "ranged" ? "archer" : "warrior"));
       const html =
         '<span class="coord">' +
         engine.cell(p) +
@@ -4286,10 +4906,7 @@ if (typeof module !== "undefined") module.exports = { CombatCampaignAdapter };
     }
     if (op === "new") {
       try {
-        localStorage.setItem(
-          KEY + "-previous",
-          JSON.stringify(engine.export()),
-        );
+        localStorage.setItem(KEY + "-previous", JSON.stringify(sessionValue()));
       } catch {}
       newBattle(defaultScene);
       return;
@@ -4299,7 +4916,7 @@ if (typeof module !== "undefined") module.exports = { CombatCampaignAdapter };
       return;
     }
     if (op === "export") {
-      download("rin-battle-v30.json", engine.export());
+      download(runtime.campaign_id + "-battle-v30.json", sessionValue());
       return;
     }
     if (op === "import") {
@@ -4313,7 +4930,7 @@ if (typeof module !== "undefined") module.exports = { CombatCampaignAdapter };
     if (op === "report") {
       try {
         download(
-          "rin-battle-result.json",
+          runtime.campaign_id + "-battle-result.json",
           CombatCampaignAdapter.outcome(engine.s),
         );
       } catch (e) {
@@ -4329,7 +4946,7 @@ if (typeof module !== "undefined") module.exports = { CombatCampaignAdapter };
     }
     if (op === "journal-export") {
       download(
-        "rin-combat-journal.txt",
+        runtime.campaign_id + "-combat-journal.txt",
         engine.s.events.map((e) => e.text).join("\n"),
       );
       return;
@@ -4338,6 +4955,10 @@ if (typeof module !== "undefined") module.exports = { CombatCampaignAdapter };
       path = [];
       pointMode = null;
       render();
+      return;
+    }
+    if (op === "pack") {
+      $("pack-file").click();
       return;
     }
     if (op === "move") {
@@ -4401,6 +5022,22 @@ if (typeof module !== "undefined") module.exports = { CombatCampaignAdapter };
       e.target.value = "";
     }
   });
+  $("pack-file").addEventListener("change", async (e) => {
+    try {
+      if (e.target.files[0]) {
+        const nextRuntime = CombatContentPack.compile(
+          JSON.parse(await e.target.files[0].text()),
+        );
+        newBattle(CombatContentPack.encounter(nextRuntime), nextRuntime);
+      }
+    } catch (err) {
+      notice = err.message;
+      error = true;
+      render();
+    } finally {
+      e.target.value = "";
+    }
+  });
   $("scenario-file").addEventListener("change", async (e) => {
     try {
       if (e.target.files[0])
@@ -4415,10 +5052,21 @@ if (typeof module !== "undefined") module.exports = { CombatCampaignAdapter };
   });
   window.addEventListener("beforeunload", save);
   try {
+    const savedPack = localStorage.getItem(PACK_SLOT);
+    if (savedPack) {
+      runtime = CombatContentPack.compile(JSON.parse(savedPack));
+      defaultScene = CombatContentPack.encounter(runtime);
+      KEY = runtime.campaign_id + "-combat-session-v30";
+    }
     const stored = globalThis.__bindings?.value?.session;
     const local = localStorage.getItem(KEY);
     if (stored)
-      load({ kind: "rin-veir-combat-session", version: 30, session: stored });
+      load({
+        kind: "dnd-combat-session",
+        version: 30,
+        session: stored,
+        contentPack: globalThis.__bindings?.value?.contentPack,
+      });
     else if (local) load(JSON.parse(local));
     else newBattle(defaultScene);
   } catch (err) {

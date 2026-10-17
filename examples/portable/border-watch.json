@@ -1,0 +1,200 @@
+{
+  "kind": "dnd-combat-pack",
+  "version": 1,
+  "api": 1,
+  "id": "border-watch",
+  "revision": 1,
+  "name": "Пограничный дозор — пример отдельной кампании",
+  "rules_version": "dnd-2024-2026-10",
+  "requires": [
+    "feature:extraAttack",
+    "feature:sneakDice",
+    "onHitCondition"
+  ],
+  "abilities": {
+    "trained-fighter": {
+      "handler": "features",
+      "features": {
+        "extraAttack": 2
+      }
+    },
+    "scout-training": {
+      "handler": "features",
+      "features": {
+        "sneakDice": 2,
+        "cunningAction": true
+      }
+    },
+    "hunting-pack": {
+      "handler": "features",
+      "features": {
+        "packTactics": true
+      }
+    },
+    "venom-claws": {
+      "handler": "onHitCondition",
+      "attacks": [
+        "claws"
+      ],
+      "name": "Ядовитые когти",
+      "condition": "poisoned",
+      "save": {
+        "stat": "CON",
+        "dc": 12
+      },
+      "duration": "target-next-start"
+    }
+  },
+  "profiles": {
+    "sentinel": {
+      "name": "Эна, страж дозора",
+      "hp": 38,
+      "ac": 16,
+      "speed": 30,
+      "scores": {
+        "STR": 14,
+        "DEX": 14,
+        "CON": 14,
+        "INT": 10,
+        "WIS": 12,
+        "CHA": 10
+      },
+      "proficiency": 2,
+      "attacks": [
+        {
+          "id": "sword",
+          "name": "Меч дозора",
+          "kind": "melee",
+          "ability": "STR",
+          "count": 1,
+          "die": 6,
+          "range": 5,
+          "damageType": "slashing"
+        }
+      ],
+      "abilities": [
+        "trained-fighter"
+      ]
+    },
+    "scout": {
+      "name": "Таль, разведчик",
+      "hp": 27,
+      "ac": 14,
+      "speed": 30,
+      "scores": {
+        "STR": 14,
+        "DEX": 14,
+        "CON": 14,
+        "INT": 10,
+        "WIS": 12,
+        "CHA": 10
+      },
+      "proficiency": 2,
+      "attacks": [
+        {
+          "id": "blade",
+          "name": "Клинок разведчика",
+          "kind": "melee",
+          "ability": "STR",
+          "count": 1,
+          "die": 6,
+          "range": 5,
+          "damageType": "slashing",
+          "sneakEligible": true
+        }
+      ],
+      "abilities": [
+        "scout-training"
+      ]
+    },
+    "marsh-hunter": {
+      "name": "Болотный ловчий",
+      "hp": 24,
+      "ac": 13,
+      "speed": 30,
+      "scores": {
+        "STR": 14,
+        "DEX": 14,
+        "CON": 14,
+        "INT": 10,
+        "WIS": 12,
+        "CHA": 10
+      },
+      "proficiency": 2,
+      "attacks": [
+        {
+          "id": "claws",
+          "name": "Когти ловчего",
+          "kind": "melee",
+          "ability": "STR",
+          "count": 1,
+          "die": 6,
+          "range": 5,
+          "damageType": "slashing"
+        }
+      ],
+      "abilities": [
+        "hunting-pack",
+        "venom-claws"
+      ],
+      "tactics": {
+        "role": "pack",
+        "canFlee": true,
+        "morale": 0.15
+      }
+    }
+  },
+  "characters": {
+    "ena": {
+      "profile": "sentinel"
+    },
+    "tal": {
+      "profile": "scout"
+    }
+  },
+  "default_encounter": "marsh-road",
+  "encounters": {
+    "marsh-road": {
+      "name": "Дозор на болотной дороге — учебный бой",
+      "kind": "training",
+      "battle_id": "portable-marsh-road",
+      "width": 11,
+      "height": 8,
+      "walls": [
+        "F1",
+        "F2",
+        "F7",
+        "F8"
+      ],
+      "rubble": [
+        "F3",
+        "F4"
+      ],
+      "heroes": {
+        "ena": {
+          "cell": "C4",
+          "initiative": 20
+        },
+        "tal": {
+          "cell": "C5",
+          "initiative": 18
+        }
+      },
+      "enemies": [
+        {
+          "id": "hunter_a",
+          "profile": "marsh-hunter",
+          "cell": "H4",
+          "initiative": 12
+        },
+        {
+          "id": "hunter_b",
+          "profile": "marsh-hunter",
+          "cell": "H5",
+          "initiative": 10
+        }
+      ]
+    }
+  },
+  "notes": "Авторский тестовый противник. Яд накладывается при попадании при провале ТЕЛ СЛ12 до начала следующего хода цели; это не официальный статблок D&D."
+}

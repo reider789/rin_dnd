@@ -3,9 +3,8 @@
 import argparse,base64,hashlib,json
 from pathlib import Path
 from sync_combat_runtime import snapshot
+from combat_bundle import MODULES, render, engine_version
 ROOT=Path(__file__).resolve().parents[1]
-MODULES=['core/battlefield.js','core/rules_engine.js','core/tactical_ai.js','core/campaign_adapter.js','web/combat_app.js']
-def encoded(value):return json.dumps(value,ensure_ascii=False,separators=(',',':')).replace('<','\\u003c')
 def build(root=ROOT,scene=None,check=False):
     runtime=snapshot(root)
     canonical_path=root/'config/rin_runtime.json'
@@ -19,15 +18,10 @@ def build(root=ROOT,scene=None,check=False):
     portrait=(root/'assets/rin-portrait-256.webp').read_bytes()
     art['assets']['heroes.rin']={'mime':'image/webp','data':'data:image/webp;base64,'+base64.b64encode(portrait).decode()}
     files=MODULES+['web/shell.html','web/desktop.css','config/combat_profiles.json',str(scene_path.relative_to(root))]
-    manifest={'name':'rin-veir-combat','version':30,'engine_version':'30.1.0','rules_version':runtime['rules_version'],
+    manifest={'name':'rin-veir-combat','version':30,'engine_version':engine_version(root),'rules_version':runtime['rules_version'],
       'source_state_revision':runtime['source_state_revision'],'source_state_sha256':runtime['source_state_sha256'],
       'sources':{f:hashlib.sha256((root/f).read_bytes()).hexdigest() for f in files}}
-    code='\n\n'.join((root/p).read_text(encoding='utf-8') for p in MODULES)
-    html=(root/'web/shell.html').read_text(encoding='utf-8')
-    for marker,value in [('STYLE',(root/'web/desktop.css').read_text()),('RUNTIME',encoded(runtime)),('SCENE',encoded(encounter)),('ART',encoded(art)),('CODE',code)]:
-        token='/*__'+marker+'__*/'
-        if html.count(token)!=1:raise ValueError('Missing build marker '+marker)
-        html=html.replace(token,value)
+    html=render(runtime,encounter,art,root)
     manifest.update(bundle_sha256=hashlib.sha256(html.encode()).hexdigest(),bytes=len(html.encode()))
     entry={'schema_version':3,'engine':'rin-combat-v30','main_ui_path':'index.html','source_engine':'web/shell.html','source_modules':MODULES,
       'runtime':'config/rin_runtime.json','default_training':'encounters/caravan_ambush_training.json','canonical':False,
