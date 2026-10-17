@@ -2,7 +2,7 @@
 // The only registration point for supported data-level mechanics. No code from packs is executed.
 class CombatCapabilities {
   static API = 1;
-  static ENGINE = "30.2.0";
+  static ENGINE = "30.3.0";
   static RULES = "dnd-2024-2026-10";
   static FEATURES = {
     martialArts: "boolean",
@@ -14,25 +14,99 @@ class CombatCapabilities {
     shadowArts: "boolean",
     uncannyMetabolism: "boolean",
     sneakDice: [1, 10],
-    masteries: ["vex", "nick"],
+    masteries: ["vex", "nick", "graze", "sap", "push", "slow"],
+    greatWeaponFighting: "boolean",
+    greatWeaponMaster: [1, 6],
+    savageAttacker: "boolean",
+    tacticalMaster: "boolean",
+    superiorityDie: [4, 6, 8, 10, 12],
+    maneuverDC: [1, 30],
+    maneuvers: [
+      "precision",
+      "trip",
+      "push",
+      "goad",
+      "maneuvering",
+      "riposte",
+      "bait",
+    ],
     alert: "boolean",
     extraAttack: [1, 4],
     packTactics: "boolean",
     cunningAction: "boolean",
+    fighterLevel: [1, 20],
+    secondWind: "boolean",
+    actionSurge: "boolean",
+    tacticalMind: "boolean",
+    tacticalShift: "boolean",
+    indomitable: "boolean",
+    uncannyDodge: "boolean",
+    evasion: "boolean",
+    reliableTalent: "boolean",
+    auraProtection: [1, 10],
+    auraRadius: [5, 30],
+    auraDevotion: "boolean",
+    auraCourage: "boolean",
+    guardianSaveBonus: [1, 10],
+    protection: "boolean",
+    shieldEquipped: "boolean",
+    shieldSpell: "boolean",
+    autoShield: "boolean",
+    critNegation: "boolean",
+    acReaction: [1, 10],
+    heavyArmorReduction: [1, 10],
+    heavyArmor: "boolean",
+    steadyAim: "boolean",
+    sharpshooter: "boolean",
+    layOnHands: "boolean",
+    knowEnemy: "boolean",
   };
+  static COUNTERS = [
+    "second_wind",
+    "action_surge",
+    "indomitable",
+    "superiority",
+    "lay_on_hands",
+    "channel_divinity",
+    "shield_magic_initiate",
+    "guardian_mark",
+    "cloak_charges",
+    "forge_resonance",
+    "leaf_charges",
+    "living_arrow",
+    "arcane_recovery",
+    "smite_free",
+    "storm_thrower_ammo",
+    "know_enemy",
+  ];
+  static counter(value) {
+    this.require(
+      value &&
+        Number.isInteger(value.current) &&
+        Number.isInteger(value.max) &&
+        value.current >= 0 &&
+        value.current <= value.max,
+      "Неверный счётчик current/max",
+    );
+  }
   static require(ok, message) {
     if (!ok) throw Error(message);
   }
   static features(features = {}) {
+    for (const key of ["secondWind", "tacticalMind", "indomitable"])
+      this.require(
+        !features[key] || Number.isInteger(features.fighterLevel),
+        "Для способности нужен уровень воина: " + key,
+      );
     for (const [key, value] of Object.entries(features)) {
       const type = this.FEATURES[key];
       this.require(type, "Нет проверенного обработчика способности: " + key);
       const valid =
         type === "boolean"
           ? typeof value === "boolean"
-          : key === "masteries"
+          : ["masteries", "maneuvers"].includes(key)
             ? Array.isArray(value) && value.every((v) => type.includes(v))
-            : key === "martialDie"
+            : ["martialDie", "superiorityDie"].includes(key)
               ? type.includes(value)
               : Number.isInteger(value) && value >= type[0] && value <= type[1];
       this.require(valid, "Неверные параметры способности: " + key);
@@ -146,6 +220,8 @@ class CombatCapabilities {
           "ammoInventoryId",
           "ammoItem",
           "effects",
+          "heavy",
+          "twoHanded",
         ].includes(k),
       ),
       "Неподдержанное поле атаки",
@@ -158,7 +234,9 @@ class CombatCapabilities {
     for (const effect of attack.effects || []) this.effect(effect);
     if (attack.mastery)
       this.require(
-        ["vex", "nick"].includes(attack.mastery),
+        ["vex", "nick", "graze", "sap", "push", "slow"].includes(
+          attack.mastery,
+        ),
         "Неподдержанное свойство оружия: " + attack.mastery,
       );
   }
@@ -169,6 +247,7 @@ class CombatCapabilities {
       rules: this.RULES,
       features: structuredClone(this.FEATURES),
       handlers: ["features", "onHitCondition"],
+      counters: [...this.COUNTERS],
       conditions: ["poisoned", "prone", "frost"],
     };
   }

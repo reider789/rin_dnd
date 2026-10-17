@@ -88,10 +88,10 @@
       !["dnd-combat-session", "rin-veir-combat-session"].includes(
         value?.kind,
       ) ||
-      ![30, 31].includes(value.version)
+      ![30, 31, 32].includes(value.version)
     )
       throw Error(
-        "Нужно сохранение v30 или v31; файлы v29 открываются в прежней версии",
+        "Нужно сохранение v30–v32; файлы v29 открываются в прежней версии",
       );
     const nextRuntime = value.contentPack
       ? CombatContentPack.compile(value.contentPack)
@@ -193,6 +193,106 @@
     let title = "Решение: " + name,
       body = "",
       buttons = "";
+    if (p.kind === "precision" || p.kind === "riposte") {
+      title =
+        (p.kind === "precision" ? "Точная атака" : "Ответный удар") +
+        " · " +
+        name;
+      body =
+        p.kind === "precision"
+          ? "Потратить кость превосходства и добавить её к промахнувшейся атаке?"
+          : "Враг промахнулся. Потратить реакцию и кость превосходства на ответную атаку?";
+      buttons = choice("yes", "Использовать") + choice("no", "Пропустить");
+    }
+    if (p.kind === "strikeChoice") {
+      title = "Попадание · " + name;
+      const labels = {
+        trip: "Опрокидывающая атака",
+        push: "Отталкивающая атака",
+        goad: "Провоцирующая атака",
+        maneuvering: "Маневрирующая атака",
+      };
+      body =
+        '<label>Манёвр <select id="strike-maneuver"><option value="">Без манёвра</option>' +
+        p.maneuvers
+          .map(
+            (k) => '<option value="' + esc(k) + '">' + labels[k] + "</option>",
+          )
+          .join("") +
+        "</select></label>";
+      if (p.maneuvers.includes("maneuvering"))
+        body +=
+          '<label>Союзник <select id="strike-ally">' +
+          engine.s.order
+            .filter(
+              (k) =>
+                k !== p.actor &&
+                engine.unit(k).team === engine.unit(p.actor).team &&
+                !engine.incapacitated(k) &&
+                engine.unit(k).reaction > 0,
+            )
+            .map(
+              (k) =>
+                '<option value="' +
+                esc(k) +
+                '">' +
+                esc(engine.name(k)) +
+                "</option>",
+            )
+            .join("") +
+          "</select></label>";
+      if (p.savage)
+        body +=
+          '<label><input type="checkbox" id="strike-savage"> Свирепый атакующий · раз за ход</label>';
+      buttons =
+        choice("use", "Применить выбранное") + choice("skip", "Обычный урон");
+    }
+    if (p.kind === "defensiveReaction") {
+      title =
+        {
+          protection: "Защита союзника",
+          shield: "Щит",
+          cloak: "Плащ Ваэльтира",
+          mark: "Знак Непоколебимого Стража",
+        }[p.ability] +
+        " · " +
+        name;
+      body =
+        "Потратить реакцию" +
+        (["cloak", "mark"].includes(p.ability) ? " и заряд предмета" : "") +
+        "?";
+      buttons =
+        choice("yes", "Использовать") + choice("no", "Сохранить реакцию");
+    }
+    if (p.kind === "classRoll") {
+      title =
+        p.ability === "indomitable" ? "Несгибаемость" : "Тактический разум";
+      body =
+        p.ability === "indomitable"
+          ? "Проверка провалена. Потратить использование, перебросить спасбросок и добавить уровень воина?"
+          : "Проверка провалена. Добавить к10? Второе дыхание расходуется только при превращении провала в успех.";
+      buttons =
+        choice("yes", "Использовать") + choice("no", "Оставить результат");
+    }
+    if (p.kind === "uncannyDodge") {
+      title = "Невероятное уклонение · " + name;
+      body =
+        "Урон от видимого атакующего: " +
+        p.damage.amount +
+        ". Потратить реакцию и уменьшить его вдвое?";
+      buttons =
+        choice("yes", "Уменьшить урон") + choice("no", "Сохранить реакцию");
+    }
+    if (p.kind === "freeMovement") {
+      title = p.label + " · " + name;
+      body =
+        "Можно пройти до " +
+        p.budget +
+        " футов отдельно от обычного движения, без атак по возможности. Выбери свободную клетку на карте.";
+      buttons =
+        (path.length ? choice("move", "Пройти по выбранному маршруту") : "") +
+        choice("skip", "Остаться на месте");
+    }
     if (p.kind === "metabolism") {
       title = "Необычный метаболизм";
       body =
@@ -453,6 +553,7 @@
       u.ac +
       "<br>Действие " +
       u.action +
+      ((u.surgeAction || 0) > 0 ? " + Всплеск " + u.surgeAction : "") +
       " · Бонус " +
       u.bonus +
       " · Реакция " +
@@ -504,31 +605,49 @@
       button(
         "attack",
         "Атаковать",
-        !play || !target || (u.action <= 0 && u.attacksLeft <= 0),
+        !play ||
+          !target ||
+          (u.action + (u.surgeAction || 0) <= 0 && u.attacksLeft <= 0),
       ) +
       button(
         "attackAt",
         "Атаковать клетку<small>Если цель не видна</small>",
-        !play || (u.action <= 0 && u.attacksLeft <= 0),
+        !play || (u.action + (u.surgeAction || 0) <= 0 && u.attacksLeft <= 0),
       ) +
-      button("dash", "Рывок", !play || u.action <= 0) +
-      button("disengage", "Отход", !play || u.action <= 0) +
-      button("dodge", "Уклонение", !play || u.action <= 0) +
-      button("hide", "Спрятаться", !play || u.action <= 0) +
-      button("search", "Поиск", !play || u.action <= 0) +
+      button("dash", "Рывок", !play || u.action + (u.surgeAction || 0) <= 0) +
+      button(
+        "disengage",
+        "Отход",
+        !play || u.action + (u.surgeAction || 0) <= 0,
+      ) +
+      button(
+        "dodge",
+        "Уклонение",
+        !play || u.action + (u.surgeAction || 0) <= 0,
+      ) +
+      button(
+        "hide",
+        "Спрятаться",
+        !play || u.action + (u.surgeAction || 0) <= 0,
+      ) +
+      button("search", "Поиск", !play || u.action + (u.surgeAction || 0) <= 0) +
       button("grapple", "Захват", !play || !target) +
       button("shove", "Опрокинуть", !play || !target) +
-      button("helpAttack", "Помочь атакой", !play || !target || u.action <= 0) +
+      button(
+        "helpAttack",
+        "Помочь атакой",
+        !play || !target || u.action + (u.surgeAction || 0) <= 0,
+      ) +
       button("shovePush", "Оттолкнуть", !play || !target) +
       button(
         "readyApproach",
         "Подготовить удар<small>Если враг приблизится</small>",
-        !play || u.action <= 0,
+        !play || u.action + (u.surgeAction || 0) <= 0,
       ) +
       button(
         "readyAlly",
         "Прикрыть союзника<small>Подготовить ответ на атаку</small>",
-        !play || u.action <= 0,
+        !play || u.action + (u.surgeAction || 0) <= 0,
       ) +
       (engine.has(id, "prone") ? button("stand", "Встать", !play) : "") +
       (engine.has(id, "grappled")
@@ -604,6 +723,106 @@
         ) +
         "</div>"
       : "";
+    const count = (key) => u.counters?.[key]?.current || 0;
+    const classButtons = [
+      f.secondWind
+        ? button(
+            "secondWind",
+            "Второе дыхание · " + count("second_wind"),
+            !play || u.bonus <= 0 || count("second_wind") <= 0,
+          )
+        : "",
+      f.actionSurge
+        ? button(
+            "actionSurge",
+            "Всплеск действий · " + count("action_surge"),
+            !play || u.surgeTurn === s.turnSerial || count("action_surge") <= 0,
+          )
+        : "",
+      f.steadyAim
+        ? button(
+            "steadyAim",
+            "Точный прицел",
+            !play || u.bonus <= 0 || u.movedThisTurn > 0,
+          )
+        : "",
+      f.cunningAction
+        ? button(
+            "cunningHide",
+            "Спрятаться · бонусное",
+            !play || u.bonus <= 0,
+          ) +
+          button("cunningDash", "Рывок · бонусное", !play || u.bonus <= 0) +
+          button("cunningDisengage", "Отход · бонусное", !play || u.bonus <= 0)
+        : "",
+      f.knowEnemy
+        ? button("knowEnemy", "Познай врага", !play || !target || u.bonus <= 0)
+        : "",
+    ].join("");
+    if (f.knowEnemy && count("know_enemy") === 0)
+      $("abilities").innerHTML += button(
+        "restoreKnowEnemy",
+        "Восстановить анализ · кость превосходства",
+        !play || count("superiority") <= 0,
+      );
+    if (classButtons)
+      $("abilities").innerHTML +=
+        '<h3>Способности</h3><div class="choices">' + classButtons + "</div>";
+    if (f.greatWeaponMaster)
+      $("abilities").innerHTML += button(
+        "hew",
+        "Добивающая атака · бонусное",
+        !play || !target || u.bonus <= 0 || u.hewTurn !== s.turnSerial,
+      );
+    if (!f.martialArts && f.masteries?.includes("nick"))
+      $("abilities").innerHTML += button(
+        "nick",
+        "Быстрая атака другим лёгким оружием",
+        !play || !target || u.nickUsed || !u.lightWeaponUsed,
+      );
+    if (f.maneuvers?.includes("bait"))
+      $("abilities").innerHTML += button(
+        "bait",
+        "Приманка и смена · защита союзнику",
+        !play ||
+          !selected ||
+          engine.unit(selected).team !== u.team ||
+          selected === id ||
+          u.move < 5,
+      );
+    if (f.tacticalMaster)
+      $("abilities").innerHTML +=
+        '<label>Свойство следующей атаки <select id="mastery"><option value="">Свойство оружия</option><option value="push">Толчок</option><option value="sap">Ослабление</option><option value="slow">Замедление</option></select></label>';
+    if (f.layOnHands)
+      $("abilities").innerHTML +=
+        "<h3>Наложение рук · " +
+        count("lay_on_hands") +
+        '</h3><select id="healing-target">' +
+        s.order
+          .filter((k) => engine.unit(k).team === u.team && !engine.unit(k).dead)
+          .map(
+            (k) =>
+              '<option value="' +
+              esc(k) +
+              '">' +
+              esc(engine.name(k)) +
+              "</option>",
+          )
+          .join("") +
+        '</select><label>ПЗ <input type="number" id="healing-amount" min="1" max="' +
+        count("lay_on_hands") +
+        '" value="5"></label><div class="choices">' +
+        button(
+          "layOnHands",
+          "Восстановить ПЗ",
+          !play || u.bonus <= 0 || count("lay_on_hands") <= 0,
+        ) +
+        button(
+          "curePoison",
+          "Снять отравление · 5",
+          !play || u.bonus <= 0 || count("lay_on_hands") < 5,
+        ) +
+        "</div>";
     $("policies").innerHTML = u.controlled
       ? "<details><summary>Выбор Удачи и вдохновения</summary>" +
         [
@@ -712,6 +931,10 @@
         id: p.id,
         choice: b.dataset.decision,
         note: $("ruling")?.value,
+        path,
+        maneuver: $("strike-maneuver")?.value || null,
+        ally: $("strike-ally")?.value,
+        savage: $("strike-savage")?.checked || false,
       });
       return;
     }
@@ -760,7 +983,12 @@
         render();
         return;
       }
-      if (u.controlled && !p) {
+      if (
+        (u.controlled && !p) ||
+        (p?.kind === "freeMovement" && engine.unit(p.actor).controlled)
+      ) {
+        const movingId = p?.kind === "freeMovement" ? p.actor : id,
+          movingUnit = engine.unit(movingId);
         const field = new CombatBattlefield({
           walls: new Set(engine.s.terrain.walls),
           rubble: new Set(engine.s.terrain.rubble),
@@ -768,30 +996,34 @@
           occupant: (x, y) => {
             const k = engine.occupied(x, y);
             return k &&
-              !engine.canPass(id, k) &&
+              !engine.canPass(movingId, k) &&
               !engine.unit(k).hidden &&
-              engine.canSee(id, k)
+              engine.canSee(movingId, k)
               ? k
               : null;
           },
-          actor: () => u,
+          actor: () => movingUnit,
           webDifficult: () => false,
           width: engine.s.terrain.width,
           height: engine.s.terrain.height,
           movementRisk: (a, b) =>
             engine
-              .enemies(id)
+              .enemies(movingId)
               .filter(
                 (k) =>
-                  engine.canSee(id, k) &&
+                  engine.canSee(movingId, k) &&
                   engine.distance(a, engine.unit(k)) <= 5 &&
                   engine.distance(b, engine.unit(k)) > 5,
               ).length,
         });
         path = field.findPath(point) || [];
-        if (field.pathCost(path) > u.move) path = [];
+        if (
+          field.pathCost(path) >
+          (p?.kind === "freeMovement" ? p.budget : u.move)
+        )
+          path = [];
         notice = path.length
-          ? "Проверь маршрут и нажми «Пройти»."
+          ? "Проверь маршрут и нажми «Пройти» в окне решения."
           : "Клетка недоступна за оставшееся движение.";
         render();
       }
@@ -858,6 +1090,40 @@
       $("pack-file").click();
       return;
     }
+    if (["layOnHands", "curePoison"].includes(op)) {
+      act({
+        kind: "layOnHands",
+        actor: id,
+        target: $("healing-target").value,
+        amount: Number($("healing-amount").value),
+        curePoison: op === "curePoison",
+      });
+      return;
+    }
+    if (
+      [
+        "secondWind",
+        "actionSurge",
+        "steadyAim",
+        "knowEnemy",
+        "restoreKnowEnemy",
+      ].includes(op)
+    ) {
+      act({ kind: op, actor: id, target: selected });
+      return;
+    }
+    if (["cunningHide", "cunningDash", "cunningDisengage"].includes(op)) {
+      act({
+        kind: {
+          cunningHide: "hide",
+          cunningDash: "dash",
+          cunningDisengage: "disengage",
+        }[op],
+        actor: id,
+        cost: "bonus",
+      });
+      return;
+    }
     if (op === "move") {
       act({ kind: "move", actor: id, path });
       return;
@@ -867,10 +1133,37 @@
       render();
       return;
     }
+    if (op === "hew") {
+      act({
+        kind: "attack",
+        actor: id,
+        target: selected,
+        weapon,
+        mode: "hew",
+        mastery: $("mastery")?.value || null,
+      });
+      return;
+    }
+    if (op === "bait") {
+      act({ kind: "bait", actor: id, target: selected, recipient: selected });
+      return;
+    }
     const mapped = {
-      bonusStrike: { kind: "attack", weapon: "unarmed", mode: "bonus" },
-      flurryStrike: { kind: "attack", weapon: "unarmed", mode: "flurry" },
-      nick: { kind: "attack", weapon: "dagger", mode: "nick" },
+      bonusStrike: {
+        kind: "attack",
+        weapon: u.attacks.find((a) => a.unarmed)?.id || weapon,
+        mode: "bonus",
+      },
+      flurryStrike: {
+        kind: "attack",
+        weapon: u.attacks.find((a) => a.unarmed)?.id || weapon,
+        mode: "flurry",
+      },
+      nick: {
+        kind: "attack",
+        weapon: u.attacks.find((a) => a.mastery === "nick")?.id || weapon,
+        mode: "nick",
+      },
       patientFree: { kind: "disengage", cost: "bonus" },
       patientPaid: { kind: "disengage", cost: "bonus", paid: true },
       windFree: { kind: "dash", cost: "bonus" },
@@ -894,7 +1187,14 @@
       return;
     }
     if (op)
-      act({ kind: op, actor: id, target: selected, weapon, ...mapped[op] });
+      act({
+        kind: op,
+        actor: id,
+        target: selected,
+        weapon,
+        mastery: op === "attack" ? $("mastery")?.value || null : null,
+        ...mapped[op],
+      });
   });
   root.addEventListener("change", (e) => {
     if (e.target.id === "weapon") {

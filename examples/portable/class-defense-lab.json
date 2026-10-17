@@ -1,0 +1,327 @@
+{
+  "kind": "dnd-combat-pack",
+  "version": 1,
+  "api": 1,
+  "id": "class-defense-lab",
+  "revision": 1,
+  "name": "Проверка классовых способностей — учебный бой",
+  "rules_version": "dnd-2024-2026-10",
+  "requires": [
+    "feature:extraAttack",
+    "feature:sneakDice",
+    "onHitCondition"
+  ],
+  "abilities": {
+    "trained-fighter": {
+      "handler": "features",
+      "features": {
+        "extraAttack": 2
+      }
+    },
+    "scout-training": {
+      "handler": "features",
+      "features": {
+        "sneakDice": 2,
+        "cunningAction": true
+      }
+    },
+    "hunting-pack": {
+      "handler": "features",
+      "features": {
+        "packTactics": true
+      }
+    },
+    "venom-claws": {
+      "handler": "onHitCondition",
+      "attacks": [
+        "claws"
+      ],
+      "name": "Ядовитые когти",
+      "condition": "poisoned",
+      "save": {
+        "stat": "CON",
+        "dc": 12
+      },
+      "duration": "target-next-start"
+    }
+  },
+  "profiles": {
+    "sentinel": {
+      "name": "Воин испытания",
+      "hp": 80,
+      "ac": 16,
+      "speed": 30,
+      "scores": {
+        "STR": 14,
+        "DEX": 14,
+        "CON": 14,
+        "INT": 10,
+        "WIS": 12,
+        "CHA": 10
+      },
+      "proficiency": 2,
+      "attacks": [
+        {
+          "id": "sword",
+          "name": "Меч дозора",
+          "kind": "melee",
+          "ability": "STR",
+          "count": 1,
+          "die": 6,
+          "range": 5,
+          "damageType": "slashing"
+        }
+      ],
+      "abilities": [
+        "trained-fighter"
+      ],
+      "features": {
+        "fighterLevel": 10,
+        "secondWind": true,
+        "tacticalMind": true,
+        "tacticalShift": true,
+        "actionSurge": true,
+        "indomitable": true,
+        "knowEnemy": true
+      }
+    },
+    "scout": {
+      "name": "Защитник испытания",
+      "hp": 70,
+      "ac": 14,
+      "speed": 30,
+      "scores": {
+        "STR": 14,
+        "DEX": 14,
+        "CON": 14,
+        "INT": 10,
+        "WIS": 12,
+        "CHA": 10
+      },
+      "proficiency": 2,
+      "attacks": [
+        {
+          "id": "blade",
+          "name": "Клинок разведчика",
+          "kind": "melee",
+          "ability": "STR",
+          "count": 1,
+          "die": 6,
+          "range": 5,
+          "damageType": "slashing",
+          "sneakEligible": true
+        }
+      ],
+      "abilities": [
+        "scout-training"
+      ],
+      "features": {
+        "auraProtection": 2,
+        "auraDevotion": true,
+        "auraCourage": true,
+        "guardianSaveBonus": 1,
+        "protection": true,
+        "shieldEquipped": true,
+        "critNegation": true,
+        "layOnHands": true
+      }
+    },
+    "marsh-hunter": {
+      "name": "Болотный ловчий",
+      "hp": 24,
+      "ac": 13,
+      "speed": 30,
+      "scores": {
+        "STR": 14,
+        "DEX": 14,
+        "CON": 14,
+        "INT": 10,
+        "WIS": 12,
+        "CHA": 10
+      },
+      "proficiency": 2,
+      "attacks": [
+        {
+          "id": "claws",
+          "name": "Когти ловчего",
+          "kind": "melee",
+          "ability": "STR",
+          "count": 1,
+          "die": 6,
+          "range": 5,
+          "damageType": "slashing"
+        }
+      ],
+      "abilities": [
+        "hunting-pack",
+        "venom-claws"
+      ],
+      "tactics": {
+        "role": "pack",
+        "canFlee": true,
+        "morale": 0.15
+      }
+    },
+    "skirmisher": {
+      "name": "Разведчик испытания",
+      "hp": 55,
+      "ac": 17,
+      "speed": 30,
+      "scores": {
+        "STR": 8,
+        "DEX": 20,
+        "CON": 12,
+        "INT": 10,
+        "WIS": 14,
+        "CHA": 14
+      },
+      "proficiency": 4,
+      "skillProficiencies": {
+        "stealth": [
+          "DEX",
+          2
+        ],
+        "perception": [
+          "WIS",
+          2
+        ]
+      },
+      "features": {
+        "sneakDice": 5,
+        "cunningAction": true,
+        "reliableTalent": true,
+        "steadyAim": true,
+        "uncannyDodge": true,
+        "evasion": true,
+        "sharpshooter": true
+      },
+      "attacks": [
+        {
+          "id": "bow",
+          "name": "Учебный лук",
+          "kind": "ranged",
+          "ability": "DEX",
+          "count": 1,
+          "die": 6,
+          "range": 320,
+          "normalRange": 80,
+          "flat": 7,
+          "bonus": 11,
+          "damageType": "piercing",
+          "sneakEligible": true,
+          "ammo": "arrows"
+        }
+      ]
+    }
+  },
+  "characters": {
+    "ena": {
+      "profile": "sentinel",
+      "resources": {
+        "hp": {
+          "current": 45,
+          "max": 80
+        },
+        "second_wind": {
+          "current": 4,
+          "max": 4
+        },
+        "action_surge": {
+          "current": 1,
+          "max": 1
+        },
+        "indomitable": {
+          "current": 1,
+          "max": 1
+        },
+        "know_enemy": {
+          "current": 1,
+          "max": 1
+        },
+        "superiority": {
+          "current": 5,
+          "max": 5
+        }
+      }
+    },
+    "tal": {
+      "profile": "scout",
+      "resources": {
+        "hp": {
+          "current": 70,
+          "max": 70
+        },
+        "lay_on_hands": {
+          "current": 50,
+          "max": 50
+        },
+        "guardian_mark": {
+          "current": 3,
+          "max": 3
+        }
+      }
+    },
+    "scout": {
+      "profile": "skirmisher",
+      "resources": {
+        "hp": {
+          "current": 55,
+          "max": 55
+        },
+        "arrows": {
+          "current": 30,
+          "max": 30
+        }
+      }
+    }
+  },
+  "default_encounter": "marsh-road",
+  "encounters": {
+    "marsh-road": {
+      "name": "Испытание общих классовых обработчиков",
+      "kind": "training",
+      "battle_id": "portable-marsh-road",
+      "width": 11,
+      "height": 8,
+      "walls": [
+        "F1",
+        "F2",
+        "F7",
+        "F8"
+      ],
+      "rubble": [
+        "F3",
+        "F4"
+      ],
+      "heroes": {
+        "ena": {
+          "cell": "C4",
+          "initiative": 20
+        },
+        "tal": {
+          "cell": "C5",
+          "initiative": 18
+        },
+        "scout": {
+          "cell": "B5",
+          "initiative": 16
+        }
+      },
+      "enemies": [
+        {
+          "id": "hunter_a",
+          "profile": "marsh-hunter",
+          "cell": "H4",
+          "initiative": 12
+        },
+        {
+          "id": "hunter_b",
+          "profile": "marsh-hunter",
+          "cell": "H5",
+          "initiative": 10
+        }
+      ]
+    }
+  },
+  "notes": "Изолированный учебный состав с возможностями, нужными для миграции. Это не карточки Яра, Лютобора и Рады и не полный профиль какого-либо класса. Источники ресурсов заданы явно."
+}

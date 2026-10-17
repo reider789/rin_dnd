@@ -6,10 +6,11 @@ from pathlib import Path
 from sync_combat_runtime import state_hash
 from campaignctl import build_result
 ROOT=Path(__file__).resolve().parents[1]
-RESOURCES={'hp','focus','luck','heroic','arrows','unusual_metabolism'}
+from combat_resources import RESOURCES
+
 def digest(value):return hashlib.sha256(json.dumps(value,ensure_ascii=False,sort_keys=True,separators=(',',':')).encode()).hexdigest()
 def prepare(report,state):
-    if report.get('kind')!='rin-combat-result' or report.get('version')!=30 or report.get('phase')!='ended':raise ValueError('Нужен завершённый отчёт v30')
+    if report.get('kind') not in {'rin-combat-result','dnd-combat-result'} or report.get('version')!=30 or report.get('phase')!='ended':raise ValueError('Нужен завершённый отчёт v30')
     if report.get('session_kind')!='story':raise ValueError('Учебный бой не применяется к кампании')
     if report.get('campaign_id')!=state['campaign']['id']:raise ValueError('Другая кампания')
     battle=report.get('battle_id')
@@ -26,6 +27,14 @@ def prepare(report,state):
         if not isinstance(resources,dict) or set(resources)!=(set(before.get(cid,{}))&RESOURCES):raise ValueError('Неполный набор ресурсов')
         for key,now in resources.items():
             old=before[cid][key]
+            if key=='spell_slots':
+                if not isinstance(now,dict) or set(now)!=set(old):raise ValueError('Неполный набор ячеек')
+                for level,pool in now.items():
+                    original=old[level]
+                    if not re.fullmatch('[1-9]',level) or not isinstance(pool,dict) or set(pool)!={'current','max'}:raise ValueError('Неверная ячейка')
+                    if not isinstance(pool['current'],int) or isinstance(pool['current'],bool) or pool['max']!=original['max'] or not 0<=pool['current']<=pool['max']:raise ValueError('Недопустимое изменение ячейки')
+                if now!=old:operations.append({'type':'set_character_resource','id':cid,'resource':'spell_slots','value':{level:{**old[level],**pool} for level,pool in now.items()}})
+                continue
             if not isinstance(now,dict) or set(now)!={'current','max'} or not isinstance(now['current'],int) or isinstance(now['current'],bool):raise ValueError('Неверный счётчик')
             if now['max']!=old['max'] or now['current']<0 or now['current']>now['max']:raise ValueError('Недопустимое изменение ресурса')
             delta=now['current']-old['current']
@@ -37,7 +46,7 @@ def prepare(report,state):
         catalog=state['characters'][cid]['inventory_catalog']
         for iid,qty in items.items():
             if iid not in catalog or not isinstance(qty,int) or isinstance(qty,bool) or qty<0 or qty>inv_before[cid][iid]:raise ValueError('Неверный расход предмета')
-            if iid=='arrows':
+            if catalog[iid].get('name')=='Стрелы' or iid=='arrows':
                 if qty!=after[cid]['arrows']['current']:raise ValueError('Стрелы расходятся между ресурсами и инвентарём')
             elif qty!=inv_before[cid][iid]:operations.append({'type':'adjust_item_quantity','id':cid,'item':iid,'delta':qty-inv_before[cid][iid]})
     if seconds:operations.append({'type':'advance_time','seconds':seconds})

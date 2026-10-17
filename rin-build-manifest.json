@@ -1,23 +1,26 @@
 {
   "name": "rin-veir-combat",
   "version": 30,
-  "engine_version": "30.2.0",
+  "engine_version": "30.3.0",
   "rules_version": "dnd-2024-2026-10",
   "source_state_revision": 1,
   "source_state_sha256": "bf8bd1f85817996db5961dd8c658c028f7c87a7632fd53f75a98812a013139e9",
   "sources": {
     "core/battlefield.js": "e62571232bebb06cfbcf87a8571cde590e5fbc6cd1aa493ebe76e5c7a94bdc98",
-    "core/capabilities.js": "276792535dbfd21f2a72e032eb06514b94f2d587719bde789fbb49baa6329f8c",
-    "core/content_pack.js": "f92bbd203a8cf9d74a4b67699dc0c75f7c820674155cbd28f96cd803e9ee3562",
-    "core/rules_engine.js": "a9549b33b61695b1ad3da999ff7025b4e1b699af789c0061388077053d67ee42",
-    "core/tactical_ai.js": "ea4c73540f39b9b6aea5e43d3df1001516781009893568017af570a26cda18df",
-    "core/campaign_adapter.js": "440ba1e24254d92b41e18d183552a116e41fa3f4024ff3d95c4c4c0c808009a4",
-    "web/combat_app.js": "fd10a2e490e0e8a3f39314ecfaa2b8077c6851105e70a1f3adb6f017bb75d293",
+    "core/capabilities.js": "572c5e471a0252a04035f57804e0058048471f8eaed866eeec14a8f3d35ebaf0",
+    "core/content_pack.js": "09a0ec449d875b333473de5c3628861749efe283d08f8df700356b162c317d67",
+    "core/class_features.js": "cf28f2a3c80a76c627ea0d6e44cc5ea136c5e0758e549db716411074490cec03",
+    "core/defenses.js": "5c55a3f8269d22d9a5e069306b3699d2aa5bc0e10095b078da4e1589a0969e30",
+    "core/martial_features.js": "057b51792a4a1748936e244c9a0fa686e6a30692b13f7c233e6cc3cc8eb658b5",
+    "core/rules_engine.js": "2a0707a7f2e941cf1f8330f186736495bc20d27312e70ad373a1ca0857ddaf5d",
+    "core/tactical_ai.js": "d7e59dc20438634efaf516c9b08b29429ebc6702fa8c20883b196903e9577d7a",
+    "core/campaign_adapter.js": "3234ff880bd5dcda0214ce3d1fcea471948c6831dd2da940b66d2100bd554217",
+    "web/combat_app.js": "170505658442a98442b746160b4f9c403c8b9156a8e8e1ba478e1eff95b9c769",
     "web/shell.html": "8ea17482700b5ceec07904fbcf59977490959b1ed743a40ec73bb6fed09f0cb1",
     "web/desktop.css": "ebb3f2abc9ebc48fdade26a46809cf17c45f381575c0141628d1111447d3421e",
     "config/combat_profiles.json": "91e59d5e10e910a12a82dd9ae089333ac764f3f49317fb7285f81f99802fb287",
     "encounters/caravan_ambush_training.json": "e0855a32f8401b0ad1307e29eb2a428ffed46dcb9113ba504e4a6c0b1be9d714"
   },
-  "bundle_sha256": "b47efae70347f916e7ed45c2de7a39ef7de5ea2373f0f935889c87c493181fff",
-  "bytes": 1765767
+  "bundle_sha256": "c2b141bb9e0001b280460e0e79a461a3e13cf3785ed06cb5ba015bfff909268a",
+  "bytes": 1824419
 }

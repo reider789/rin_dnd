@@ -53,6 +53,18 @@ class CombatCampaignAdapter {
       })),
       statuses: [],
       items: {},
+      proficientSkills: Object.keys(p.skillProficiencies || {}),
+      counters: Object.fromEntries(
+        AdapterCapabilities.COUNTERS.filter((k) => r[k] !== undefined).map(
+          (k) => [k, { current: r[k].current, max: r[k].max }],
+        ),
+      ),
+      slots: Object.fromEntries(
+        Object.entries(r.spell_slots || {}).map(([k, v]) => [
+          k,
+          { current: v.current, max: v.max },
+        ]),
+      ),
       temp: 0,
       turnCount: 0,
       action: 0,
@@ -305,6 +317,9 @@ class CombatCampaignAdapter {
       if (!Object.keys(before).length) continue;
       const u = s.units[id];
       after[id] = {};
+      for (const [resource, pool] of Object.entries(u.counters || {}))
+        if (before[resource]) after[id][resource] = structuredClone(pool);
+      if (before.spell_slots) after[id].spell_slots = structuredClone(u.slots);
       for (const [field, resource] of Object.entries(mapping))
         if (before[resource])
           after[id][resource] = {

@@ -114,3 +114,27 @@ test("simultaneous blindness and Dodge cancel rather than stacking extra dice", 
   assert.equal(attack.rolls.length, 1);
   assert.ok(e.s.random.draws > count);
 });
+
+const classPack = JSON.parse(fs.readFileSync(__dirname + '/../examples/portable/class-defense-lab.json'));
+const { createBattle } = require('../sdk');
+for (const seed of [7, 31, 104]) test('shared classes complete a battle with serializable reactions, seed '+seed,()=>{
+  let {engine:e}=createBattle(classPack,undefined,seed);e.initialize();
+  for(let n=0;e.s.phase!=='ended'||e.s.pending||e.s.queue.length;n++) {
+    assert.ok(n<1800,'class battle did not converge');
+    if(e.s.pending) {
+      const p=e.s.pending;
+      if(p.kind==='freeMovement')e.dispatch({kind:'decide',id:p.id,choice:'skip'});
+      else if(['classRoll','uncannyDodge','defensiveReaction','precision','riposte'].includes(p.kind))e.dispatch({kind:'decide',id:p.id,choice:'yes'});
+      else if(p.kind==='strikeChoice')e.dispatch({kind:'decide',id:p.id,choice:'skip'});
+      else resolve(e);
+    } else if(e.s.queue.length)e.run();
+    else e.dispatch(new AI(e).choose(e.actorId));
+    if(n%9===0){const saved=JSON.stringify(e.export());e=new E(JSON.parse(saved).session);assert.equal(JSON.stringify(e.export()),saved);}
+    for(const u of Object.values(e.s.units))for(const pool of Object.values(u.counters||{}))assert.ok(pool.current>=0&&pool.current<=pool.max);
+  }
+  const report=A.outcome(e.s);assert.equal(report.campaign_id,'class-defense-lab');
+  assert.ok(report.after.ena.second_wind.current<=3);
+  assert.equal(4-report.after.ena.second_wind.current,e.s.events.filter(x=>x.type==='roll'&&x.text.includes('Второе дыхание')).length);
+  assert.equal(1-report.after.ena.action_surge.current,e.s.events.filter(x=>x.type==='ability'&&x.text.includes('Всплеск действий')).length);
+  assert.equal(e.export().version,32);
+});

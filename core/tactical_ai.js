@@ -168,7 +168,9 @@ class CombatTacticalAI {
       const goal = options[0];
       if (!goal) continue;
       if (!goal.path.length)
-        return u.action > 0 ? { kind: "search", actor: id } : done;
+        return u.action + (u.surgeAction || 0) > 0
+          ? { kind: "search", actor: id }
+          : done;
       let spent = 0;
       const path = [];
       for (const p of goal.path) {
@@ -185,11 +187,13 @@ class CombatTacticalAI {
           path,
           reason: "обследует окрестности последнего известного места",
         };
-      return u.action > 0
+      return u.action + (u.surgeAction || 0) > 0
         ? { kind: e.speed(id) > 0 ? "dash" : "dodge", actor: id }
         : done;
     }
-    return u.action > 0 ? { kind: "dodge", actor: id } : done;
+    return u.action + (u.surgeAction || 0) > 0
+      ? { kind: "dodge", actor: id }
+      : done;
   }
   choose(id) {
     const e = this.engine,
@@ -200,6 +204,22 @@ class CombatTacticalAI {
       role = u.tactics?.role || "skirmisher",
       done = { kind: "endTurn", actor: id };
     if (e.incapacitated(id) || !e.active(id)) return done;
+    if (
+      u.features.secondWind &&
+      u.bonus > 0 &&
+      (u.counters?.second_wind?.current || 0) > 0 &&
+      u.max - u.hp >= (u.features.fighterLevel || 0) + 5
+    )
+      return { kind: "secondWind", actor: id };
+    if (
+      u.features.actionSurge &&
+      (u.counters?.action_surge?.current || 0) > 0 &&
+      u.surgeTurn !== s.turnSerial &&
+      u.action + (u.surgeAction || 0) <= 0 &&
+      u.attacksLeft <= 0 &&
+      visible.length
+    )
+      return { kind: "actionSurge", actor: id };
     if (e.occupied(u.x, u.y, id) && u.move > 0) {
       const exits = this.reachable(id)
         .filter((p) => p.path.length)
@@ -220,7 +240,7 @@ class CombatTacticalAI {
         !e.unit(k).stable &&
         e.canSee(id, k),
     );
-    if (dying && u.action > 0) {
+    if (dying && u.action + (u.surgeAction || 0) > 0) {
       if (e.distance(u, e.unit(dying)) <= 5)
         return { kind: "stabilize", actor: id, target: dying };
       const routes = this.reachable(id)
@@ -256,7 +276,7 @@ class CombatTacticalAI {
       )
         return { kind: "flee", actor: id };
       if (
-        u.action > 0 &&
+        u.action + (u.surgeAction || 0) > 0 &&
         visible.some((t) => e.distance(u, t) <= 5) &&
         !u.disengaged
       )
@@ -283,10 +303,14 @@ class CombatTacticalAI {
           path: exits[0].path,
           reason: "отступает к выходу",
         };
-      return u.action > 0 ? { kind: "dodge", actor: id } : done;
+      return u.action + (u.surgeAction || 0) > 0
+        ? { kind: "dodge", actor: id }
+        : done;
     }
     if (!known.length)
-      return u.action > 0 ? { kind: "dodge", actor: id } : done;
+      return u.action + (u.surgeAction || 0) > 0
+        ? { kind: "dodge", actor: id }
+        : done;
     const obscures = (z) =>
       ["darkness", "fog", "smoke"].includes(z.kind) &&
       !(z.kind === "darkness" && z.owner === id && u.features.shadowArts);
@@ -320,7 +344,7 @@ class CombatTacticalAI {
       adjacent &&
       unarmed &&
       u.features.martialArts &&
-      u.action === 0 &&
+      u.action + (u.surgeAction || 0) === 0 &&
       u.bonus > 0
     ) {
       if (u.focus > 0) return { kind: "flurry", actor: id };
@@ -366,7 +390,8 @@ class CombatTacticalAI {
         cover = s.terrain.cover?.[p.x + "," + p.y] || 0;
       for (const target of visible)
         for (const weapon of u.attacks) {
-          if (u.action <= 0 && u.attacksLeft <= 0) continue;
+          if (u.action + (u.surgeAction || 0) <= 0 && u.attacksLeft <= 0)
+            continue;
           try {
             e.validateAttack(id, target.id, weapon, p);
           } catch {
@@ -414,7 +439,7 @@ class CombatTacticalAI {
       if (best.p.path.length) {
         if (
           this.risk(id, best.p.path, known) > 0 &&
-          u.action > 0 &&
+          u.action + (u.surgeAction || 0) > 0 &&
           role === "ranged" &&
           !u.disengaged
         )
@@ -436,7 +461,8 @@ class CombatTacticalAI {
         weapon: best.weapon,
       };
     }
-    if (u.action > 0 && u.tactics.hold) return { kind: "dodge", actor: id };
+    if (u.action + (u.surgeAction || 0) > 0 && u.tactics.hold)
+      return { kind: "dodge", actor: id };
     if (!visible.length) return this.investigate(id, known, obscures);
     const goal = [...known].sort(
       (a, b) => b.seenTurn - a.seenTurn || e.distance(u, a) - e.distance(u, b),
@@ -467,11 +493,14 @@ class CombatTacticalAI {
             ? "сближается"
             : "проверяет последнее известное место",
         };
-      if (!goal.visible && u.action > 0) return { kind: "search", actor: id };
-      if (u.action > 0 && u.move === 0 && goal.visible)
+      if (!goal.visible && u.action + (u.surgeAction || 0) > 0)
+        return { kind: "search", actor: id };
+      if (u.action + (u.surgeAction || 0) > 0 && u.move === 0 && goal.visible)
         return { kind: "dash", actor: id };
     }
-    return u.action > 0 ? { kind: "dodge", actor: id } : done;
+    return u.action + (u.surgeAction || 0) > 0
+      ? { kind: "dodge", actor: id }
+      : done;
   }
 }
 if (typeof module !== "undefined") module.exports = { CombatTacticalAI };
