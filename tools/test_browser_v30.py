@@ -42,7 +42,30 @@ def run():
   with page.expect_download() as d:page.locator('[data-op="journal-export"]').click()
   assert len(Path(d.value.path()).read_text())>50
   if os.environ.get('RIN_SCREENSHOT'):page.screenshot(path=os.environ['RIN_SCREENSHOT'],full_page=True)
+  # Import a different campaign through the actual file input; preserve Rin's save.
+  pack=json.loads((ROOT/'examples/portable/border-watch.json').read_text())
+  page.locator('#pack-file').set_input_files(str(ROOT/'examples/portable/border-watch.json'))
+  assert page.evaluate(f'{api}.snapshot().meta.campaignId')=='border-watch'
+  assert set(page.evaluate(f'Object.keys({api}.snapshot().units)'))=={'ena','tal','hunter_a','hunter_b'}
+  assert page.evaluate("localStorage.getItem('rin-veir-combat-session-v30')!==null")
+  portable=page.evaluate(f'{api}.snapshot()');page.reload();page.wait_for_function(f'Boolean({api})')
+  assert page.evaluate(f'{api}.snapshot()')==portable
+  invalid=json.loads(json.dumps(pack));invalid['abilities']['venom-claws']['handler']='unknownSpell'
+  page.locator('#pack-file').set_input_files({'name':'invalid.json','mimeType':'application/json','buffer':json.dumps(invalid).encode()})
+  assert page.evaluate(f'{api}.snapshot()')==portable
+  assert 'Недостающий обработчик' in page.locator('#notice').inner_text()
+  with page.expect_download() as d:page.locator('[data-op="export"]').click()
+  portable_save=Path(d.value.path()).read_bytes();value=json.loads(portable_save)
+  assert value['version']==31 and value['contentPack']['id']=='border-watch'
+  # A fresh account/browser context can restore this battle without the original pack upload.
+  fresh=browser.new_context(viewport={'width':1440,'height':1000});other=fresh.new_page()
+  other.on('pageerror',lambda e:errors.append(str(e)));other.add_init_script('window.__HV_ENABLE_TEST_APIS=true')
+  other.goto((ROOT/'index.html').as_uri());other.wait_for_function(f'Boolean({api})')
+  other.locator('#import-file').set_input_files({'name':'portable-session.json','mimeType':'application/json','buffer':portable_save})
+  assert other.evaluate(f'{api}.snapshot()')==portable
+  other.reload();other.wait_for_function(f'Boolean({api})');assert other.evaluate(f'{api}.snapshot()')==portable
+  fresh.close()
   assert not errors,errors
-  print('V30 BROWSER OK: desktop, real ability buttons, incremental map, persistence, reaction decline/reload, downloads, no JS errors')
+  print('V30 BROWSER OK: desktop, real ability buttons, incremental map, persistence, reaction decline/reload, downloads, cross-campaign packs, rejected bad pack, portable save in fresh context, no JS errors')
   browser.close()
 if __name__=='__main__':run()

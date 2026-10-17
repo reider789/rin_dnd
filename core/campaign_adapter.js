@@ -1,7 +1,12 @@
 "use strict";
+const AdapterCapabilities =
+  typeof module !== "undefined"
+    ? require("./capabilities").CombatCapabilities
+    : CombatCapabilities;
 // The campaign translates its profiles here; the domain has no named hero branches.
 class CombatCampaignAdapter {
   static unit(id, p, raw = {}, r = {}) {
+    p = structuredClone(p);
     const stats = Object.fromEntries(
       Object.entries(p.scores || {}).map(([k, v]) => [
         k,
@@ -27,13 +32,14 @@ class CombatCampaignAdapter {
       name: raw.name || p.name || id,
       team: raw.team || "party",
       controlled: Boolean(raw.controlled),
-      tokenKey: raw.tokenKey || null,
+      tokenKey: raw.tokenKey || p.tokenKey || null,
       x: raw.x,
       y: raw.y,
       hp: r.hp?.current ?? p.hp ?? 11,
       max: r.hp?.max ?? p.hp ?? 11,
       ac: p.ac ?? 12,
       speed: p.speed ?? 30,
+      size: p.size ?? 2,
       stats,
       saves,
       skills: { ...skills, ...p.skills },
@@ -65,6 +71,7 @@ class CombatCampaignAdapter {
       resistances: p.resistances || [],
       immunities: p.immunities || [],
       vulnerabilities: p.vulnerabilities || [],
+      conditionImmunities: p.conditionImmunities || [],
       tactics: {
         role: "skirmisher",
         canFlee: false,
@@ -95,6 +102,11 @@ class CombatCampaignAdapter {
         scene.source_state_sha256 !== runtime.source_state_sha256)
     )
       throw Error("Сюжетный сценарий не соответствует текущему канону");
+    if (
+      runtime.rules_version &&
+      runtime.rules_version !== AdapterCapabilities.RULES
+    )
+      throw Error("Несовместимая версия правил снимка");
     const width = scene.width || 11,
       height = scene.height || 8,
       units = {},
@@ -124,7 +136,7 @@ class CombatCampaignAdapter {
       if (!p) throw Error("Нет проверенной карточки " + id);
       units[id] = this.unit(
         id,
-        p,
+        { ...p, deathSaves: p.deathSaves ?? Boolean(c) },
         {
           ...r,
           name: c?.name || r.name,
@@ -160,7 +172,7 @@ class CombatCampaignAdapter {
       if (units[id]) throw Error("Повторный ID участника");
       if (r.abilities?.length)
         throw Error("Способности NPC требуют проверенную карточку features");
-      const p = {
+      const inline = {
         hp: r.hp,
         ac: r.ac,
         speed: r.speed || 30,
@@ -191,6 +203,17 @@ class CombatCampaignAdapter {
         },
         deathSaves: false,
       };
+      const p = r.profile ? runtime.npc_profiles[r.profile] : inline;
+      if (!p) throw Error("Нет профиля противника: " + r.profile);
+      if (
+        r.profile &&
+        ["hp", "ac", "speed", "features", "attacks", "attack", "senses"].some(
+          (k) => Object.hasOwn(r, k),
+        )
+      )
+        throw Error(
+          "Параметры противника задаются в профиле, а не поверх него",
+        );
       units[id] = this.unit(
         id,
         p,
@@ -211,13 +234,20 @@ class CombatCampaignAdapter {
     return {
       version: 30,
       rulesVersion: "dnd-2024-2026-10",
-      engineVersion: "30.0.0",
+      engineVersion: AdapterCapabilities.ENGINE,
       meta: {
         campaignId: runtime.campaign_id,
         battleId: scene.battle_id || "training-" + Date.now(),
         kind: scene.kind === "story" ? "story" : "training",
         name: scene.name,
         theme: scene.theme || "forest",
+        resultKind: runtime.result_kind || "rin-combat-result",
+        contentPack: runtime.content_pack
+          ? {
+              id: runtime.content_pack.id,
+              revision: runtime.content_pack.revision,
+            }
+          : null,
         sourceRevision: runtime.source_state_revision,
         sourceHash: runtime.source_state_sha256,
       },
@@ -283,7 +313,7 @@ class CombatCampaignAdapter {
           };
     }
     return {
-      kind: "rin-combat-result",
+      kind: s.meta.resultKind || "rin-combat-result",
       version: 30,
       rules_version: s.rulesVersion,
       campaign_id: s.meta.campaignId,

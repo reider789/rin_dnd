@@ -1,0 +1,721 @@
+{
+  "schema_version": 1,
+  "kind": "combat-migration-audit",
+  "canonical": false,
+  "campaign_id": "yar-warrior",
+  "source_state_revision": 29,
+  "engine_api": 1,
+  "ready_for_full_migration": false,
+  "characters": {
+    "yar": {
+      "name": "Яр",
+      "class_and_level": "Воин 10 / Мастер боевых приёмов • Градодержатель Хейвенгарда",
+      "ready": false,
+      "capabilities": [
+        {
+          "source_row": 16,
+          "category": "attack",
+          "name": "Меч Меткого Удара",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 17,
+          "category": "attack",
+          "name": "Hew",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 18,
+          "category": "attack",
+          "name": "Грозовой метатель",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 19,
+          "category": "attack",
+          "name": "Молот Великой Кузни",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 25,
+          "category": "feature",
+          "name": "Extra Attack",
+          "status": "primitive_available_needs_verified_profile",
+          "primitive": "extraAttack"
+        },
+        {
+          "source_row": 26,
+          "category": "feature",
+          "name": "Second Wind — 4/4",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 27,
+          "category": "feature",
+          "name": "Tactical Mind",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 28,
+          "category": "feature",
+          "name": "Tactical Shift",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 29,
+          "category": "feature",
+          "name": "Action Surge — 1/1",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 30,
+          "category": "feature",
+          "name": "Know Your Enemy",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 31,
+          "category": "feature",
+          "name": "Кости превосходства — 5/5 к10",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 32,
+          "category": "feature",
+          "name": "Precision Attack",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 33,
+          "category": "feature",
+          "name": "Trip Attack",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 34,
+          "category": "feature",
+          "name": "Riposte",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 35,
+          "category": "feature",
+          "name": "Maneuvering Attack",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 36,
+          "category": "feature",
+          "name": "Pushing Attack",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 37,
+          "category": "feature",
+          "name": "Провоцирующая атака",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 38,
+          "category": "feature",
+          "name": "Приманка и смена",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 39,
+          "category": "feature",
+          "name": "Боевые черты",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 40,
+          "category": "feature",
+          "name": "Молот Великой Кузни",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 41,
+          "category": "feature",
+          "name": "Несгибаемость — 1/1",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 42,
+          "category": "feature",
+          "name": "Тактическое мастерство",
+          "status": "needs_handler_or_review"
+        }
+      ],
+      "unmapped_resources": [
+        "action_surge",
+        "personal_money_cp",
+        "storm_thrower_ammo"
+      ],
+      "reason": "Полный профиль не подтверждён; нельзя отключать недостающие способности и запускать сюжетный бой."
+    },
+    "daphne": {
+      "name": "Дафна",
+      "class_and_level": "Волшебница 10 / Школа Воплощения • Личный помощник и писарь градодержателя",
+      "ready": false,
+      "capabilities": [
+        {
+          "source_row": 24,
+          "category": "attack",
+          "name": "Огненный снаряд",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 25,
+          "category": "attack",
+          "name": "Луч холода",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 26,
+          "category": "attack",
+          "name": "Расщепление разума",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 27,
+          "category": "attack",
+          "name": "Огненный шар",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 28,
+          "category": "attack",
+          "name": "Наручи Грозового Контура",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 32,
+          "category": "feature",
+          "name": "Sculpt Spells",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 33,
+          "category": "feature",
+          "name": "Potent Cantrip",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 34,
+          "category": "feature",
+          "name": "Усиленное Воплощение",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 35,
+          "category": "feature",
+          "name": "Заговоры — 5",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 36,
+          "category": "feature",
+          "name": "Знаток Воплощения",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 37,
+          "category": "feature",
+          "name": "Магическое восстановление",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 38,
+          "category": "feature",
+          "name": "Ячейки и подготовка",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 39,
+          "category": "feature",
+          "name": "Стандартная подготовка — 15 из 15",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 40,
+          "category": "feature",
+          "name": "Книга заклинаний",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 41,
+          "category": "feature",
+          "name": "Наручи Грозового Контура",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 43,
+          "category": "spell",
+          "name": "Доспехи мага",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 44,
+          "category": "spell",
+          "name": "Волшебная стрела",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 45,
+          "category": "spell",
+          "name": "Огненные ладони",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 46,
+          "category": "spell",
+          "name": "Громовая волна",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 47,
+          "category": "spell",
+          "name": "Туманное облако",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 48,
+          "category": "spell",
+          "name": "Палящий луч",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 49,
+          "category": "spell",
+          "name": "Туманный шаг",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 50,
+          "category": "spell",
+          "name": "Паутина",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 51,
+          "category": "spell",
+          "name": "Огненный шар",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 52,
+          "category": "spell",
+          "name": "Замедление",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 53,
+          "category": "spell",
+          "name": "Контрзаклинание",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 54,
+          "category": "spell",
+          "name": "Рассеивание магии",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 55,
+          "category": "spell",
+          "name": "Полёт",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 56,
+          "category": "spell",
+          "name": "Дверь в измерение",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 57,
+          "category": "spell",
+          "name": "Стена огня",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 58,
+          "category": "spell",
+          "name": "Полиморф",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 59,
+          "category": "spell",
+          "name": "Высшая невидимость",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 60,
+          "category": "spell",
+          "name": "Устойчивая сфера Отилюка",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 61,
+          "category": "spell",
+          "name": "Конус холода",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 62,
+          "category": "spell",
+          "name": "Кажущаяся внешность",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 63,
+          "category": "spell",
+          "name": "Удержание чудовища",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 64,
+          "category": "spell",
+          "name": "Силовая стена",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 65,
+          "category": "spell",
+          "name": "Рука Бигби",
+          "status": "needs_handler_or_review"
+        }
+      ],
+      "unmapped_resources": [
+        "arcane_recovery",
+        "concentration",
+        "mage_armor",
+        "prepared_spells",
+        "shield_magic_initiate",
+        "spell_slots"
+      ],
+      "reason": "Полный профиль не подтверждён; нельзя отключать недостающие способности и запускать сюжетный бой."
+    },
+    "lyutobor": {
+      "name": "Лютобор",
+      "class_and_level": "Паладин 10 / Клятва Преданности • Защитник передней линии",
+      "ready": false,
+      "capabilities": [
+        {
+          "source_row": 16,
+          "category": "attack",
+          "name": "Длинный меч",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 17,
+          "category": "attack",
+          "name": "Священное оружие + меч",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 18,
+          "category": "attack",
+          "name": "Джавелин",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 19,
+          "category": "attack",
+          "name": "Божественная кара",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 24,
+          "category": "feature",
+          "name": "Наложение рук — 50/50 ПЗ",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 25,
+          "category": "feature",
+          "name": "Aura of Protection",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 26,
+          "category": "feature",
+          "name": "Aura of Devotion",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 27,
+          "category": "feature",
+          "name": "Аура отваги",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 28,
+          "category": "feature",
+          "name": "Крепкий",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 29,
+          "category": "feature",
+          "name": "Protection",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 30,
+          "category": "feature",
+          "name": "Знак Непоколебимого Стража",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 31,
+          "category": "feature",
+          "name": "Мастер тяжёлых доспехов",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 32,
+          "category": "feature",
+          "name": "Божественный канал / Священное оружие",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 33,
+          "category": "feature",
+          "name": "Верный скакун и ячейки",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 34,
+          "category": "feature",
+          "name": "Изгнание врагов",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 35,
+          "category": "feature",
+          "name": "Мастер щита",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 38,
+          "category": "spell",
+          "name": "Bless",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 39,
+          "category": "spell",
+          "name": "Cure Wounds",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 40,
+          "category": "spell",
+          "name": "Heroism",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 41,
+          "category": "spell",
+          "name": "Command",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 42,
+          "category": "spell",
+          "name": "Compelled Duel",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 43,
+          "category": "spell",
+          "name": "Protection from Evil and Good",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 44,
+          "category": "spell",
+          "name": "Shield of Faith",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 45,
+          "category": "spell",
+          "name": "Aid",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 46,
+          "category": "spell",
+          "name": "Lesser Restoration",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 47,
+          "category": "spell",
+          "name": "Zone of Truth",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 48,
+          "category": "spell",
+          "name": "Warding Bond / Защитная связь",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 49,
+          "category": "spell",
+          "name": "Маяк надежды",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 50,
+          "category": "spell",
+          "name": "Рассеивание магии",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 51,
+          "category": "spell",
+          "name": "Мантия крестоносца",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 52,
+          "category": "spell",
+          "name": "Аура жизненной силы",
+          "status": "needs_handler_or_review"
+        }
+      ],
+      "unmapped_resources": [
+        "lay_on_hands",
+        "spell_slots"
+      ],
+      "reason": "Полный профиль не подтверждён; нельзя отключать недостающие способности и запускать сюжетный бой."
+    },
+    "rada": {
+      "name": "Рада",
+      "class_and_level": "Плут 10 / Вор • Разведка и специальные задачи",
+      "ready": false,
+      "capabilities": [
+        {
+          "source_row": 16,
+          "category": "attack",
+          "name": "Лук Последнего Листа",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 17,
+          "category": "attack",
+          "name": "Скимитар",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 18,
+          "category": "attack",
+          "name": "Короткий меч",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 19,
+          "category": "attack",
+          "name": "Кинжал",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 26,
+          "category": "feature",
+          "name": "Скрытая атака — 5к6",
+          "status": "primitive_available_needs_verified_profile",
+          "primitive": "sneakDice"
+        },
+        {
+          "source_row": 27,
+          "category": "feature",
+          "name": "Хитрый удар — СЛ 17",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 28,
+          "category": "feature",
+          "name": "Хитрое действие",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 29,
+          "category": "feature",
+          "name": "Точный прицел",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 30,
+          "category": "feature",
+          "name": "Невероятное уклонение",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 31,
+          "category": "feature",
+          "name": "Уклонение",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 32,
+          "category": "feature",
+          "name": "Надёжный талант",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 33,
+          "category": "feature",
+          "name": "Vex",
+          "status": "primitive_available_needs_verified_profile",
+          "primitive": "masteries:vex"
+        },
+        {
+          "source_row": 34,
+          "category": "feature",
+          "name": "Nick",
+          "status": "primitive_available_needs_verified_profile",
+          "primitive": "masteries:nick"
+        },
+        {
+          "source_row": 35,
+          "category": "feature",
+          "name": "Thief — лазание",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 36,
+          "category": "feature",
+          "name": "Улучшение характеристик",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 37,
+          "category": "feature",
+          "name": "Меткий стрелок",
+          "status": "needs_handler_or_review"
+        },
+        {
+          "source_row": 38,
+          "category": "feature",
+          "name": "Высшее мастерство скрытности",
+          "status": "needs_handler_or_review"
+        }
+      ],
+      "unmapped_resources": [],
+      "reason": "Полный профиль не подтверждён; нельзя отключать недостающие способности и запускать сюжетный бой."
+    }
+  },
+  "legacy_registry_revision": 27,
+  "legacy_registry_is_stale": true,
+  "source": {
+    "repository": "reider789/havengard-campaign-engine",
+    "commit": "6d26e942d9d86a4c895a821933c569a61bb92a2a",
+    "state_blob": "f004091e80f52955deea660f214160a89e94b6a0"
+  },
+  "note": "Аудит по актуальной карточке канона; в отчёт включены только названия и строки механик. Старый реестр используется лишь для обнаружения устаревания."
+}

@@ -5,6 +5,8 @@
   "source_engine": "web/shell.html",
   "source_modules": [
     "core/battlefield.js",
+    "core/capabilities.js",
+    "core/content_pack.js",
     "core/rules_engine.js",
     "core/tactical_ai.js",
     "core/campaign_adapter.js",
