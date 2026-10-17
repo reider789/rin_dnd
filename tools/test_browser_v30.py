@@ -45,6 +45,7 @@ def run():
   # Import a different campaign through the actual file input; preserve Rin's save.
   pack=json.loads((ROOT/'examples/portable/border-watch.json').read_text())
   page.locator('#pack-file').set_input_files(str(ROOT/'examples/portable/border-watch.json'))
+  page.wait_for_function(f"{api}.snapshot().meta.campaignId==='border-watch'")
   assert page.evaluate(f'{api}.snapshot().meta.campaignId')=='border-watch'
   assert set(page.evaluate(f'Object.keys({api}.snapshot().units)'))=={'ena','tal','hunter_a','hunter_b'}
   assert page.evaluate("localStorage.getItem('rin-veir-combat-session-v30')!==null")
@@ -52,6 +53,7 @@ def run():
   assert page.evaluate(f'{api}.snapshot()')==portable
   invalid=json.loads(json.dumps(pack));invalid['abilities']['venom-claws']['handler']='unknownSpell'
   page.locator('#pack-file').set_input_files({'name':'invalid.json','mimeType':'application/json','buffer':json.dumps(invalid).encode()})
+  page.wait_for_function("document.querySelector('#notice').textContent.includes('Недостающий обработчик')")
   assert page.evaluate(f'{api}.snapshot()')==portable
   assert 'Недостающий обработчик' in page.locator('#notice').inner_text()
   with page.expect_download() as d:page.locator('[data-op="export"]').click()
@@ -62,6 +64,7 @@ def run():
   other.on('pageerror',lambda e:errors.append(str(e)));other.add_init_script('window.__HV_ENABLE_TEST_APIS=true')
   other.goto((ROOT/'index.html').as_uri());other.wait_for_function(f'Boolean({api})')
   other.locator('#import-file').set_input_files({'name':'portable-session.json','mimeType':'application/json','buffer':portable_save})
+  other.wait_for_function(f"{api}.snapshot().meta.campaignId==='border-watch'")
   assert other.evaluate(f'{api}.snapshot()')==portable
   other.reload();other.wait_for_function(f'Boolean({api})');assert other.evaluate(f'{api}.snapshot()')==portable
   fresh.close()
