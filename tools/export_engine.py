@@ -4,8 +4,8 @@ from pathlib import Path
 import argparse,hashlib,json,zipfile
 from combat_bundle import ROOT,MODULES,engine_version
 FILES=MODULES+['sdk/index.js','sdk/cli.js','sdk/verify.js','web/shell.html','web/desktop.css',
- 'tools/combat_bundle.py','tools/build_combat.py','tools/export_engine.py','tools/audit_havengard.py',
- 'tests/test_content_packs.js','examples/portable/border-watch.json','docs/CONTENT_PACKS.md','docs/PORTABLE_ENGINE.md']
+ 'tools/combat_bundle.py','tools/combat_resources.py','tools/build_combat.py','tools/export_engine.py','tools/audit_havengard.py',
+ 'tests/test_content_packs.js','tests/test_class_features.js','tests/test_defenses.js','tests/test_martial_features.js','examples/portable/border-watch.json','examples/portable/class-defense-lab.json','docs/CONTENT_PACKS.md','docs/CLASS_FEATURES.md','docs/PORTABLE_ENGINE.md']
 def export(output,root=ROOT):
     content={name:(root/name).read_bytes() for name in FILES}
     content['README.md']=(root/'docs/PORTABLE_ENGINE.md').read_bytes()

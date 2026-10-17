@@ -68,6 +68,32 @@ def run():
   assert other.evaluate(f'{api}.snapshot()')==portable
   other.reload();other.wait_for_function(f'Boolean({api})');assert other.evaluate(f'{api}.snapshot()')==portable
   fresh.close()
+  # Current class handlers use real buttons and save their own reaction windows.
+  page.locator('#pack-file').set_input_files(str(ROOT/'examples/portable/class-defense-lab.json'))
+  page.wait_for_function(f"{api}.snapshot().meta.campaignId==='class-defense-lab'")
+  page.evaluate(f"{api}.set(s=>{{s.random.tape=[5];}})")
+  page.locator('[data-op="secondWind"]').click()
+  assert page.evaluate(f'{api}.snapshot().pending.kind')=='freeMovement'
+  assert page.evaluate(f'{api}.snapshot().units.ena.hp')==60
+  assert page.evaluate(f'{api}.snapshot().units.ena.counters.second_wind.current')==3
+  page.reload();page.wait_for_function(f'Boolean({api})')
+  assert page.evaluate(f'{api}.snapshot().pending.kind')=='freeMovement'
+  page.locator('[data-tile="1,3"]').click();page.locator('[data-decision="move"]').click()
+  assert page.evaluate(f'{api}.snapshot().units.ena.x')==1
+  assert page.evaluate(f'{api}.snapshot().units.ena.move')==30
+  page.locator('[data-op="actionSurge"]').click()
+  assert page.evaluate(f'{api}.snapshot().units.ena.surgeAction')==1
+  assert page.evaluate(f'{api}.snapshot().units.ena.counters.action_surge.current')==0
+  with page.expect_download() as d:page.locator('[data-op="export"]').click()
+  assert json.loads(Path(d.value.path()).read_bytes())['version']==32
+  # A selected maneuver is offered only after hit confirmation and survives reload.
+  page.evaluate(f"{api}.set(s=>{{s.units.ena.features.maneuvers=['trip'];s.units.ena.features.superiorityDie=10;s.units.ena.features.maneuverDC=17;s.units.hunter_a.x=2;s.units.hunter_a.y=3;s.units.hunter_a.hp=100;s.units.hunter_a.max=100;s.random.tape=[15,2,3,1];}})")
+  page.locator('[data-tile="2,3"]').click();page.locator('[data-op="attack"]').click()
+  assert page.evaluate(f'{api}.snapshot().pending.kind')=='strikeChoice'
+  page.reload();page.wait_for_function(f'Boolean({api})')
+  page.locator('#strike-maneuver').select_option('trip');page.locator('[data-decision="use"]').click()
+  assert page.evaluate(f'{api}.snapshot().units.hunter_a.statuses.some(z=>z.kind==="prone")')
+  assert page.evaluate(f'{api}.snapshot().units.ena.counters.superiority.current')==4
   assert not errors,errors
   print('V30 BROWSER OK: desktop, real ability buttons, incremental map, persistence, reaction decline/reload, downloads, cross-campaign packs, rejected bad pack, portable save in fresh context, no JS errors')
   browser.close()

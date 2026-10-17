@@ -3,7 +3,13 @@
 from pathlib import Path
 import argparse,hashlib,json
 SUPPORTED={'Extra Attack':'extraAttack','Vex':'masteries:vex','Nick':'masteries:nick','Скрытая атака — 5к6':'sneakDice'}
-RESOURCES={'hp','focus','luck','heroic','arrows','unusual_metabolism'}
+from combat_resources import RESOURCES
+SUPPORTED.update({
+ 'Second Wind — 4/4':'secondWind','Tactical Mind':'tacticalMind','Tactical Shift':'tacticalShift','Action Surge — 1/1':'actionSurge','Know Your Enemy':'knowEnemy',
+ 'Precision Attack':'maneuver:precision','Trip Attack':'maneuver:trip','Riposte':'maneuver:riposte','Maneuvering Attack':'maneuver:maneuvering','Pushing Attack':'maneuver:push','Провоцирующая атака':'maneuver:goad','Приманка и смена':'maneuver:bait','Несгибаемость — 1/1':'indomitable','Тактическое мастерство':'tacticalMaster',
+ 'Хитрое действие':'cunningAction','Точный прицел':'steadyAim','Невероятное уклонение':'uncannyDodge','Уклонение':'evasion','Надёжный талант':'reliableTalent','Меткий стрелок':'sharpshooter',
+ 'Наложение рук — 50/50 ПЗ':'layOnHands','Aura of Protection':'auraProtection','Aura of Devotion':'auraDevotion','Аура отваги':'auraCourage','Protection':'protection','Знак Непоколебимого Стража':'critNegation','Мастер тяжёлых доспехов':'heavyArmorReduction'
+})
 def audit(state,registry=None):
     result={'schema_version':1,'kind':'combat-migration-audit','canonical':False,'campaign_id':state['campaign']['id'],
       'source_state_revision':state['state_revision'],

@@ -208,6 +208,7 @@ class CombatContentPack {
       "heroic",
       "arrows",
       "unusual_metabolism",
+      ...C.COUNTERS,
     ];
     for (const [key, char] of Object.entries(pack.characters)) {
       fields(char, ["name", "profile", "resources", "inventory"], key);
@@ -223,15 +224,20 @@ class CombatContentPack {
         resources.hp?.max === p.hp,
         "Максимум ПЗ расходится с профилем: " + key,
       );
-      for (const [name, value] of Object.entries(resources))
-        C.require(
-          resourceFields.includes(name) &&
-            Number.isInteger(value.current) &&
-            Number.isInteger(value.max) &&
-            value.current >= 0 &&
-            value.current <= value.max,
-          "Неподдержанный или неверный ресурс: " + key + "/" + name,
-        );
+      for (const [name, value] of Object.entries(resources)) {
+        if (name === "spell_slots") {
+          for (const [level, pool] of Object.entries(value)) {
+            C.require(/^[1-9]$/.test(level), "Неверный круг ячейки");
+            C.counter(pool);
+          }
+        } else {
+          C.require(
+            resourceFields.includes(name),
+            "Неподдержанный ресурс: " + name,
+          );
+          C.counter(value);
+        }
+      }
       const inventory = char.inventory || [];
       C.require(
         Array.isArray(inventory) &&

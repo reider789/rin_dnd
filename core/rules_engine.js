@@ -4,6 +4,18 @@ const RulesCapabilities =
   typeof module !== "undefined"
     ? require("./capabilities").CombatCapabilities
     : CombatCapabilities;
+const RulesClassFeatures =
+  typeof module !== "undefined"
+    ? require("./class_features").CombatClassFeatures
+    : CombatClassFeatures;
+const RulesDefenses =
+  typeof module !== "undefined"
+    ? require("./defenses").CombatDefenses
+    : CombatDefenses;
+const RulesMartial =
+  typeof module !== "undefined"
+    ? require("./martial_features").CombatMartialFeatures
+    : CombatMartialFeatures;
 class CombatRulesEngine {
   static VERSION = RulesCapabilities.ENGINE;
   static RULES = RulesCapabilities.RULES;
@@ -113,6 +125,21 @@ class CombatRulesEngine {
         )
           throw Error("Неверная атака: " + id);
       RulesCapabilities.features(u.features);
+      RulesClassFeatures.validateUnit(u);
+      for (const [key, value] of Object.entries(u.counters || {})) {
+        RulesCapabilities.require(
+          RulesCapabilities.COUNTERS.includes(key),
+          "Неизвестный ресурс " + key,
+        );
+        RulesCapabilities.counter(value);
+      }
+      for (const [level, value] of Object.entries(u.slots || {})) {
+        RulesCapabilities.require(
+          /^[1-9]$/.test(level),
+          "Неверный круг ячейки",
+        );
+        RulesCapabilities.counter(value);
+      }
       for (const attack of u.attacks) RulesCapabilities.attack(attack);
     }
     if (s.pending && (!s.pending.id || !s.pending.kind))
@@ -134,7 +161,10 @@ class CombatRulesEngine {
     return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y)) * 5;
   }
   has(id, kind) {
-    return this.unit(id).statuses.some((z) => z.kind === kind);
+    return (
+      this.unit(id).statuses.some((z) => z.kind === kind) &&
+      !RulesDefenses.suppresses(this, id, kind)
+    );
   }
   incapacitated(id) {
     return (
@@ -261,12 +291,20 @@ class CombatRulesEngine {
       c = this.s.terrain.cover?.[k] || 0;
     return [2, 5].includes(c) ? c : 0;
   }
-  ac(id, from = null) {
+  ac(id, from = null, spec = null) {
     const u = this.unit(id);
     return (
       u.ac +
-      (from ? this.cover(from, id) : 0) +
-      (this.has(id, "shield") ? 5 : 0)
+      (from && !(from.features?.sharpshooter && spec?.kind === "ranged")
+        ? this.cover(from, id)
+        : 0) +
+      (this.has(id, "shield") ? 5 : 0) +
+      Math.max(
+        0,
+        ...u.statuses
+          .filter((z) => z.kind === "bait")
+          .map((z) => z.amount || 0),
+      )
     );
   }
   emit(type, actor, text, data = {}) {
@@ -352,6 +390,11 @@ class CombatRulesEngine {
   }
   command(c, u) {
     const id = c.actor;
+    if (
+      RulesClassFeatures.command(this, c, u) ||
+      RulesMartial.command(this, c, u)
+    )
+      return;
     if (!["policy", "moveDarkness", "endConcentration"].includes(c.kind))
       u.darkMoveWindow = false;
     if (c.kind === "attackAt") {
@@ -374,7 +417,10 @@ class CombatRulesEngine {
         this.command({ ...c, kind: "attack", target }, u);
         return;
       }
-      this.require(u.action > 0 || u.attacksLeft > 0, "Нет атаки");
+      this.require(
+        u.action > 0 || u.surgeAction > 0 || u.attacksLeft > 0,
+        "Нет атаки",
+      );
       this.require(!spec.ammo || u[spec.ammo] > 0, "Нет боеприпасов");
       this.require(
         !spec.ammoItem || u.items[spec.ammoItem] > 0,
@@ -382,7 +428,7 @@ class CombatRulesEngine {
       );
       if (u.attacksLeft > 0) u.attacksLeft--;
       else {
-        u.action--;
+        this.spendAction(id);
         u.attacksLeft = (u.features.extraAttack || 1) - 1;
       }
       if (spec.ammo) {
@@ -408,7 +454,19 @@ class CombatRulesEngine {
       const spec = this.attackSpec(id, c.weapon),
         mode = c.mode || "action";
       this.validateAttack(id, c.target, spec);
-      if (mode === "bonus") {
+      RulesMartial.prepareAttack(this, c, spec);
+      if (mode === "hew") {
+        this.require(
+          u.features.greatWeaponMaster &&
+            u.hewTurn === this.s.turnSerial &&
+            u.bonus > 0 &&
+            spec.kind === "melee" &&
+            !spec.unarmed,
+          "Нет добивающей атаки",
+        );
+        u.bonus--;
+        u.hewTurn = null;
+      } else if (mode === "bonus") {
         this.require(
           u.features.martialArts && u.bonus > 0 && spec.unarmed,
           "Нет бонусного безоружного удара",
@@ -429,12 +487,12 @@ class CombatRulesEngine {
         u.nickUsed = true;
       } else {
         this.require(
-          u.action > 0 || u.attacksLeft > 0,
+          u.action > 0 || u.surgeAction > 0 || u.attacksLeft > 0,
           "Действие Атака потрачено",
         );
         if (u.attacksLeft > 0) u.attacksLeft--;
         else {
-          u.action--;
+          this.spendAction(id);
           u.attacksLeft = (u.features.extraAttack || 1) - 1;
         }
         if (spec.light) u.lightWeaponUsed = spec.id;
@@ -447,36 +505,7 @@ class CombatRulesEngine {
       return;
     }
     if (c.kind === "move") {
-      this.require(Array.isArray(c.path) && c.path.length, "Нужен маршрут");
-      let from = u,
-        cost = 0;
-      for (const [index, p] of c.path.entries()) {
-        const occupant = this.occupied(p.x, p.y, id),
-          known =
-            occupant &&
-            (this.unit(occupant).team === u.team ||
-              (!this.unit(occupant).hidden && this.canSee(id, occupant)));
-        this.require(
-          this.inside(p) &&
-            !this.wall(p) &&
-            (!known ||
-              (this.canPass(id, occupant) && index < c.path.length - 1)) &&
-            this.distance(from, p) === 5,
-          "Маршрут перекрыт",
-        );
-        if (from.x !== p.x && from.y !== p.y)
-          this.require(
-            !this.wall({ x: from.x, y: p.y }) &&
-              !this.wall({ x: p.x, y: from.y }),
-            "Закрытый угол",
-          );
-        cost += this.stepCost(id, p);
-        from = p;
-      }
-      this.require(
-        cost <= u.move && this.speed(id) > 0,
-        "Недостаточно передвижения",
-      );
+      this.validatePath(id, c.path, u.move);
       u.darkMoveWindow = false;
       this.enqueue({
         kind: "moveStep",
@@ -576,7 +605,10 @@ class CombatRulesEngine {
     if (["dash", "disengage", "dodge"].includes(c.kind)) {
       const bonus = c.cost === "bonus",
         paid = Boolean(c.paid);
-      this.require((bonus ? u.bonus : u.action) > 0, "Действие потрачено");
+      this.require(
+        (bonus ? u.bonus : u.action + (u.surgeAction || 0)) > 0,
+        "Действие потрачено",
+      );
       this.require(
         !bonus || u.features.monkFocus || u.features.cunningAction,
         "Нет подходящего бонусного действия",
@@ -590,10 +622,13 @@ class CombatRulesEngine {
         "Бонусное Уклонение требует фокус",
       );
       if (bonus) u.bonus--;
-      else u.action--;
+      else this.spendAction(id);
       if (paid) u.focus--;
       u.darkMoveWindow = false;
-      if (c.kind === "dash") u.move += this.speed(id);
+      if (c.kind === "dash") {
+        this.adjustMovementBudget(id, this.speed(id));
+        u.dashCount = (u.dashCount || 0) + 1;
+      }
       if (c.kind === "disengage" || paid) u.disengaged = true;
       if (c.kind === "dodge" || (paid && c.kind === "disengage"))
         this.status(id, "dodge", { expiresAtStart: id });
@@ -609,7 +644,12 @@ class CombatRulesEngine {
       return;
     }
     if (c.kind === "hide") {
-      this.require(u.action > 0, "Нет действия");
+      const bonus = c.cost === "bonus";
+      this.require(!bonus || u.features.cunningAction, "Нет бонусного Скрытия");
+      this.require(
+        bonus ? u.bonus > 0 : u.action > 0 || u.surgeAction > 0,
+        "Нет действия",
+      );
       const cover = this.s.terrain.cover?.[u.x + "," + u.y] || 0,
         obscured = this.s.zones.some(
           (z) =>
@@ -620,12 +660,19 @@ class CombatRulesEngine {
           !this.enemies(id).some((e) => this.canSee(e, id)),
         "Для скрытия нужны укрытие или непроглядная область и отсутствие наблюдателя",
       );
-      u.action--;
+      if (bonus) u.bonus--;
+      else this.spendAction(id);
       u.darkMoveWindow = false;
       this.enqueue({
         kind: "roll",
         actor: id,
         label: "Скрытность",
+        check: true,
+        dc: 15,
+        minimum:
+          u.features.reliableTalent && u.proficientSkills?.includes("stealth")
+            ? 10
+            : 0,
         count: 1,
         sides: 20,
         bonus: u.skills?.stealth || 0,
@@ -634,12 +681,18 @@ class CombatRulesEngine {
       return;
     }
     if (c.kind === "search") {
-      this.require(u.action > 0, "Нет действия");
-      u.action--;
+      this.require(u.action > 0 || u.surgeAction > 0, "Нет действия");
+      this.spendAction(id);
       this.enqueue({
         kind: "roll",
         actor: id,
         label: "Поиск",
+        check: true,
+        minimum:
+          u.features.reliableTalent &&
+          u.proficientSkills?.includes("perception")
+            ? 10
+            : 0,
         count: 1,
         sides: 20,
         bonus: u.skills?.perception || 0,
@@ -649,7 +702,7 @@ class CombatRulesEngine {
     }
     if (c.kind === "check") {
       this.require(
-        u.action > 0 &&
+        (u.action > 0 || u.surgeAction > 0) &&
           typeof c.stat === "string" &&
           Object.hasOwn(u.stats, c.stat),
         "Нужны действие и характеристика",
@@ -662,11 +715,16 @@ class CombatRulesEngine {
         c.skill && Object.hasOwn(u.skills, c.skill)
           ? u.skills[c.skill]
           : u.stats[c.stat];
-      u.action--;
+      this.spendAction(id);
       this.enqueue({
         kind: "roll",
         actor: id,
         label: String(c.label || "Проверка").slice(0, 100),
+        check: true,
+        minimum:
+          u.features.reliableTalent && u.proficientSkills?.includes(c.skill)
+            ? 10
+            : 0,
         count: 1,
         sides: 20,
         bonus,
@@ -685,7 +743,10 @@ class CombatRulesEngine {
       return;
     }
     if (c.kind === "grapple" || c.kind === "shove") {
-      this.require(u.action > 0 || u.attacksLeft > 0, "Нет атаки");
+      this.require(
+        u.action > 0 || u.surgeAction > 0 || u.attacksLeft > 0,
+        "Нет атаки",
+      );
       const t = this.unit(c.target);
       this.require(
         t.team !== u.team &&
@@ -697,7 +758,7 @@ class CombatRulesEngine {
       this.require((t.size || 2) <= (u.size || 2) + 1, "Цель слишком велика");
       if (u.attacksLeft > 0) u.attacksLeft--;
       else {
-        u.action--;
+        this.spendAction(id);
         u.attacksLeft = (u.features.extraAttack || 1) - 1;
       }
       const dc =
@@ -718,8 +779,11 @@ class CombatRulesEngine {
     }
     if (c.kind === "escape") {
       const z = u.statuses.find((z) => z.kind === "grappled");
-      this.require(z && u.action > 0, "Нет захвата или действия");
-      u.action--;
+      this.require(
+        z && (u.action > 0 || u.surgeAction > 0),
+        "Нет захвата или действия",
+      );
+      this.spendAction(id);
       const bonus = Math.max(
         u.skills?.athletics ?? u.stats.STR,
         u.skills?.acrobatics ?? u.stats.DEX,
@@ -728,6 +792,17 @@ class CombatRulesEngine {
         kind: "roll",
         actor: id,
         label: "Освобождение из захвата",
+        check: true,
+        minimum:
+          u.features.reliableTalent &&
+          u.proficientSkills?.includes(
+            (u.skills?.athletics ?? u.stats.STR) >=
+              (u.skills?.acrobatics ?? u.stats.DEX)
+              ? "athletics"
+              : "acrobatics",
+          )
+            ? 10
+            : 0,
         count: 1,
         sides: 20,
         bonus,
@@ -737,11 +812,12 @@ class CombatRulesEngine {
     }
     if (c.kind === "ready") {
       this.require(
-        u.action > 0 && ["approach", "attackAlly"].includes(c.trigger),
+        (u.action > 0 || u.surgeAction > 0) &&
+          ["approach", "attackAlly"].includes(c.trigger),
         "Нужны действие и понятный триггер",
       );
       const spec = this.attackSpec(id, c.weapon);
-      u.action--;
+      this.spendAction(id);
       u.ready = { trigger: c.trigger, spec };
       this.emit(
         "ready",
@@ -756,13 +832,13 @@ class CombatRulesEngine {
     }
     if (c.kind === "helpAttack") {
       this.require(
-        u.action > 0 &&
+        (u.action > 0 || u.surgeAction > 0) &&
           this.enemies(id).includes(c.target) &&
           this.distance(u, this.unit(c.target)) <= 5 &&
           this.wallLOS(u, this.unit(c.target)),
         "Для помощи нужна соседняя враждебная цель и действие",
       );
-      u.action--;
+      this.spendAction(id);
       this.s.help ??= [];
       this.s.help.push({ helper: id, target: c.target });
       this.emit(
@@ -799,18 +875,24 @@ class CombatRulesEngine {
     if (c.kind === "stabilize") {
       const t = this.unit(c.target);
       this.require(
-        u.action > 0 &&
+        (u.action > 0 || u.surgeAction > 0) &&
           t.hp === 0 &&
           !t.dead &&
           !t.stable &&
           this.distance(u, t) <= 5,
         "Цель недоступна",
       );
-      u.action--;
+      this.spendAction(id);
       this.enqueue({
         kind: "roll",
         actor: id,
         label: "Медицина",
+        check: true,
+        dc: 10,
+        minimum:
+          u.features.reliableTalent && u.proficientSkills?.includes("medicine")
+            ? 10
+            : 0,
         count: 1,
         sides: 20,
         bonus: u.skills?.medicine ?? u.stats.WIS,
@@ -846,6 +928,51 @@ class CombatRulesEngine {
       return;
     }
     throw Error("Для этого действия ещё нет проверенного обработчика");
+  }
+  spendAction(id, magic = false) {
+    const u = this.unit(id);
+    if (!magic && (u.surgeAction || 0) > 0) {
+      u.surgeAction--;
+      return;
+    }
+    this.require(
+      u.action > 0,
+      magic ? "Нет обычного действия для Магии" : "Нет действия",
+    );
+    u.action--;
+  }
+  validatePath(id, path, budget) {
+    const u = this.unit(id);
+    this.require(Array.isArray(path) && path.length, "Нужен маршрут");
+    let from = u,
+      cost = 0;
+    for (const [index, p] of path.entries()) {
+      const occupant = this.occupied(p.x, p.y, id),
+        known =
+          occupant &&
+          (this.unit(occupant).team === u.team ||
+            (!this.unit(occupant).hidden && this.canSee(id, occupant)));
+      this.require(
+        this.inside(p) &&
+          !this.wall(p) &&
+          (!known || (this.canPass(id, occupant) && index < path.length - 1)) &&
+          this.distance(from, p) === 5,
+        "Маршрут перекрыт",
+      );
+      if (from.x !== p.x && from.y !== p.y)
+        this.require(
+          !this.wall({ x: from.x, y: p.y }) &&
+            !this.wall({ x: p.x, y: from.y }),
+          "Закрытый угол",
+        );
+      cost += this.stepCost(id, p);
+      from = p;
+    }
+    this.require(
+      cost <= budget && this.speed(id) > 0,
+      "Недостаточно передвижения",
+    );
+    return cost;
   }
   require(value, message) {
     if (!value) throw Error(message);
@@ -892,7 +1019,13 @@ class CombatRulesEngine {
     if (from) vis.adv = !this.canSee(target, from);
     const advantage = [],
       disadvantage = [];
+    if (this.has(id, "aim")) advantage.push("Точный прицел");
     if (vis.adv) advantage.push("цель не видит атакующего");
+    if (RulesDefenses.protected(this, target))
+      disadvantage.push("Защита союзника");
+    if (this.has(id, "sap")) disadvantage.push("Ослабление");
+    if (u.statuses.some((z) => z.kind === "goaded" && z.source !== target))
+      disadvantage.push("Провоцирующая атака");
     if (vis.disadv) disadvantage.push("атакующий не видит цель");
     if (
       this.has(target, "restrained") ||
@@ -941,9 +1074,13 @@ class CombatRulesEngine {
     if (u.statuses.some((z) => z.kind === "grappled" && z.source !== target))
       disadvantage.push("захват");
     if (spec.kind !== "melee" && spec.kind !== "meleeSpell") {
-      if (d > (spec.normalRange || spec.range))
+      if (
+        d > (spec.normalRange || spec.range) &&
+        !(u.features.sharpshooter && spec.kind === "ranged")
+      )
         disadvantage.push("дальняя дистанция");
       if (
+        !(u.features.sharpshooter && spec.kind === "ranged") &&
         this.enemies(id).some(
           (e) =>
             this.distance(p, this.unit(e)) <= 5 &&
@@ -977,15 +1114,19 @@ class CombatRulesEngine {
       label: "Спасбросок " + stat,
       count: 1,
       sides: 20,
-      bonus: u.saves?.[stat] ?? u.stats?.[stat] ?? 0,
+      bonus:
+        (u.saves?.[stat] ?? u.stats?.[stat] ?? 0) +
+        RulesDefenses.saveBonus(this, id),
       mode: adv === disadv ? 0 : adv ? 1 : -1,
       autoFail: auto,
+      save: true,
       dc,
       next,
     };
   }
   speed(id) {
     const u = this.unit(id);
+    if (u.aimTurn === this.s.turnSerial) return 0;
     return [
       "grappled",
       "restrained",
@@ -994,7 +1135,23 @@ class CombatRulesEngine {
       "stunned",
     ].some((k) => this.has(id, k))
       ? 0
-      : Math.max(0, u.speed - (this.has(id, "frost") ? 10 : 0));
+      : Math.max(
+          0,
+          u.speed - (this.has(id, "frost") || this.has(id, "slow") ? 10 : 0),
+        );
+  }
+  adjustMovementBudget(id, delta) {
+    const u = this.unit(id),
+      budget = u.move + (u.movementDebt || 0) + delta;
+    // Preserve overspent movement: removing Slow must not refund spent distance.
+    u.move = Math.max(0, budget);
+    u.movementDebt = Math.min(0, budget);
+  }
+  adjustMovementForSpeed(id, previous) {
+    this.adjustMovementBudget(
+      id,
+      (this.speed(id) - previous) * (1 + (this.unit(id).dashCount || 0)),
+    );
   }
   stepCost(id, p) {
     const other = this.occupied(p.x, p.y, id),
@@ -1014,7 +1171,10 @@ class CombatRulesEngine {
   }
   status(id, kind, extra = {}) {
     const u = this.unit(id);
-    u.statuses = u.statuses.filter((z) => z.kind !== kind);
+    u.statuses = u.statuses.filter(
+      (z) =>
+        z.kind !== kind || (extra.stackBySource && z.source !== extra.source),
+    );
     u.statuses.push({ kind, ...extra });
     if (
       [
@@ -1049,6 +1209,7 @@ class CombatRulesEngine {
     while (!this.s.pending && this.s.queue.length) {
       if (++n > 2000) throw Error("Слишком длинная последовательность");
       this.task(this.s.queue.shift());
+      RulesDefenses.refresh(this);
       this.observeAll();
     }
   }
@@ -1106,6 +1267,7 @@ class CombatRulesEngine {
   task(t) {
     const s = this.s,
       u = t.actor ? this.unit(t.actor) : null;
+    if (RulesClassFeatures.task(this, t) || RulesMartial.task(this, t)) return;
     if (t.kind === "initiativeSetup") {
       const alert = s.order.find(
         (id) =>
@@ -1145,6 +1307,10 @@ class CombatRulesEngine {
       s.turnSerial++;
       a.turnCount++;
       a.action = 1;
+      a.dashCount = 0;
+      a.movementDebt = 0;
+      a.surgeAction = 0;
+      a.movedThisTurn = 0;
       a.bonus = 1;
       a.reaction = 1;
       a.move = a.speed;
@@ -1156,6 +1322,7 @@ class CombatRulesEngine {
       a.jumpMultiplier = 1;
       a.darkMoveWindow = true;
       a.ready = null;
+      RulesDefenses.refresh(this, id);
       a.statuses = a.statuses.filter(
         (z) =>
           z.expiresAtStart !== id &&
@@ -1163,7 +1330,7 @@ class CombatRulesEngine {
       );
       s.zones = s.zones.filter((z) => z.until > s.elapsed);
       s.help = (s.help || []).filter((h) => h.helper !== id);
-      if (this.speed(id) === 0) a.move = 0;
+      a.move = this.speed(id);
       if (a.vex)
         for (const k of Object.keys(a.vex))
           if (a.vex[k] < a.turnCount) delete a.vex[k];
@@ -1174,9 +1341,12 @@ class CombatRulesEngine {
           kind: "roll",
           actor: id,
           label: "Спасбросок от смерти",
+          save: true,
+          deathSave: true,
+          dc: 10,
           count: 1,
           sides: 20,
-          bonus: 0,
+          bonus: RulesDefenses.saveBonus(this, id),
           next: { kind: "deathSaveResult", actor: id },
         });
       return;
@@ -1187,6 +1357,14 @@ class CombatRulesEngine {
         this.status(t.actor, "prone");
       }
       u.darkMoveWindow = false;
+      u.surgeAction = 0;
+      u.statuses = u.statuses.filter((z) => z.expiresAtEnd !== t.actor);
+      for (const other of s.order)
+        this.unit(other).statuses = this.unit(other).statuses.filter(
+          (z) =>
+            z.expiresOnSourceEnd !== t.actor ||
+            u.turnCount < (z.expiresOnSourceEndTurn || 0),
+        );
       u.flurryLeft = 0;
       this.emit("turnEnded", t.actor, this.name(t.actor) + " завершает ход.");
       for (let n = 0; n < s.order.length; n++) {
@@ -1245,6 +1423,7 @@ class CombatRulesEngine {
     }
     if (t.kind === "attackRoll") {
       if (!this.active(t.actor) || !this.active(t.target)) return;
+      if (RulesDefenses.beforeAttack(this, t)) return;
       const target = this.unit(t.target);
       if (
         target.controlled &&
@@ -1266,6 +1445,8 @@ class CombatRulesEngine {
       );
       if (t.luckDefense) m.disadv = true;
       const mode = m.adv === m.disadv ? 0 : m.adv ? 1 : -1;
+      this.removeStatus(t.actor, "aim");
+      this.removeStatus(t.actor, "sap");
       if (u.vex) delete u.vex[t.target];
       this.removeStatus(t.actor, "invisible");
       u.hidden = false;
@@ -1287,17 +1468,26 @@ class CombatRulesEngine {
       return;
     }
     if (t.kind === "attackResult") {
+      if (
+        RulesMartial.beforeResult(this, t) ||
+        RulesDefenses.beforeResult(this, t)
+      )
+        return;
       if (t.result.lucky) {
         t.modifiers.adv = true;
         t.modifiers.advantage.push("Удача");
       }
       const d = t.result.kept,
-        hit = d === 20 || (d !== 1 && t.result.total >= this.ac(t.target, u)),
+        hit =
+          d === 20 ||
+          (d !== 1 &&
+            t.result.total >= this.ac(t.target, u, t.spec) + (t.acBonus || 0)),
         m = t.modifiers;
       const critical =
-        d === 20 ||
-        (this.distance(u, this.unit(t.target)) <= 5 &&
-          ["paralyzed", "unconscious"].some((k) => this.has(t.target, k)));
+        !t.cancelCritical &&
+        (d === 20 ||
+          (this.distance(u, this.unit(t.target)) <= 5 &&
+            ["paralyzed", "unconscious"].some((k) => this.has(t.target, k))));
       this.emit(
         "attack",
         t.actor,
@@ -1321,7 +1511,7 @@ class CombatRulesEngine {
           " = " +
           t.result.total +
           " против КД " +
-          this.ac(t.target, u) +
+          (this.ac(t.target, u, t.spec) + (t.acBonus || 0)) +
           (hit
             ? critical
               ? " — КРИТИЧЕСКОЕ ПОПАДАНИЕ."
@@ -1338,7 +1528,10 @@ class CombatRulesEngine {
           modifiers: m,
         },
       );
-      if (!hit) return;
+      if (!hit) {
+        RulesMartial.afterMiss(this, t);
+        return;
+      }
       if (t.spec.effects?.length)
         this.enqueue({
           kind: "attackEffects",
@@ -1363,16 +1556,13 @@ class CombatRulesEngine {
           ((m.adv && !m.disadv) || allied),
       );
       if (sneak) u.sneakTurn = s.turnSerial;
-      const count = t.spec.count * (critical ? 2 : 1),
-        sneakCount = sneak ? u.features.sneakDice * (critical ? 2 : 1) : 0;
+      const sneakCount = sneak ? u.features.sneakDice * (critical ? 2 : 1) : 0;
       this.enqueue({
-        kind: "roll",
-        actor: t.actor,
-        label: "Урон " + t.spec.name,
-        count,
-        sides: t.spec.die,
-        bonus: t.mode === "nick" ? Math.min(0, t.spec.flat) : t.spec.flat,
-        next: { ...t, kind: "damageResult", critical, sneakCount },
+        ...t,
+        kind: "weaponDamageRoll",
+        critical,
+        sneakCount,
+        strikeId: "strike-" + ++s.sequence,
       });
       return;
     }
@@ -1407,12 +1597,14 @@ class CombatRulesEngine {
     if (t.kind === "applyAttackCondition") {
       RulesCapabilities.effect(t.effect);
       if (!this.active(t.target) || t.result?.success) return;
+      const previousSpeed = this.speed(t.target);
       this.status(t.target, t.effect.condition, {
         source: t.actor,
         ...(t.effect.duration === "target-next-start"
           ? { expiresAtStart: t.target }
           : {}),
       });
+      this.adjustMovementForSpeed(t.target, previousSpeed);
       this.emit(
         "attackCondition",
         t.target,
@@ -1432,6 +1624,7 @@ class CombatRulesEngine {
           label: "Скрытая атака",
           count: t.sneakCount,
           sides: 6,
+          minimumDie: t.minimumDie,
           bonus: 0,
           next: {
             ...t,
@@ -1456,6 +1649,7 @@ class CombatRulesEngine {
         );
       if (
         !t.deflectResolved &&
+        t.attackHit !== false &&
         t.attack &&
         physical &&
         target.features.deflectAttacks &&
@@ -1469,6 +1663,20 @@ class CombatRulesEngine {
         this.deflect(t, true);
         return;
       }
+      if (
+        !t.armorReduced &&
+        t.attack &&
+        ["bludgeoning", "piercing", "slashing"].includes(t.damageType) &&
+        target.features.heavyArmor &&
+        target.features.heavyArmorReduction
+      ) {
+        t = {
+          ...t,
+          amount: Math.max(0, t.amount - target.features.heavyArmorReduction),
+          armorReduced: true,
+        };
+      }
+      if (RulesClassFeatures.beforeDamage(this, t)) return;
       let amount = t.amount;
       if (target.immunities?.includes(t.damageType)) amount = 0;
       else {
@@ -1514,7 +1722,14 @@ class CombatRulesEngine {
           "/" +
           target.max +
           ".",
-        { amount, lost, temp, damageType: t.damageType, source: t.actor },
+        {
+          amount,
+          lost,
+          temp,
+          damageType: t.damageType,
+          source: t.actor,
+          strikeId: t.strikeId,
+        },
       );
       if (target.hp === 0) {
         this.status(t.target, "unconscious");
@@ -1642,7 +1857,7 @@ class CombatRulesEngine {
         occupant = this.occupied(p.x, p.y, t.actor);
       if (
         occupant &&
-        (!this.canPass(t.actor, occupant) || t.path.length === 1)
+        (t.forced || !this.canPass(t.actor, occupant) || t.path.length === 1)
       ) {
         u.blockedCells ??= [];
         u.blockedCells.push({ ...p, turn: s.turnSerial });
@@ -1656,16 +1871,17 @@ class CombatRulesEngine {
       }
       if (
         this.wall(p) ||
-        this.speed(t.actor) === 0 ||
-        u.move < this.stepCost(t.actor, p)
+        (!t.forced && this.speed(t.actor) === 0) ||
+        (t.freeBudget ?? u.move) < this.stepCost(t.actor, p)
       ) {
         this.markSharedSpace(t.actor);
         return;
       }
-      if (!u.disengaged) {
+      if (!u.disengaged && !t.noOA) {
         const enemy = this.enemies(t.actor).find(
           (e) =>
             !t.provoked.includes(e) &&
+            !(t.oaExempt || []).includes(e) &&
             this.unit(e).reaction > 0 &&
             !this.incapacitated(e) &&
             this.canSee(e, t.actor) &&
@@ -1715,7 +1931,10 @@ class CombatRulesEngine {
       }
       const from = { x: u.x, y: u.y },
         cost = this.stepCost(t.actor, p);
-      u.move -= cost;
+      if (t.freeBudget !== undefined) t.freeBudget -= cost;
+      else u.move -= cost;
+      if (!t.forced && this.actorId === t.actor)
+        u.movedThisTurn = (u.movedThisTurn || 0) + cost;
       u.x = p.x;
       u.y = p.y;
       u.involuntarySharedSpace = false;
@@ -1865,7 +2084,8 @@ class CombatRulesEngine {
         this.heal(t.actor, 1);
         return;
       }
-      if (d >= 10) u.deathSuccesses = (u.deathSuccesses || 0) + 1;
+      if (d !== 1 && t.result.total >= 10)
+        u.deathSuccesses = (u.deathSuccesses || 0) + 1;
       else u.deathFailures = (u.deathFailures || 0) + (d === 1 ? 2 : 1);
       if (u.deathFailures >= 3) u.dead = true;
       if (u.deathSuccesses >= 3) u.stable = true;
@@ -1887,14 +2107,18 @@ class CombatRulesEngine {
     if (this.occupied(u.x, u.y, id)) u.involuntarySharedSpace = true;
   }
   finishRoll(t) {
-    const kept =
+    if (RulesClassFeatures.afterRoll(this, t)) return;
+    const rawKept =
       t.sides === 20 && t.mode
         ? t.mode > 0
           ? Math.max(...t.rolls)
           : Math.min(...t.rolls)
         : t.rolls[0];
+    const kept = t.sides === 20 ? Math.max(rawKept, t.minimum || 0) : rawKept;
     const total =
-        (t.sides === 20 ? kept : t.rolls.reduce((a, b) => a + b, 0)) +
+        (t.sides === 20
+          ? kept
+          : t.rolls.reduce((a, b) => a + Math.max(b, t.minimumDie || 0), 0)) +
         (t.bonus || 0),
       success = !t.autoFail && total >= t.dc;
     this.emit(
@@ -1915,6 +2139,7 @@ class CombatRulesEngine {
         rolls: t.rolls,
         sides: t.sides,
         bonus: t.bonus || 0,
+        total,
         mode: t.mode || 0,
       },
     );
@@ -1937,13 +2162,11 @@ class CombatRulesEngine {
       u.vex[t.target] = u.turnCount + 1;
     }
     return {
-      kind: "damage",
+      kind: "weaponDamage",
       actor: t.actor,
       target: t.target,
+      frame: t,
       amount,
-      damageType: t.spec.damageType,
-      attack: t.spec,
-      critical: t.critical,
     };
   }
   deflect(t, use) {
@@ -2026,6 +2249,12 @@ class CombatRulesEngine {
     this.require(p && p.id === c.id, "Это решение уже завершено или устарело");
     const u = this.unit(p.actor);
     this.s.pending = null;
+    if (
+      RulesClassFeatures.decision(this, c, p) ||
+      RulesMartial.decision(this, c, p) ||
+      RulesDefenses.decision(this, c, p)
+    )
+      return;
     if (p.kind === "initiativeSwap") {
       this.require(
         c.choice === "skip" || p.targets.includes(c.target),
@@ -2245,7 +2474,56 @@ class CombatRulesEngine {
   export() {
     return {
       kind: "dnd-combat-session",
-      version: this.s.meta.contentPack ? 31 : 30,
+      version: Object.values(this.s.units).some(
+        (u) =>
+          Object.keys(u.counters || {}).length ||
+          Object.keys(u.slots || {}).length ||
+          u.features.masteries?.some((k) => !["vex", "nick"].includes(k)) ||
+          u.attacks.some(
+            (a) => a.mastery && !["vex", "nick"].includes(a.mastery),
+          ) ||
+          Object.keys(u.features || {}).some((k) =>
+            [
+              "greatWeaponFighting",
+              "greatWeaponMaster",
+              "savageAttacker",
+              "tacticalMaster",
+              "superiorityDie",
+              "maneuverDC",
+              "maneuvers",
+              "secondWind",
+              "actionSurge",
+              "tacticalMind",
+              "tacticalShift",
+              "indomitable",
+              "layOnHands",
+              "knowEnemy",
+              "auraDevotion",
+              "auraCourage",
+              "auraRadius",
+              "guardianSaveBonus",
+              "heavyArmor",
+              "heavyArmorReduction",
+              "shieldEquipped",
+              "autoShield",
+              "fighterLevel",
+              "uncannyDodge",
+              "evasion",
+              "reliableTalent",
+              "steadyAim",
+              "sharpshooter",
+              "auraProtection",
+              "protection",
+              "shieldSpell",
+              "acReaction",
+              "critNegation",
+            ].includes(k),
+          ),
+      )
+        ? 32
+        : this.s.meta.contentPack
+          ? 31
+          : 30,
       session: structuredClone(this.s),
     };
   }

@@ -4,6 +4,7 @@
   "canonical": false,
   "campaign_id": "yar-warrior",
   "source_state_revision": 29,
+  "source_state_sha256": "294ab1a2e31b0a7416ca2efeec2d873e17aa74c00c3237b193da44455498e360",
   "engine_api": 1,
   "ready_for_full_migration": false,
   "characters": {
@@ -47,31 +48,36 @@
           "source_row": 26,
           "category": "feature",
           "name": "Second Wind — 4/4",
-          "status": "needs_handler_or_review"
+          "status": "primitive_available_needs_verified_profile",
+          "primitive": "secondWind"
         },
         {
           "source_row": 27,
           "category": "feature",
           "name": "Tactical Mind",
-          "status": "needs_handler_or_review"
+          "status": "primitive_available_needs_verified_profile",
+          "primitive": "tacticalMind"
         },
         {
           "source_row": 28,
           "category": "feature",
           "name": "Tactical Shift",
-          "status": "needs_handler_or_review"
+          "status": "primitive_available_needs_verified_profile",
+          "primitive": "tacticalShift"
         },
         {
           "source_row": 29,
           "category": "feature",
           "name": "Action Surge — 1/1",
-          "status": "needs_handler_or_review"
+          "status": "primitive_available_needs_verified_profile",
+          "primitive": "actionSurge"
         },
         {
           "source_row": 30,
           "category": "feature",
           "name": "Know Your Enemy",
-          "status": "needs_handler_or_review"
+          "status": "primitive_available_needs_verified_profile",
+          "primitive": "knowEnemy"
         },
         {
           "source_row": 31,
@@ -83,43 +89,50 @@
           "source_row": 32,
           "category": "feature",
           "name": "Precision Attack",
-          "status": "needs_handler_or_review"
+          "status": "primitive_available_needs_verified_profile",
+          "primitive": "maneuver:precision"
         },
         {
           "source_row": 33,
           "category": "feature",
           "name": "Trip Attack",
-          "status": "needs_handler_or_review"
+          "status": "primitive_available_needs_verified_profile",
+          "primitive": "maneuver:trip"
         },
         {
           "source_row": 34,
           "category": "feature",
           "name": "Riposte",
-          "status": "needs_handler_or_review"
+          "status": "primitive_available_needs_verified_profile",
+          "primitive": "maneuver:riposte"
         },
         {
           "source_row": 35,
           "category": "feature",
           "name": "Maneuvering Attack",
-          "status": "needs_handler_or_review"
+          "status": "primitive_available_needs_verified_profile",
+          "primitive": "maneuver:maneuvering"
         },
         {
           "source_row": 36,
           "category": "feature",
           "name": "Pushing Attack",
-          "status": "needs_handler_or_review"
+          "status": "primitive_available_needs_verified_profile",
+          "primitive": "maneuver:push"
         },
         {
           "source_row": 37,
           "category": "feature",
           "name": "Провоцирующая атака",
-          "status": "needs_handler_or_review"
+          "status": "primitive_available_needs_verified_profile",
+          "primitive": "maneuver:goad"
         },
         {
           "source_row": 38,
           "category": "feature",
           "name": "Приманка и смена",
-          "status": "needs_handler_or_review"
+          "status": "primitive_available_needs_verified_profile",
+          "primitive": "maneuver:bait"
         },
         {
           "source_row": 39,
@@ -137,19 +150,19 @@
           "source_row": 41,
           "category": "feature",
           "name": "Несгибаемость — 1/1",
-          "status": "needs_handler_or_review"
+          "status": "primitive_available_needs_verified_profile",
+          "primitive": "indomitable"
         },
         {
           "source_row": 42,
           "category": "feature",
           "name": "Тактическое мастерство",
-          "status": "needs_handler_or_review"
+          "status": "primitive_available_needs_verified_profile",
+          "primitive": "tacticalMaster"
         }
       ],
       "unmapped_resources": [
-        "action_surge",
-        "personal_money_cp",
-        "storm_thrower_ammo"
+        "personal_money_cp"
       ],
       "reason": "Полный профиль не подтверждён; нельзя отключать недостающие способности и запускать сюжетный бой."
     },
@@ -388,12 +401,9 @@
         }
       ],
       "unmapped_resources": [
-        "arcane_recovery",
         "concentration",
         "mage_armor",
-        "prepared_spells",
-        "shield_magic_initiate",
-        "spell_slots"
+        "prepared_spells"
       ],
       "reason": "Полный профиль не подтверждён; нельзя отключать недостающие способности и запускать сюжетный бой."
     },
@@ -430,25 +440,29 @@
           "source_row": 24,
           "category": "feature",
           "name": "Наложение рук — 50/50 ПЗ",
-          "status": "needs_handler_or_review"
+          "status": "primitive_available_needs_verified_profile",
+          "primitive": "layOnHands"
         },
         {
           "source_row": 25,
           "category": "feature",
           "name": "Aura of Protection",
-          "status": "needs_handler_or_review"
+          "status": "primitive_available_needs_verified_profile",
+          "primitive": "auraProtection"
         },
         {
           "source_row": 26,
           "category": "feature",
           "name": "Aura of Devotion",
-          "status": "needs_handler_or_review"
+          "status": "primitive_available_needs_verified_profile",
+          "primitive": "auraDevotion"
         },
         {
           "source_row": 27,
           "category": "feature",
           "name": "Аура отваги",
-          "status": "needs_handler_or_review"
+          "status": "primitive_available_needs_verified_profile",
+          "primitive": "auraCourage"
         },
         {
           "source_row": 28,
@@ -460,19 +474,22 @@
           "source_row": 29,
           "category": "feature",
           "name": "Protection",
-          "status": "needs_handler_or_review"
+          "status": "primitive_available_needs_verified_profile",
+          "primitive": "protection"
         },
         {
           "source_row": 30,
           "category": "feature",
           "name": "Знак Непоколебимого Стража",
-          "status": "needs_handler_or_review"
+          "status": "primitive_available_needs_verified_profile",
+          "primitive": "critNegation"
         },
         {
           "source_row": 31,
           "category": "feature",
           "name": "Мастер тяжёлых доспехов",
-          "status": "needs_handler_or_review"
+          "status": "primitive_available_needs_verified_profile",
+          "primitive": "heavyArmorReduction"
         },
         {
           "source_row": 32,
@@ -589,10 +606,7 @@
           "status": "needs_handler_or_review"
         }
       ],
-      "unmapped_resources": [
-        "lay_on_hands",
-        "spell_slots"
-      ],
+      "unmapped_resources": [],
       "reason": "Полный профиль не подтверждён; нельзя отключать недостающие способности и запускать сюжетный бой."
     },
     "rada": {
@@ -641,31 +655,36 @@
           "source_row": 28,
           "category": "feature",
           "name": "Хитрое действие",
-          "status": "needs_handler_or_review"
+          "status": "primitive_available_needs_verified_profile",
+          "primitive": "cunningAction"
         },
         {
           "source_row": 29,
           "category": "feature",
           "name": "Точный прицел",
-          "status": "needs_handler_or_review"
+          "status": "primitive_available_needs_verified_profile",
+          "primitive": "steadyAim"
         },
         {
           "source_row": 30,
           "category": "feature",
           "name": "Невероятное уклонение",
-          "status": "needs_handler_or_review"
+          "status": "primitive_available_needs_verified_profile",
+          "primitive": "uncannyDodge"
         },
         {
           "source_row": 31,
           "category": "feature",
           "name": "Уклонение",
-          "status": "needs_handler_or_review"
+          "status": "primitive_available_needs_verified_profile",
+          "primitive": "evasion"
         },
         {
           "source_row": 32,
           "category": "feature",
           "name": "Надёжный талант",
-          "status": "needs_handler_or_review"
+          "status": "primitive_available_needs_verified_profile",
+          "primitive": "reliableTalent"
         },
         {
           "source_row": 33,
@@ -697,7 +716,8 @@
           "source_row": 37,
           "category": "feature",
           "name": "Меткий стрелок",
-          "status": "needs_handler_or_review"
+          "status": "primitive_available_needs_verified_profile",
+          "primitive": "sharpshooter"
         },
         {
           "source_row": 38,
@@ -711,11 +731,5 @@
     }
   },
   "legacy_registry_revision": 27,
-  "legacy_registry_is_stale": true,
-  "source": {
-    "repository": "reider789/havengard-campaign-engine",
-    "commit": "6d26e942d9d86a4c895a821933c569a61bb92a2a",
-    "state_blob": "f004091e80f52955deea660f214160a89e94b6a0"
-  },
-  "note": "Аудит по актуальной карточке канона; в отчёт включены только названия и строки механик. Старый реестр используется лишь для обнаружения устаревания."
+  "legacy_registry_is_stale": true
 }
