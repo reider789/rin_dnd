@@ -7,17 +7,7 @@ class CombatTacticalAI {
   observe(id) {
     const e = this.engine,
       s = e.s;
-    s.memory[id] ??= {};
-    for (const foe of e.enemies(id))
-      if (e.canSee(id, foe) && !e.unit(foe).hidden) {
-        const t = e.unit(foe);
-        s.memory[id][foe] = {
-          x: t.x,
-          y: t.y,
-          seenTurn: s.turnSerial,
-          name: t.name,
-        };
-      }
+    e.recordObservations(id);
     return Object.entries(s.memory[id]).map(([key, v]) => ({
       id: key,
       ...v,
@@ -100,6 +90,106 @@ class CombatTacticalAI {
       from = p;
     }
     return risk;
+  }
+  // A forecast deliberately differs from adjudication: unseen enemies and another
+  // creature's private senses must not influence the position we choose.
+  estimateModifiers(id, target, weapon, from, known) {
+    const e = this.engine,
+      u = e.unit(id),
+      distance = e.distance(from, target),
+      ranged = !["melee", "meleeSpell"].includes(weapon.kind);
+    const adv =
+      ["restrained", "stunned", "paralyzed", "unconscious", "blinded"].some(
+        (kind) => e.has(target.id, kind),
+      ) ||
+      (e.has(target.id, "prone") && distance <= 5) ||
+      (u.vex?.[target.id] !== undefined && u.vex[target.id] >= u.turnCount) ||
+      (u.features.packTactics &&
+        e.s.order.some(
+          (ally) =>
+            ally !== id &&
+            e.unit(ally).team === u.team &&
+            e.active(ally) &&
+            e.distance(e.unit(ally), target) <= 5,
+        )) ||
+      e.s.help?.some(
+        (h) =>
+          h.target === target.id &&
+          h.helper !== id &&
+          e.unit(h.helper).team === u.team,
+      );
+    const disadv =
+      !e.canSee(id, target.id, from) ||
+      ["restrained", "poisoned", "prone", "frightened"].some((k) =>
+        e.has(id, k),
+      ) ||
+      e.has(target.id, "dodge") ||
+      (e.has(target.id, "prone") && distance > 5) ||
+      u.statuses.some((z) => z.kind === "grappled" && z.source !== target.id) ||
+      (ranged &&
+        (distance > (weapon.normalRange || weapon.range) ||
+          known.some(
+            (t) =>
+              t.visible && e.distance(from, t) <= 5 && !e.incapacitated(t.id),
+          )));
+    return { adv: Boolean(adv), disadv: Boolean(disadv) };
+  }
+  investigate(id, known, obscures) {
+    const e = this.engine,
+      u = e.unit(id),
+      done = { kind: "endTurn", actor: id };
+    // Reachability is based on known occupancy. An actual hidden obstruction is
+    // resolved by moveStep, just as for an ordinary player move.
+    const routes = this.reachable(
+      id,
+      e.s.terrain.width * e.s.terrain.height * 15,
+    );
+    const endpoints = new Set(this.reachable(id).map((p) => p.x + "," + p.y));
+    for (const memory of [...known].sort((a, b) => b.seenTurn - a.seenTurn)) {
+      const searched = new Set(memory.searchedFrom || []),
+        radius = Math.max(5, Math.min(60, u.tactics?.searchRadius || 15)),
+        options = routes
+          .filter(
+            (p) =>
+              e.distance(p, memory) <= radius &&
+              !searched.has(p.x + "," + p.y) &&
+              !p.path.some((q) =>
+                e.s.zones.some((z) => obscures(z) && e.zoneAt(q, z)),
+              ) &&
+              !e.s.zones.some((z) => obscures(z) && e.zoneAt(p, z)),
+          )
+          .sort(
+            (a, b) =>
+              e.distance(a, memory) - e.distance(b, memory) ||
+              a.cost +
+                this.risk(id, a.path, known) * 25 -
+                (b.cost + this.risk(id, b.path, known) * 25),
+          );
+      const goal = options[0];
+      if (!goal) continue;
+      if (!goal.path.length)
+        return u.action > 0 ? { kind: "search", actor: id } : done;
+      let spent = 0;
+      const path = [];
+      for (const p of goal.path) {
+        spent += e.stepCost(id, p);
+        if (spent > u.move) break;
+        path.push(p);
+      }
+      while (path.length && !endpoints.has(path.at(-1).x + "," + path.at(-1).y))
+        path.pop();
+      if (path.length)
+        return {
+          kind: "move",
+          actor: id,
+          path,
+          reason: "обследует окрестности последнего известного места",
+        };
+      return u.action > 0
+        ? { kind: e.speed(id) > 0 ? "dash" : "dodge", actor: id }
+        : done;
+    }
+    return u.action > 0 ? { kind: "dodge", actor: id } : done;
   }
   choose(id) {
     const e = this.engine,
@@ -284,7 +374,7 @@ class CombatTacticalAI {
           }
           const range = e.distance(p, target),
             ranged = !["melee", "meleeSpell"].includes(weapon.kind),
-            m = e.attackModifiers(id, target.id, weapon, p);
+            m = this.estimateModifiers(id, target, weapon, p, known);
           let chance = Math.min(
             0.95,
             Math.max(0.05, (21 + weapon.bonus - 14) / 20),
@@ -347,6 +437,7 @@ class CombatTacticalAI {
       };
     }
     if (u.action > 0 && u.tactics.hold) return { kind: "dodge", actor: id };
+    if (!visible.length) return this.investigate(id, known, obscures);
     const goal = [...known].sort(
       (a, b) => b.seenTurn - a.seenTurn || e.distance(u, a) - e.distance(u, b),
     )[0];

@@ -1,7 +1,7 @@
 /* D&D 2024 combat domain. No DOM, network, character names or campaign IDs. */
 "use strict";
 class CombatRulesEngine {
-  static VERSION = "30.0.0";
+  static VERSION = "30.1.0";
   static RULES = "dnd-2024-2026-10";
   static FEATURES = new Set([
     "martialArts",
@@ -1094,19 +1094,25 @@ class CombatRulesEngine {
         );
       }
     }
-    for (const id of this.s.order) {
-      if (!this.active(id)) continue;
-      this.s.memory[id] ??= {};
-      for (const foe of this.enemies(id)) {
-        const t = this.unit(foe);
-        if (!t.hidden && this.canSee(id, foe))
-          this.s.memory[id][foe] = {
-            x: t.x,
-            y: t.y,
-            name: t.name,
-            seenTurn: this.s.turnSerial,
-          };
-      }
+    for (const id of this.s.order)
+      if (this.active(id)) this.recordObservations(id);
+  }
+  recordObservations(id) {
+    const memory = (this.s.memory[id] ??= {});
+    for (const foe of this.s.order) {
+      const t = this.unit(foe);
+      if (t.team === this.unit(id).team || t.hidden || !this.canSee(id, foe))
+        continue;
+      // A visible fallen opponent is no longer a missing combatant. An unseen
+      // defeat does not erase the observer's memory or reveal its outcome.
+      if (!this.active(foe)) delete memory[foe];
+      else
+        memory[foe] = {
+          x: t.x,
+          y: t.y,
+          name: t.name,
+          seenTurn: this.s.turnSerial,
+        };
     }
   }
   task(t) {
@@ -1739,6 +1745,14 @@ class CombatRulesEngine {
       return;
     }
     if (t.kind === "searchResult") {
+      // Record completed searches, not proposed AI commands. This survives a
+      // checkpoint during the perception roll and also works for player Search.
+      for (const [id, memory] of Object.entries(s.memory[t.actor] || {})) {
+        if (this.canSee(t.actor, id) && !this.unit(id).hidden) continue;
+        memory.searchedFrom ??= [];
+        const cell = u.x + "," + u.y;
+        if (!memory.searchedFrom.includes(cell)) memory.searchedFrom.push(cell);
+      }
       for (const id of this.enemies(t.actor)) {
         const a = this.unit(id);
         if (a.hidden && t.result.total >= a.hideDC && this.wallLOS(u, a)) {

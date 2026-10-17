@@ -651,3 +651,131 @@ test("leaving concealment ends Hide instead of granting permanent invisibility",
   assert.equal(e.unit("rin").hidden, false);
   assert.equal(e.has("rin", "invisible"), false);
 });
+
+test("AI forecasts ignore unseen threats and another creature's private senses", () => {
+  const e = battle(),
+    ai = new AI(e),
+    archer = e.unit("enemy_2");
+  e.unit("enemy_1").team = e.unit("rin").team;
+  e.unit("enemy_1").hidden = true;
+  e.status("enemy_1", "invisible");
+  Object.assign(e.unit("enemy_1"), { x: 8, y: 3 });
+  const known = ai.observe("enemy_2"),
+    target = known.find((t) => t.id === "rin");
+  const forecast = ai.estimateModifiers(
+    "enemy_2",
+    target,
+    archer.attacks[0],
+    archer,
+    known,
+  );
+  assert.equal(forecast.disadv, false);
+  assert.equal(
+    e.attackModifiers("enemy_2", "rin", archer.attacks[0]).disadv,
+    true,
+  );
+  const decision = ai.choose("enemy_2"),
+    random = structuredClone(e.s.random);
+  Object.assign(e.unit("enemy_1"), { x: 10, y: 7 });
+  e.unit("rin").senses = { blindsight: 120, truesight: 120 };
+  assert.deepEqual(
+    ai.estimateModifiers("enemy_2", target, archer.attacks[0], archer, known),
+    forecast,
+  );
+  assert.deepEqual(ai.choose("enemy_2"), decision);
+  assert.deepEqual(e.s.random, random);
+});
+
+test("completed investigation visits new positions, survives reload and eventually holds", () => {
+  let e = battle();
+  const id = "enemy_1";
+  e.s.index = e.s.order.indexOf(id);
+  Object.assign(e.unit("rin"), { x: 10, y: 7 });
+  e.status("rin", "invisible");
+  e.unit(id).tactics.searchRadius = 5;
+  e.s.memory[id] = { rin: { x: 2, y: 3, seenTurn: 0, name: "Рин" } };
+  const locations = new Set();
+  let held = false;
+  for (let n = 0; n < 100; n++) {
+    const c = new AI(e).choose(id);
+    if (c.kind === "dodge") {
+      held = true;
+      break;
+    }
+    if (c.kind === "endTurn") {
+      // Isolate repeated investigator turns; the complete encounter suite covers initiative.
+      Object.assign(e.unit(id), { action: 1, move: 30 });
+      e.s.turnSerial++;
+      continue;
+    }
+    if (c.kind === "search") {
+      const key = e.unit(id).x + "," + e.unit(id).y;
+      assert.ok(!locations.has(key), "repeated an already completed search");
+      locations.add(key);
+    }
+    e.dispatch(c);
+    assert.equal(e.s.pending, null);
+    e = new E(JSON.parse(JSON.stringify(e.export())).session);
+  }
+  assert.ok(held, "investigation must finish instead of circling forever");
+  assert.ok(locations.size >= 5);
+  assert.equal(e.s.memory[id].rin.searchedFrom.length, locations.size);
+  assert.equal(e.unit("rin").x, 10);
+  // A new sighting replaces the obsolete search history.
+  e.removeStatus("rin", "invisible");
+  e.observeAll();
+  assert.equal(e.s.memory[id].rin.x, 10);
+  assert.equal(e.s.memory[id].rin.searchedFrom, undefined);
+});
+
+test("proposing Search does not mark a location until the roll completes", () => {
+  const e = battle(),
+    id = "enemy_1";
+  e.s.index = e.s.order.indexOf(id);
+  Object.assign(e.unit("rin"), { x: 10, y: 7 });
+  e.status("rin", "invisible");
+  e.s.memory[id] = { rin: { x: 2, y: 3, seenTurn: 0 } };
+  e.unit(id).action = 1;
+  const c = new AI(e).choose(id);
+  assert.equal(c.kind, "search");
+  assert.equal(e.s.memory[id].rin.searchedFrom, undefined);
+  e.unit(id).controlled = true;
+  e.unit(id).heroic = 1;
+  e.unit(id).policies.heroic = true;
+  e.dispatch(c);
+  assert.equal(e.s.pending.kind, "roll");
+  assert.equal(e.s.memory[id].rin.searchedFrom, undefined);
+  const copy = new E(JSON.parse(JSON.stringify(e.export())).session);
+  decide(copy, "accept");
+  assert.deepEqual(copy.s.memory[id].rin.searchedFrom, ["2,3"]);
+});
+
+test("an immobilized investigator does not endlessly Dash toward a memory", () => {
+  const e = battle(),
+    id = "enemy_1";
+  e.s.index = e.s.order.indexOf(id);
+  Object.assign(e.unit("rin"), { x: 10, y: 7 });
+  e.status("rin", "invisible");
+  e.status(id, "grappled", { source: "rin" });
+  Object.assign(e.unit(id), { action: 1, move: 0 });
+  e.s.memory[id] = { rin: { x: 7, y: 3, seenTurn: 0 } };
+  const c = new AI(e).choose(id);
+  assert.equal(c.kind, "dodge");
+  e.dispatch(c);
+  assert.equal(new AI(e).choose(id).kind, "endTurn");
+});
+
+test("observations forget a visible fallen target without learning an unseen defeat", () => {
+  const e = battle(),
+    ai = new AI(e),
+    id = "enemy_1";
+  ai.observe(id);
+  assert.ok(e.s.memory[id].rin);
+  e.status("rin", "invisible");
+  Object.assign(e.unit("rin"), { hp: 0, dead: true });
+  ai.observe(id);
+  assert.ok(e.s.memory[id].rin, "unseen death must not update knowledge");
+  e.removeStatus("rin", "invisible");
+  ai.observe(id);
+  assert.equal(e.s.memory[id].rin, undefined);
+});
