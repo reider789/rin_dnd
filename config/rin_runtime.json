@@ -1,12 +1,15 @@
 {
   "schema_version": 2,
-  "source_state_revision": 2,
-  "source": "rin-veir-master-sheet-2026-10-16",
+  "combat_schema_version": 30,
+  "campaign_id": "rin-veir",
+  "source": "state/_campaign-state.json",
+  "source_state_revision": 1,
+  "source_state_sha256": "bf8bd1f85817996db5961dd8c658c028f7c87a7632fd53f75a98812a013139e9",
   "is_canonical": false,
   "characters": {
     "rin": {
       "name": "Рин Вейр",
-      "class_and_level": "Разбойник 1 / Монах 3 — Воин Тени",
+      "class_and_level": "Разбойник 1 / Монах 3 (Воин Тени), D&D 2024",
       "ac_description": "16",
       "speed": "40 фт",
       "resources": {
@@ -18,183 +21,515 @@
           "current": 0,
           "max": 3
         },
-        "luck": {
-          "current": 2,
-          "max": 2
-        },
         "arrows": {
           "current": 20,
           "max": 20
         },
+        "luck": {
+          "current": 2,
+          "max": 2
+        },
         "heroic": {
+          "current": 1,
+          "max": 1
+        },
+        "personal_money_cp": 18289,
+        "unusual_metabolism": {
           "current": 1,
           "max": 1
         }
       },
-      "consumables": {},
       "inventory": [
         {
-          "id": "shortsword",
-          "name": "«Черта»",
-          "quantity": 1
+          "id": "cherta",
+          "name": "«Черта» (короткий меч)",
+          "quantity": 1,
+          "description": "Основное оружие, Vex",
+          "status": "при себе",
+          "origin": "канон кампании",
+          "combat_available": true
         },
         {
-          "id": "dagger",
-          "name": "Кинжал",
-          "quantity": 4
+          "id": "daggers",
+          "name": "Кинжалы",
+          "quantity": 4,
+          "description": "Один может применять Nick",
+          "status": "при себе",
+          "origin": "канон кампании",
+          "combat_available": true
         },
         {
           "id": "shortbow",
           "name": "Короткий лук",
-          "quantity": 1
+          "quantity": 1,
+          "description": "",
+          "status": "при себе",
+          "origin": "канон кампании",
+          "combat_available": true
         },
         {
           "id": "arrows",
           "name": "Стрелы",
-          "quantity": 20
+          "quantity": 20,
+          "description": "В рабочем колчане; не смешивать с найденными до перекладки",
+          "status": "при себе",
+          "origin": "канон кампании",
+          "combat_available": true
+        },
+        {
+          "id": "quiver",
+          "name": "Колчан",
+          "quantity": 1,
+          "description": "",
+          "status": "при себе",
+          "origin": "канон кампании",
+          "combat_available": true
         },
         {
           "id": "thieves_tools",
           "name": "Воровские инструменты",
-          "quantity": 1
+          "quantity": 1,
+          "description": "",
+          "status": "при себе",
+          "origin": "канон кампании",
+          "combat_available": true
+        },
+        {
+          "id": "burglars_pack",
+          "name": "Набор взломщика",
+          "quantity": 1,
+          "description": "",
+          "status": "при себе",
+          "origin": "канон кампании",
+          "combat_available": true
+        },
+        {
+          "id": "pouches",
+          "name": "Поясные сумки",
+          "quantity": 2,
+          "description": "",
+          "status": "при себе",
+          "origin": "канон кампании",
+          "combat_available": true
+        },
+        {
+          "id": "clothes",
+          "name": "Дорожная одежда и серое пальто",
+          "quantity": 1,
+          "description": "",
+          "status": "при себе",
+          "origin": "канон кампании",
+          "combat_available": true
+        },
+        {
+          "id": "bedroll",
+          "name": "Постельные принадлежности",
+          "quantity": 1,
+          "description": "",
+          "status": "при себе",
+          "origin": "канон кампании",
+          "combat_available": true
+        },
+        {
+          "id": "game_set",
+          "name": "Игровой набор",
+          "quantity": 1,
+          "description": "",
+          "status": "при себе",
+          "origin": "канон кампании",
+          "combat_available": true
+        },
+        {
+          "id": "monastery_documents",
+          "name": "Документы Последнего Света",
+          "quantity": 1,
+          "description": "Похищены при уходе; часть содержания неизвестна",
+          "status": "скрыто при себе",
+          "origin": "канон кампании",
+          "combat_available": true
+        },
+        {
+          "id": "edric_letter",
+          "name": "Письмо Эдрика для Сайрена",
+          "quantity": 1,
+          "description": "Прочитано вместе с Сайреном",
+          "status": "при себе",
+          "origin": "канон кампании",
+          "combat_available": true
+        },
+        {
+          "id": "edric_plate",
+          "name": "Контактная пластинка Эдрика",
+          "quantity": 1,
+          "description": "Контакт Остен Рей, пароль о книге без последней страницы",
+          "status": "при себе",
+          "origin": "канон кампании",
+          "combat_available": true
+        },
+        {
+          "id": "circle_vii",
+          "name": "Жетон VII",
+          "quantity": 1,
+          "description": "",
+          "status": "при себе",
+          "origin": "канон кампании",
+          "combat_available": true
+        },
+        {
+          "id": "circle_orders",
+          "name": "Записка с приказом Разомкнутого Круга",
+          "quantity": 1,
+          "description": "",
+          "status": "при себе",
+          "origin": "канон кампании",
+          "combat_available": true
+        },
+        {
+          "id": "horse",
+          "name": "Верховая лошадь",
+          "quantity": 1,
+          "description": "Оставлена в Сером Броде на конюшне; местоположение подлежит сверке",
+          "status": "конюшня Серого Брода",
+          "origin": "канон кампании",
+          "combat_available": false
+        },
+        {
+          "id": "saddle",
+          "name": "Верховое седло",
+          "quantity": 1,
+          "description": "На лошади",
+          "status": "конюшня Серого Брода",
+          "origin": "канон кампании",
+          "combat_available": false
+        },
+        {
+          "id": "saddlebags",
+          "name": "Седельные сумки",
+          "quantity": 1,
+          "description": "На лошади",
+          "status": "конюшня Серого Брода",
+          "origin": "канон кампании",
+          "combat_available": false
+        },
+        {
+          "id": "food_wraps",
+          "name": "Сухие дорожные свёртки",
+          "quantity": 2,
+          "description": "На лошади",
+          "status": "конюшня Серого Брода",
+          "origin": "канон кампании",
+          "combat_available": false
+        },
+        {
+          "id": "rope",
+          "name": "Тонкая верёвка",
+          "quantity": 1,
+          "description": "На лошади",
+          "status": "конюшня Серого Брода",
+          "origin": "канон кампании",
+          "combat_available": false
+        },
+        {
+          "id": "blank_tokens",
+          "name": "Жетоны без номера",
+          "quantity": 3,
+          "description": "На лошади",
+          "status": "конюшня Серого Брода",
+          "origin": "канон кампании",
+          "combat_available": false
+        },
+        {
+          "id": "route_map",
+          "name": "Карта Серый Брод — Вейлхольм",
+          "quantity": 1,
+          "description": "Отмечена старая обсерватория и «VII — активен»",
+          "status": "при себе",
+          "origin": "канон кампании",
+          "combat_available": true
+        },
+        {
+          "id": "circle_notebook",
+          "name": "Записная книжка Разомкнутого Круга",
+          "quantity": 1,
+          "description": "",
+          "status": "при себе",
+          "origin": "канон кампании",
+          "combat_available": true
+        },
+        {
+          "id": "sealed_cylinder",
+          "name": "Запечатанный металлический цилиндр",
+          "quantity": 1,
+          "description": "Не вскрыт",
+          "status": "при себе",
+          "origin": "канон кампании",
+          "combat_available": true
+        },
+        {
+          "id": "unclear_flasks",
+          "name": "Флаконы мутной жидкости",
+          "quantity": 3,
+          "description": "2 у Мары; 1 в седельной сумке",
+          "status": "частично у Мары",
+          "origin": "канон кампании",
+          "combat_available": false
+        },
+        {
+          "id": "needle_case",
+          "name": "Футляр с тремя иглами",
+          "quantity": 1,
+          "description": "Возможно опасное содержимое",
+          "status": "у Мары",
+          "origin": "канон кампании",
+          "combat_available": false
+        },
+        {
+          "id": "thin_pick",
+          "name": "Тонкая металлическая отмычка",
+          "quantity": 1,
+          "description": "Найдена у Лорена",
+          "status": "у Мары",
+          "origin": "канон кампании",
+          "combat_available": false
+        },
+        {
+          "id": "bandit_sabers",
+          "name": "Трофейные сабли",
+          "quantity": 3,
+          "description": "С пяти дорожных разбойников",
+          "status": "караванная повозка",
+          "origin": "засада на дороге",
+          "combat_available": false
+        },
+        {
+          "id": "bandit_bows",
+          "name": "Трофейные короткие луки",
+          "quantity": 2,
+          "description": "С дорожных разбойников",
+          "status": "караванная повозка",
+          "origin": "засада на дороге",
+          "combat_available": false
+        },
+        {
+          "id": "bandit_armors",
+          "name": "Поношенные кожаные доспехи",
+          "quantity": 5,
+          "description": "С дорожных разбойников",
+          "status": "караванная повозка",
+          "origin": "засада на дороге",
+          "combat_available": false
+        },
+        {
+          "id": "bandit_arrows",
+          "name": "Трофейные стрелы",
+          "quantity": 32,
+          "description": "Ещё не зачислены в личный колчан",
+          "status": "караванная повозка",
+          "origin": "засада на дороге",
+          "combat_available": false
+        },
+        {
+          "id": "bandit_quivers",
+          "name": "Трофейные колчаны",
+          "quantity": 2,
+          "description": "С дорожных разбойников",
+          "status": "караванная повозка",
+          "origin": "засада на дороге",
+          "combat_available": false
+        },
+        {
+          "id": "bandit_pouches",
+          "name": "Трофейные кошели",
+          "quantity": 5,
+          "description": "Монеты учтены в личном кошельке",
+          "status": "караванная повозка",
+          "origin": "засада на дороге",
+          "combat_available": false
         }
       ],
+      "consumables": {},
+      "combat_profile": {
+        "scores": {
+          "STR": 8,
+          "DEX": 17,
+          "CON": 14,
+          "INT": 8,
+          "WIS": 16,
+          "CHA": 10
+        },
+        "proficiency": 2,
+        "saveProficiencies": [
+          "DEX",
+          "INT"
+        ],
+        "skillProficiencies": {
+          "stealth": [
+            "DEX",
+            2
+          ],
+          "perception": [
+            "WIS",
+            2
+          ],
+          "sleightOfHand": [
+            "DEX",
+            1
+          ]
+        },
+        "features": {
+          "martialArts": true,
+          "monkFocus": true,
+          "monkLevel": 3,
+          "martialDie": 6,
+          "flurryCount": 2,
+          "deflectAttacks": 3,
+          "shadowArts": true,
+          "uncannyMetabolism": true,
+          "sneakDice": 1,
+          "masteries": [
+            "vex",
+            "nick"
+          ],
+          "alert": true
+        },
+        "senses": {
+          "darkvision": 60
+        },
+        "deathSaves": true,
+        "attacks": [
+          {
+            "id": "shortsword",
+            "name": "«Черта»",
+            "ability": "DEX",
+            "count": 1,
+            "die": 6,
+            "kind": "melee",
+            "range": 5,
+            "damageType": "piercing",
+            "sneakEligible": true,
+            "inventoryId": "cherta",
+            "light": true,
+            "mastery": "vex"
+          },
+          {
+            "id": "dagger",
+            "name": "Кинжал",
+            "ability": "DEX",
+            "count": 1,
+            "die": 6,
+            "kind": "melee",
+            "range": 5,
+            "damageType": "piercing",
+            "sneakEligible": true,
+            "inventoryId": "daggers",
+            "light": true,
+            "mastery": "nick"
+          },
+          {
+            "id": "unarmed",
+            "name": "Безоружный удар",
+            "ability": "DEX",
+            "count": 1,
+            "die": 6,
+            "kind": "melee",
+            "range": 5,
+            "damageType": "bludgeoning",
+            "unarmed": true
+          },
+          {
+            "id": "bow",
+            "name": "Короткий лук",
+            "ability": "DEX",
+            "count": 1,
+            "die": 6,
+            "kind": "ranged",
+            "range": 320,
+            "damageType": "piercing",
+            "sneakEligible": true,
+            "inventoryId": "shortbow",
+            "ammo": "arrows",
+            "normalRange": 80,
+            "ammoInventoryId": "arrows"
+          },
+          {
+            "id": "daggerThrow",
+            "name": "Метнуть кинжал",
+            "ability": "DEX",
+            "count": 1,
+            "die": 6,
+            "kind": "ranged",
+            "range": 60,
+            "damageType": "piercing",
+            "sneakEligible": true,
+            "inventoryId": "daggers",
+            "normalRange": 20,
+            "ammoItem": "daggers"
+          }
+        ],
+        "verified_class_and_level": "Разбойник 1 / Монах 3 (Воин Тени), D&D 2024",
+        "ac": 16,
+        "speed": 40
+      },
       "skills_attacks_spells": [
         {
-          "name": "«Черта»",
-          "description": "+5 · 1d6+3 · короткий меч · Уязвимость (Vex)"
-        },
-        {
-          "name": "Кинжал",
-          "description": "+5 · 1d6+3 · Быстрота (Nick), Лёгкое"
-        },
-        {
-          "name": "Короткий лук",
-          "description": "+5 · 1d6+3 · 80/320 футов, стрелы 20"
+          "name": "«Черта», короткий меч",
+          "description": "+5 к попаданию · 1к6+3 · Vex"
         },
         {
           "name": "Безоружный удар",
-          "description": "+5 · 1d6+3 · приём Боевых искусств"
+          "description": "+5 к попаданию · 1к6+3"
         },
         {
           "name": "Скрытая атака",
-          "description": "Дополнительный урон 1к6 один раз за ход при выполнении условий"
+          "description": "1к6 один раз за ход при выполнении условий"
         },
         {
-          "name": "Боевые искусства",
-          "description": "Безоружный удар бонусным действием, без необходимости действия Атака"
+          "name": "Тьма Воина Тени",
+          "description": "1 фокус, действие, 15 фт радиус, 60 фт дальность, концентрация до 10 минут; видит внутри своей Тьмы"
         },
         {
           "name": "Шквал ударов",
-          "description": "За 1 фокус — 2 безоружных удара бонусным действием"
-        },
-        {
-          "name": "Терпеливая защита",
-          "description": "Бонусное действие: Отход бесплатно; за 1 фокус Отход и Уклонение"
-        },
-        {
-          "name": "Шаг ветра",
-          "description": "Бонусное действие: Рывок бесплатно; за 1 фокус Рывок и Отход, удвоение прыжка"
-        },
-        {
-          "name": "Отражение атак",
-          "description": "Реакция: уменьшить дробящий, колющий или рубящий урон на 1к10+6; при снижении до нуля можно перенаправить за 1 фокус"
-        },
-        {
-          "name": "Искусства Тени: Тьма",
-          "description": "1 фокус, действие, 60 футов, радиус 15 футов, концентрация до 10 минут. Рин видит в собственной Тьме; в начале хода может перенести её бесплатно"
-        },
-        {
-          "name": "Малая иллюзия",
-          "description": "Заговор, визуальная или звуковая иллюзия. Действие Магия"
-        },
-        {
-          "name": "Удачливый",
-          "description": "2 использования после длительного отдыха — преимущество на собственный d20 или помеха по себе"
-        },
-        {
-          "name": "Бдительный",
-          "description": "Инициатива +5, можно обменяться инициативой с согласным союзником"
-        }
-      ]
-    },
-    "guard_a": {
-      "name": "Охранник A",
-      "class_and_level": "Караванный охранник",
-      "ac_description": "16",
-      "speed": "30 фт",
-      "resources": {
-        "hp": {
-          "current": 11,
-          "max": 11
-        }
-      },
-      "consumables": {},
-      "inventory": [
-        {
-          "id": "spear",
-          "name": "Копьё",
-          "quantity": 1
-        }
-      ],
-      "skills_attacks_spells": [
-        {
-          "name": "Копьё",
-          "description": "+3 · 1d6+1"
-        }
-      ]
-    },
-    "guard_b": {
-      "name": "Охранник B",
-      "class_and_level": "Караванный охранник",
-      "ac_description": "16",
-      "speed": "30 фт",
-      "resources": {
-        "hp": {
-          "current": 11,
-          "max": 11
-        }
-      },
-      "consumables": {},
-      "inventory": [
-        {
-          "id": "spear",
-          "name": "Копьё",
-          "quantity": 1
-        }
-      ],
-      "skills_attacks_spells": [
-        {
-          "name": "Копьё",
-          "description": "+3 · 1d6+1"
-        }
-      ]
-    },
-    "guard_c": {
-      "name": "Охранник C",
-      "class_and_level": "Караванный охранник",
-      "ac_description": "16",
-      "speed": "30 фт",
-      "resources": {
-        "hp": {
-          "current": 11,
-          "max": 11
-        }
-      },
-      "consumables": {},
-      "inventory": [
-        {
-          "id": "spear",
-          "name": "Копьё",
-          "quantity": 1
-        }
-      ],
-      "skills_attacks_spells": [
-        {
-          "name": "Копьё",
-          "description": "+3 · 1d6+1"
+          "description": "1 фокус, две безоружные атаки"
         }
       ]
     }
-  }
+  },
+  "npc_profiles": {
+    "guard": {
+      "name": "Охранник",
+      "hp": 11,
+      "ac": 16,
+      "speed": 30,
+      "scores": {
+        "STR": 13,
+        "DEX": 12,
+        "CON": 12,
+        "INT": 10,
+        "WIS": 11,
+        "CHA": 10
+      },
+      "proficiency": 2,
+      "features": {},
+      "attacks": [
+        {
+          "id": "spear",
+          "name": "Копьё",
+          "kind": "melee",
+          "bonus": 3,
+          "flat": 1,
+          "count": 1,
+          "die": 6,
+          "range": 5,
+          "damageType": "piercing"
+        }
+      ],
+      "tactics": {
+        "role": "guardian",
+        "morale": 0.15,
+        "canFlee": false,
+        "hold": false
+      }
+    }
+  },
+  "rules_version": "dnd-2024-2026-10"
 }

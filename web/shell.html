@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Рин Вейр · Тактический бой</title>
+    <style>
+      /*__STYLE__*/
+    </style>
+  </head>
+  <body>
+    <main id="combat-app">
+      <header>
+        <div>
+          <small>КАМПАНИЯ РИНА ВЕЙРА · D&D 2024</small>
+          <h1 id="battle-name"></h1>
+          <p id="source-status"></p>
+        </div>
+        <div class="round" id="round"></div>
+      </header>
+      <div class="toolbar">
+        <button data-op="new">Новый учебный бой</button
+        ><button data-op="save">Сохранить</button
+        ><button data-op="export">Скачать сохранение</button
+        ><button data-op="import">Загрузить сохранение</button
+        ><button data-op="scenario">Загрузить сценарий</button
+        ><button data-op="report" id="report-button">Итоги для мастера</button
+        ><span id="save-status"></span>
+      </div>
+      <input
+        type="file"
+        id="import-file"
+        accept="application/json"
+        hidden
+      /><input
+        type="file"
+        id="scenario-file"
+        accept="application/json"
+        hidden
+      />
+      <div class="layout">
+        <section class="map-column">
+          <div id="queue" class="queue"></div>
+          <div class="board-frame">
+            <div
+              id="board"
+              class="board"
+              role="grid"
+              aria-label="Поле боя"
+            ></div>
+          </div>
+          <div id="notice" role="status"></div>
+          <div id="route"></div>
+          <div class="legend">
+            Клетка — 5 футов · светлая рамка — текущий участник · бронзовая —
+            выбранная цель
+          </div>
+          <details>
+            <summary>Участники и доступное снаряжение</summary>
+            <div id="inspector"></div>
+          </details>
+        </section>
+        <aside>
+          <div id="actor"></div>
+          <div id="decision" aria-live="polite"></div>
+          <div id="actions"></div>
+          <div id="abilities"></div>
+          <div id="policies"></div>
+        </aside>
+      </div>
+      <section class="journal-section">
+        <div class="journal-title">
+          <h2>Журнал боя</h2>
+          <button data-op="journal">Показать весь журнал</button
+          ><button data-op="journal-export">Скачать журнал</button>
+        </div>
+        <div id="journal"></div>
+      </section>
+    </main>
+    <script type="application/json" id="runtime">
+      /*__RUNTIME__*/
+    </script>
+    <script type="application/json" id="scene">
+      /*__SCENE__*/
+    </script>
+    <script type="application/json" id="artpack">
+      /*__ART__*/
+    </script>
+    <script>
+      /*__CODE__*/
+    </script>
+  </body>
+</html>

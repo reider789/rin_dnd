@@ -1,12 +1,21 @@
 {
   "name": "rin-veir-combat",
-  "engine": "full-havengard-v29-adaptation",
-  "origin": "reider789/havengard-campaign-engine",
-  "source_engine": "upstream_snapshot/engine-v29.html",
-  "player": "Рин Вейр",
-  "scene": "caravan_ambush_training",
-  "offline_rules": true,
-  "art_pack": "embedded offline original Havengard 24 assets plus portrait Rin 25th",
-  "bundle_sha256": "33300f5a1d50d9eb4ebf9837b9e47c8cc890a0a1c40277463177e3bca20f1289",
-  "bytes": 1926297
+  "version": 30,
+  "engine_version": "30.0.0",
+  "rules_version": "dnd-2024-2026-10",
+  "source_state_revision": 1,
+  "source_state_sha256": "bf8bd1f85817996db5961dd8c658c028f7c87a7632fd53f75a98812a013139e9",
+  "sources": {
+    "core/battlefield.js": "e62571232bebb06cfbcf87a8571cde590e5fbc6cd1aa493ebe76e5c7a94bdc98",
+    "core/rules_engine.js": "24cbbf3e8a3104e3ab1eb8ea1e9600542f24e46a374e37fa030bc3c18cc8947c",
+    "core/tactical_ai.js": "3d5e6f43665dd8b8465035848feeba4532bcf5fda277dabf7f17b43124f655d4",
+    "core/campaign_adapter.js": "62f0ea68d5e759dc70d70c1444ce75dfa4c4ee2dadc1d69c2e95c691a8d2f4ca",
+    "web/combat_app.js": "ecee8d235b0c6588abc3555e201b19f0602f4b3fc1d6d16a68bc156f33229a54",
+    "web/shell.html": "94624258479492a18dd936bf40b19715dfca25b463a5ca823e52ee5172bbddf4",
+    "web/desktop.css": "ebb3f2abc9ebc48fdade26a46809cf17c45f381575c0141628d1111447d3421e",
+    "config/combat_profiles.json": "8591e45948624c0342f9e2fe6b61c0e9ef651abe3d1aab77210aa3fe895c6d81",
+    "encounters/caravan_ambush_training.json": "e0855a32f8401b0ad1307e29eb2a428ffed46dcb9113ba504e4a6c0b1be9d714"
+  },
+  "bundle_sha256": "abb0adc1751e80814fe8ec7d27afe61d20599f95a3828d08d85605d24031ea90",
+  "bytes": 1739491
 }

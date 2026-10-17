@@ -1,62 +1,47 @@
 #!/usr/bin/env python3
-"""Build the complete Havengard v29 combat UI with Rin campaign profiles.
-Original unmodified v29 snapshot and all original core modules remain in repo.
-"""
-import json, base64, hashlib, argparse
+"""Reproducible offline v30 bundle. Canonical state is read-only."""
+import argparse,base64,hashlib,json
 from pathlib import Path
-
+from sync_combat_runtime import snapshot
 ROOT=Path(__file__).resolve().parents[1]
-ORDER=[
- ('/*__HV_COMBAT_CORE_MODULES__*/',['dice.js','journal.js','conditions.js','battlefield.js','state_port.js','dom_renderer.js','persistence.js']),
- ('/*__HV_SPELL_RESOLVER__*/',['spell_resolver.js']),
- ('/*__HV_REACTION_RESOLVER__*/',['reaction_resolver.js']),
-]
-TERM='\n})();\n</script>'
-
-def build(root=ROOT,scene=None):
- engine=(root/'engine-v29.html').read_text(encoding='utf-8')
- for marker,paths in ORDER:
-  assert engine.count(marker)==1, f'Cannot find {marker}'
-  engine=engine.replace(marker,'\n'.join((root/'core'/p).read_text(encoding='utf-8') for p in paths),1)
- assert engine.count('/*__RIN_ADAPTER__*/')==1
- adapter=(root/'rin_rules.js').read_text(encoding='utf-8')
- portrait=(root/'assets/rin-portrait-256.webp').read_bytes()
- adapter=adapter.replace('__RIN_PORTRAIT_DATA__','data:image/webp;base64,'+base64.b64encode(portrait).decode())
- engine=engine.replace('/*__RIN_ADAPTER__*/',adapter,1)
- skin=(root/'visual_skin.js').read_text(encoding='utf-8')
- assert engine.count(TERM)==1
- engine=engine.replace(TERM,'\n'+skin+TERM,1)
- css=(root/'fantasy_ui.css').read_text(encoding='utf-8')
- engine=engine.replace('</style>','</style>\n<style>\n'+css+'\n#hv12 .tile.rin-dark-tile {background:#0d1030ee!important;box-shadow:inset 0 0 0 1px #6a60b3bd} \n#hv12 .rin-dark-tile .unit {z-index:4}\n</style>',1)
- fx=(root/'core/visual_fx.js').read_text(encoding='utf-8')
- engine=engine.replace(TERM,'\nroot.classList.add("hv-fantasy");\n'+fx+
-   '\ncombatFX=new CombatVisualFX(root,()=>s,()=>names);\n'+
-   'const oldFXRender=render;render=function(){oldFXRender();combatFX?.afterRender()};\n'+TERM,1)
- handoff=(root/'core/narrative_handoff.js').read_text(encoding='utf-8')
- engine=engine.replace(TERM,'\n'+handoff+'\n'+
-   'const combatHandoff=new CombatNarrativeHandoff({root,state:()=>s,runtime:()=>runtime,party:()=>heroes,enemies:()=>foes,names:()=>names,outcome:()=>v21Outcome(),log,render:()=>render(),save:()=>hostSave()});\n'+TERM,1)
- ko=(root/'core/knockout_2024.js').read_text(encoding='utf-8')
- port=('const knockout2024=new CombatKnockout2024({'+'getState:()=>s,getHurt:()=>hurt,setHurt:f=>{hurt=f},'
-  'getHeal:()=>heal,setHeal:f=>{heal=f},getAfterWeaponHit:()=>afterWeaponHit,setAfterWeaponHit:f=>{afterWeaponHit=f},'
-  'getEnemyTurn:()=>enemyTurn,setEnemyTurn:f=>{enemyTurn=f},getRender:()=>render,setRender:f=>{render=f},'
-  'root:()=>root,party:()=>heroes,foes:()=>foes,names:()=>names,log,addStatus,removeStatus,save:()=>hostSave(),render:()=>render(),escape:esc,'
-  'isMeleeWeapon:(attacker,weapon,target)=>{const w=weapons[attacker]?.find(v=>v[0]===weapon);return Boolean(w&&(w[7]===5||(weapon==="dagger"&&dist(s.units[attacker],s.units[target])<=5)));}});')
- engine=engine.replace(TERM,'\n'+ko+'\n'+port+TERM,1)
- runtime=json.dumps(json.loads((root/'config/rin_runtime.json').read_text(encoding='utf-8')),ensure_ascii=False,separators=(',',':')).replace('<','\\u003c')
- if scene is None: scene=root/'encounters/caravan_ambush_training.json'
- scene=json.dumps(json.loads(Path(scene).read_text(encoding='utf-8')),ensure_ascii=False,separators=(',',':')).replace('<','\\u003c')
- # Offline art pack from original Havengard, plus Rin's newly generated portrait.
- artpack=json.loads((root/'art/hayvengard_art_v1.json').read_text(encoding='utf-8'))
- artpack['assets']['heroes.rin']={'mime':'image/webp','data':'data:image/webp;base64,'+base64.b64encode(portrait).decode()}
- art_text=json.dumps(artpack,ensure_ascii=False,separators=(',',':')).replace('<','\\u003c')
- tags='<script type="application/json" data-hg-runtime>'+runtime+'</script>\n<script type="application/json" data-rin-default-scene>'+scene+'</script>\n<script type="application/json" data-hg-artpack>'+art_text+'</script>\n'
- engine=engine.replace('<div id="hv12">','<div id="hv12">\n'+tags,1)
- # Full HTML, no external executable code. Original v29 assets load by CDN optional; local portrait always bundled.
- html=('< !doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
-  '<title>Рин Вейр — Тактический бой v29</title></head><body style="background:#101b25;padding:10px;margin:0">' + engine + '</body></html>').replace('< !doctype','<!doctype')
- (root/'index.html').write_text(html,encoding='utf-8')
- manifest={'name':'rin-veir-combat','engine':'full-havengard-v29-adaptation','origin':'reider789/havengard-campaign-engine','source_engine':'upstream_snapshot/engine-v29.html',
-  'player':'Рин Вейр','scene':'caravan_ambush_training','offline_rules':True,'art_pack':'embedded offline original Havengard 24 assets plus portrait Rin 25th','bundle_sha256':hashlib.sha256(html.encode()).hexdigest(),'bytes':len(html.encode())}
- (root/'rin-build-manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
- return manifest
-if __name__=='__main__':print(json.dumps(build(),ensure_ascii=False,indent=2))
+MODULES=['core/battlefield.js','core/rules_engine.js','core/tactical_ai.js','core/campaign_adapter.js','web/combat_app.js']
+def encoded(value):return json.dumps(value,ensure_ascii=False,separators=(',',':')).replace('<','\\u003c')
+def build(root=ROOT,scene=None,check=False):
+    runtime=snapshot(root)
+    canonical_path=root/'config/rin_runtime.json'
+    runtime_text=json.dumps(runtime,ensure_ascii=False,indent=2)+'\n'
+    scene_path=Path(scene) if scene else root/'encounters/caravan_ambush_training.json'
+    encounter=json.loads(scene_path.read_text(encoding='utf-8'))
+    if encounter.get('kind')=='story' and (encounter.get('source_revision')!=runtime['source_state_revision'] or encounter.get('source_state_sha256')!=runtime['source_state_sha256']):
+        raise ValueError('Story scenario does not match canonical state')
+    if encounter.get('kind')!='story':encounter['source_revision']=runtime['source_state_revision']
+    art=json.loads((root/'art/hayvengard_art_v1.json').read_text(encoding='utf-8'))
+    portrait=(root/'assets/rin-portrait-256.webp').read_bytes()
+    art['assets']['heroes.rin']={'mime':'image/webp','data':'data:image/webp;base64,'+base64.b64encode(portrait).decode()}
+    files=MODULES+['web/shell.html','web/desktop.css','config/combat_profiles.json',str(scene_path.relative_to(root))]
+    manifest={'name':'rin-veir-combat','version':30,'engine_version':'30.0.0','rules_version':runtime['rules_version'],
+      'source_state_revision':runtime['source_state_revision'],'source_state_sha256':runtime['source_state_sha256'],
+      'sources':{f:hashlib.sha256((root/f).read_bytes()).hexdigest() for f in files}}
+    code='\n\n'.join((root/p).read_text(encoding='utf-8') for p in MODULES)
+    html=(root/'web/shell.html').read_text(encoding='utf-8')
+    for marker,value in [('STYLE',(root/'web/desktop.css').read_text()),('RUNTIME',encoded(runtime)),('SCENE',encoded(encounter)),('ART',encoded(art)),('CODE',code)]:
+        token='/*__'+marker+'__*/'
+        if html.count(token)!=1:raise ValueError('Missing build marker '+marker)
+        html=html.replace(token,value)
+    manifest.update(bundle_sha256=hashlib.sha256(html.encode()).hexdigest(),bytes=len(html.encode()))
+    entry={'schema_version':3,'engine':'rin-combat-v30','main_ui_path':'index.html','source_engine':'web/shell.html','source_modules':MODULES,
+      'runtime':'config/rin_runtime.json','default_training':'encounters/caravan_ambush_training.json','canonical':False,
+      'mode':'offline-desktop','save_session':'dnd-combat-session-v30','narrative_handoff':'rin-combat-result-v30'}
+    current={'schema_version':3,'engine':'v30','current_ui_path':'index.html','source_state':'config/rin_runtime.json','mode':encounter.get('kind','training'),
+      'canonical':False,'source_state_revision':runtime['source_state_revision'],'source_state_sha256':runtime['source_state_sha256'],
+      'bundle_sha256':manifest['bundle_sha256'],'bundle_size_bytes':manifest['bytes'],'battle_handoff':'rin-combat-result-v30'}
+    outputs={canonical_path:runtime_text,root/'index.html':html,root/'rin-build-manifest.json':json.dumps(manifest,ensure_ascii=False,indent=2)+'\n',
+      root/'entrypoint.json':json.dumps(entry,ensure_ascii=False,indent=2)+'\n',root/'current-manifest.json':json.dumps(current,ensure_ascii=False,indent=2)+'\n'}
+    for dest,content in outputs.items():
+        if check:
+            if not dest.is_file() or dest.read_text(encoding='utf-8')!=content:raise ValueError(f'Stale generated file: {dest.name}; run python tools/build_rin.py')
+        else:dest.write_text(content,encoding='utf-8')
+    return manifest
+if __name__=='__main__':
+    p=argparse.ArgumentParser();p.add_argument('--check',action='store_true');p.add_argument('--scene',type=Path);a=p.parse_args()
+    print(json.dumps(build(scene=a.scene,check=a.check),ensure_ascii=False,indent=2))

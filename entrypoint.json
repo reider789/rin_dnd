@@ -1,14 +1,19 @@
 {
-  "schema_version": 2,
-  "engine": "rin-veir-combat-v29R",
+  "schema_version": 3,
+  "engine": "rin-combat-v30",
   "main_ui_path": "index.html",
-  "source_engine": "upstream_snapshot/engine-v29.html",
+  "source_engine": "web/shell.html",
+  "source_modules": [
+    "core/battlefield.js",
+    "core/rules_engine.js",
+    "core/tactical_ai.js",
+    "core/campaign_adapter.js",
+    "web/combat_app.js"
+  ],
   "runtime": "config/rin_runtime.json",
   "default_training": "encounters/caravan_ambush_training.json",
-  "visuals": "art/hayvengard_art_v1.json + assets/rin-portrait-256.webp",
-  "source_modules": "core/",
   "canonical": false,
-  "mode": "offline-plus-chat",
-  "narrative_handoff": "rin-veir-battle-handoff-v1",
-  "save_session": "rin-veir-combat-session-v12"
+  "mode": "offline-desktop",
+  "save_session": "dnd-combat-session-v30",
+  "narrative_handoff": "rin-combat-result-v30"
 }

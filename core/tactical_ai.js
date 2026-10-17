@@ -1,0 +1,386 @@
+"use strict";
+// Planning reads current observations and their last known positions, never unseen HP or future rolls.
+class CombatTacticalAI {
+  constructor(engine) {
+    this.engine = engine;
+  }
+  observe(id) {
+    const e = this.engine,
+      s = e.s;
+    s.memory[id] ??= {};
+    for (const foe of e.enemies(id))
+      if (e.canSee(id, foe) && !e.unit(foe).hidden) {
+        const t = e.unit(foe);
+        s.memory[id][foe] = {
+          x: t.x,
+          y: t.y,
+          seenTurn: s.turnSerial,
+          name: t.name,
+        };
+      }
+    return Object.entries(s.memory[id]).map(([key, v]) => ({
+      id: key,
+      ...v,
+      visible:
+        e.enemies(id).includes(key) && e.canSee(id, key) && !e.unit(key).hidden,
+    }));
+  }
+  reachable(id, budget = this.engine.unit(id).move) {
+    const e = this.engine,
+      u = e.unit(id),
+      queue = [{ x: u.x, y: u.y, cost: 0, path: [] }],
+      best = new Map([[u.x + "," + u.y, 0]]),
+      out = [];
+    while (queue.length) {
+      queue.sort((a, b) => a.cost - b.cost || a.path.length - b.path.length);
+      const p = queue.shift();
+      if (p.cost !== best.get(p.x + "," + p.y)) continue;
+      const at = e.occupied(p.x, p.y, id),
+        knownAt =
+          at &&
+          (e.unit(at).team === u.team ||
+            (!e.unit(at).hidden && e.canSee(id, at)));
+      if (!knownAt || !p.path.length) out.push(p);
+      for (const [dx, dy] of [
+        [1, 0],
+        [-1, 0],
+        [0, 1],
+        [0, -1],
+        [1, 1],
+        [1, -1],
+        [-1, 1],
+        [-1, -1],
+      ]) {
+        const q = { x: p.x + dx, y: p.y + dy },
+          occupant = e.occupied(q.x, q.y, id),
+          knownOccupant =
+            occupant &&
+            (e.unit(occupant).team === u.team ||
+              (!e.unit(occupant).hidden && e.canSee(id, occupant)));
+        if (
+          e.wall(q) ||
+          (knownOccupant && !e.canPass(id, occupant)) ||
+          (u.blockedCells || []).some(
+            (v) => v.x === q.x && v.y === q.y && v.turn === e.s.turnSerial,
+          )
+        )
+          continue;
+        if (
+          dx &&
+          dy &&
+          (e.wall({ x: p.x, y: q.y }) || e.wall({ x: q.x, y: p.y }))
+        )
+          continue;
+        const cost = p.cost + e.stepCost(id, q),
+          key = q.x + "," + q.y;
+        if (cost > budget || (best.get(key) ?? Infinity) <= cost) continue;
+        best.set(key, cost);
+        queue.push({ ...q, cost, path: [...p.path, q] });
+      }
+    }
+    return out;
+  }
+  risk(id, path, known) {
+    const e = this.engine,
+      u = e.unit(id);
+    if (u.disengaged) return 0;
+    let risk = 0,
+      from = u;
+    const charged = new Set();
+    for (const p of path) {
+      for (const t of known.filter((t) => t.visible))
+        if (
+          !charged.has(t.id) &&
+          e.distance(from, t) <= 5 &&
+          e.distance(p, t) > 5
+        ) {
+          risk++;
+          charged.add(t.id);
+        }
+      from = p;
+    }
+    return risk;
+  }
+  choose(id) {
+    const e = this.engine,
+      s = e.s,
+      u = e.unit(id),
+      known = this.observe(id),
+      visible = known.filter((t) => t.visible),
+      role = u.tactics?.role || "skirmisher",
+      done = { kind: "endTurn", actor: id };
+    if (e.incapacitated(id) || !e.active(id)) return done;
+    if (e.occupied(u.x, u.y, id) && u.move > 0) {
+      const exits = this.reachable(id)
+        .filter((p) => p.path.length)
+        .sort((a, b) => a.cost - b.cost);
+      if (exits[0])
+        return {
+          kind: "move",
+          actor: id,
+          path: exits[0].path,
+          reason: "освобождает общую клетку",
+        };
+    }
+    const dying = s.order.find(
+      (k) =>
+        e.unit(k).team === u.team &&
+        e.unit(k).hp === 0 &&
+        !e.unit(k).dead &&
+        !e.unit(k).stable &&
+        e.canSee(id, k),
+    );
+    if (dying && u.action > 0) {
+      if (e.distance(u, e.unit(dying)) <= 5)
+        return { kind: "stabilize", actor: id, target: dying };
+      const routes = this.reachable(id)
+        .filter((p) => p.path.length)
+        .sort(
+          (a, b) =>
+            e.distance(a, e.unit(dying)) - e.distance(b, e.unit(dying)) ||
+            a.cost - b.cost,
+        );
+      if (
+        routes[0] &&
+        e.distance(routes[0], e.unit(dying)) < e.distance(u, e.unit(dying))
+      )
+        return {
+          kind: "move",
+          actor: id,
+          path: routes[0].path,
+          reason: "спешит помочь умирающему союзнику",
+        };
+    }
+    if (
+      e.has(id, "prone") &&
+      u.move >= Math.floor(e.speed(id) / 2) &&
+      e.speed(id) > 0
+    )
+      return { kind: "stand", actor: id };
+    if (u.tactics?.canFlee && u.hp / u.max < (u.tactics.morale ?? 0.2)) {
+      if (
+        u.x === 0 ||
+        u.y === 0 ||
+        u.x === s.terrain.width - 1 ||
+        u.y === s.terrain.height - 1
+      )
+        return { kind: "flee", actor: id };
+      if (
+        u.action > 0 &&
+        visible.some((t) => e.distance(u, t) <= 5) &&
+        !u.disengaged
+      )
+        return { kind: "disengage", actor: id };
+      const edge = (p) =>
+        Math.min(
+          p.x,
+          p.y,
+          s.terrain.width - 1 - p.x,
+          s.terrain.height - 1 - p.y,
+        );
+      const exits = this.reachable(id)
+        .filter((p) => p.path.length)
+        .sort(
+          (a, b) =>
+            edge(a) - edge(b) ||
+            this.risk(id, a.path, known) - this.risk(id, b.path, known) ||
+            a.cost - b.cost,
+        );
+      if (exits.length && edge(exits[0]) < edge(u))
+        return {
+          kind: "move",
+          actor: id,
+          path: exits[0].path,
+          reason: "отступает к выходу",
+        };
+      return u.action > 0 ? { kind: "dodge", actor: id } : done;
+    }
+    if (!known.length)
+      return u.action > 0 ? { kind: "dodge", actor: id } : done;
+    const obscures = (z) =>
+      ["darkness", "fog", "smoke"].includes(z.kind) &&
+      !(z.kind === "darkness" && z.owner === id && u.features.shadowArts);
+    if (!visible.length && s.zones.some((z) => obscures(z) && e.zoneAt(u, z))) {
+      const exits = this.reachable(id)
+        .filter(
+          (p) =>
+            p.path.length &&
+            !s.zones.some((z) => obscures(z) && e.zoneAt(p, z)),
+        )
+        .sort((a, b) => a.cost - b.cost || a.path.length - b.path.length);
+      if (exits.length)
+        return {
+          kind: "move",
+          actor: id,
+          path: exits[0].path,
+          reason: "выходит из непроглядной области",
+        };
+    }
+    const adjacent = visible.find((t) => e.distance(u, t) <= 5),
+      unarmed = u.attacks.find((a) => a.unarmed);
+    if (adjacent && unarmed && u.flurryLeft > 0)
+      return {
+        kind: "attack",
+        actor: id,
+        target: adjacent.id,
+        weapon: unarmed.id,
+        mode: "flurry",
+      };
+    if (
+      adjacent &&
+      unarmed &&
+      u.features.martialArts &&
+      u.action === 0 &&
+      u.bonus > 0
+    ) {
+      if (u.focus > 0) return { kind: "flurry", actor: id };
+      return {
+        kind: "attack",
+        actor: id,
+        target: adjacent.id,
+        weapon: unarmed.id,
+        mode: "bonus",
+      };
+    }
+    if (
+      u.features.shadowArts &&
+      u.action > 0 &&
+      u.focus > 0 &&
+      !s.zones.some((z) => z.owner === id && z.kind === "darkness")
+    ) {
+      const cluster = visible.find(
+        (t) =>
+          e.distance(u, t) <= 60 &&
+          visible.filter((o) => Math.hypot(o.x - t.x, o.y - t.y) * 5 <= 15)
+            .length >= 2 &&
+          !s.order.some(
+            (a) =>
+              a !== id &&
+              e.unit(a).team === u.team &&
+              e.active(a) &&
+              Math.hypot(e.unit(a).x - t.x, e.unit(a).y - t.y) * 5 <= 15,
+          ),
+      );
+      if (cluster)
+        return {
+          kind: "darkness",
+          actor: id,
+          point: { x: cluster.x, y: cluster.y },
+        };
+    }
+    const cells = this.reachable(id),
+      candidates = [];
+    for (const p of cells) {
+      const exposure = visible.filter((t) => e.distance(p, t) <= 5).length,
+        risk = this.risk(id, p.path, known),
+        cover = s.terrain.cover?.[p.x + "," + p.y] || 0;
+      for (const target of visible)
+        for (const weapon of u.attacks) {
+          if (u.action <= 0 && u.attacksLeft <= 0) continue;
+          try {
+            e.validateAttack(id, target.id, weapon, p);
+          } catch {
+            continue;
+          }
+          const range = e.distance(p, target),
+            ranged = !["melee", "meleeSpell"].includes(weapon.kind),
+            m = e.attackModifiers(id, target.id, weapon, p);
+          let chance = Math.min(
+            0.95,
+            Math.max(0.05, (21 + weapon.bonus - 14) / 20),
+          );
+          if (m.adv && !m.disadv) chance = 1 - (1 - chance) ** 2;
+          if (m.disadv && !m.adv) chance *= chance;
+          let score =
+            chance * ((weapon.count * (weapon.die + 1)) / 2 + weapon.flat) +
+            cover * 0.5 -
+            risk * 7 -
+            p.cost * 0.035;
+          score += ranged
+            ? Math.min(range, 40) * 0.06 - exposure * 5
+            : -exposure * 0.3;
+          if (role === "guardian" && u.tactics.anchor)
+            score -= e.distance(p, u.tactics.anchor) * 0.09;
+          if (role === "pack")
+            score +=
+              s.order.filter(
+                (a) =>
+                  a !== id &&
+                  e.unit(a).team === u.team &&
+                  e.active(a) &&
+                  e.distance(e.unit(a), target) <= 5,
+              ).length * 2;
+          candidates.push({ score, p, target: target.id, weapon: weapon.id });
+        }
+    }
+    candidates.sort(
+      (a, b) =>
+        b.score - a.score ||
+        a.p.cost - b.p.cost ||
+        a.target.localeCompare(b.target),
+    );
+    const best = candidates[0];
+    if (best) {
+      if (best.p.path.length) {
+        if (
+          this.risk(id, best.p.path, known) > 0 &&
+          u.action > 0 &&
+          role === "ranged" &&
+          !u.disengaged
+        )
+          return { kind: "disengage", actor: id };
+        return {
+          kind: "move",
+          actor: id,
+          path: best.p.path,
+          reason:
+            role === "ranged"
+              ? "выбирает линию огня"
+              : "занимает позицию для атаки",
+        };
+      }
+      return {
+        kind: "attack",
+        actor: id,
+        target: best.target,
+        weapon: best.weapon,
+      };
+    }
+    if (u.action > 0 && u.tactics.hold) return { kind: "dodge", actor: id };
+    const goal = [...known].sort(
+      (a, b) => b.seenTurn - a.seenTurn || e.distance(u, a) - e.distance(u, b),
+    )[0];
+    if (goal) {
+      const routes = cells
+        .filter(
+          (p) =>
+            p.path.length &&
+            !p.path.some((q) =>
+              s.zones.some((z) => obscures(z) && e.zoneAt(q, z)),
+            ),
+        )
+        .map((p) => ({
+          p,
+          score:
+            e.distance(p, goal) +
+            this.risk(id, p.path, known) * 25 +
+            p.cost * 0.03,
+        }))
+        .sort((a, b) => a.score - b.score);
+      if (routes[0] && e.distance(routes[0].p, goal) < e.distance(u, goal))
+        return {
+          kind: "move",
+          actor: id,
+          path: routes[0].p.path,
+          reason: goal.visible
+            ? "сближается"
+            : "проверяет последнее известное место",
+        };
+      if (!goal.visible && u.action > 0) return { kind: "search", actor: id };
+      if (u.action > 0 && u.move === 0 && goal.visible)
+        return { kind: "dash", actor: id };
+    }
+    return u.action > 0 ? { kind: "dodge", actor: id } : done;
+  }
+}
+if (typeof module !== "undefined") module.exports = { CombatTacticalAI };
