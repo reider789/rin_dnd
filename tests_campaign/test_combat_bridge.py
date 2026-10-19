@@ -31,5 +31,22 @@ for changed in ('training','stale','hash','tampered','same_id_changed'):
     try:prepare(r,s)
     except (ValueError,CampaignError):pass
     else:raise AssertionError(changed)
+legacy=copy.deepcopy(report);legacy['battle_id']='LEGACY-STEED-RECEIPT-NOT-CANON'
+legacy['source_clock']=state['world']['timekeeping']['elapsed_seconds_from_anchor']
+steed=dict(id='rin-steed',summoner='rin',name='Steed',hp=25,max=25,ac=12,speed=60,size=3,
+           proficiency=2,summonLevel=2,summonDC=15,creatureType='celestial',powerAvailable=True,
+           stats={k:0 for k in ('STR','DEX','CON','INT','WIS','CHA')},saves={k:0 for k in ('STR','DEX','CON','INT','WIS','CHA')},
+           features={},attacks=[dict(id='hoof',name='Hoof',kind='melee',range=5,bonus=5,count=1,die=8,flat=3,damageType='bludgeoning')])
+legacy['continuity']=dict(effects=[],units=[steed],temporary_hp={'rin':0},temp_sources={'rin':None},statuses={'rin':[]},objects=[],zones=[])
+legacy_tx=prepare(legacy,state)
+# This literal is the pre-30.5.1 canonical payload, including the untouched summon.
+prior_value=dict(effects=[],temporary_hp=0,temp_source=None,recorded_at=legacy['source_clock']+18,
+                 summons=[steed],objects=[],zones=[],statuses=[])
+prior_tx=copy.deepcopy(legacy_tx)
+op=next(x for x in prior_tx['operations'] if x.get('field')=='combat_continuity')
+op['value']=prior_value
+prior_state=build_result(state,prior_tx)
+assert prepare(legacy,prior_state)==prior_tx
+assert build_result(prior_state,prepare(legacy,prior_state))==prior_state
 assert json.dumps(state,sort_keys=True)==original
 print('COMBAT BRIDGE OK: snapshot, ownership, bounds, conflict, exact replay, changed replay, arrows catalog; live canon unchanged')
