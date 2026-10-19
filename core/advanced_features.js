@@ -330,21 +330,28 @@ class CombatAdvancedFeatures {
         },
       );
     }
-    const sacred = AdvancedMagic.effects(e, c.actor, "sacredWeapon").find(
+    spec.sacredRadiant = Boolean(c.radiant);
+  }
+  static weaponSpec(e, actor, original) {
+    const spec = structuredClone(original),
+      u = e.unit(actor);
+    if (!["melee", "ranged"].includes(spec.kind)) return spec;
+    const sacred = AdvancedMagic.effects(e, actor, "sacredWeapon").find(
       (x) => x.weapon === spec.id,
     );
     if (sacred) {
       spec.bonus += sacred.amount;
-      if (c.radiant) spec.damageType = "radiant";
+      if (spec.sacredRadiant) spec.damageType = "radiant";
     }
     if (
-      AdvancedMagic.effects(e, c.actor, "giantStrength").length &&
+      AdvancedMagic.effects(e, actor, "giantStrength").length &&
       spec.ability === "STR"
     ) {
       const extra = Math.max(0, 5 - u.stats.STR);
       spec.bonus += extra;
       spec.flat += extra;
     }
+    return spec;
   }
   static beforeWeapon(e, t) {
     const u = e.unit(t.actor);
@@ -553,7 +560,7 @@ class CombatAdvancedFeatures {
       M = AdvancedMagic,
       jobs = [];
     if (!e.active(t.target)) return;
-    if (f.smite) {
+    if (f.smite && !f.smiteIntegrated) {
       const sf = {
         id: "spell-" + ++e.s.sequence,
         actor: t.actor,
@@ -569,18 +576,14 @@ class CombatAdvancedFeatures {
       jobs.push(M.task(t.actor, "window", { frame: sf.id }));
     }
     if (f.forge)
-      jobs.push({
-        kind: "roll",
-        actor: t.actor,
-        label: "Кузнечный резонанс",
-        count: f.critical ? 2 : 1,
-        sides: 8,
-        bonus: 0,
-        next: this.job(t.actor, "forgeRoll", {
-          target: t.target,
-          mode: f.forge,
-        }),
-      });
+      jobs.push(
+        e.saveTask(
+          t.target,
+          "STR",
+          17,
+          this.job(t.actor, "forgeSave", { target: t.target, mode: f.forge }),
+        ),
+      );
     if (f.shieldBash)
       jobs.push(
         e.saveTask(
@@ -638,35 +641,6 @@ class CombatAdvancedFeatures {
         ),
       );
     }
-    if (
-      ["melee", "ranged"].includes(f.spec.kind) &&
-      M.effects(e, t.actor, "crusaderMantle").length
-    )
-      jobs.push({
-        kind: "roll",
-        actor: t.actor,
-        label: "Мантия крестоносца",
-        count: f.critical ? 2 : 1,
-        sides: 4,
-        bonus: 0,
-        next: this.job(t.actor, "smiteDamage", { target: t.target }),
-      });
-    if (
-      ["melee", "ranged"].includes(f.spec.kind) &&
-      M.effects(e, t.actor, "enlarge").length
-    )
-      jobs.push({
-        kind: "roll",
-        actor: t.actor,
-        label: "Рост",
-        count: f.critical ? 2 : 1,
-        sides: 4,
-        bonus: 0,
-        next: this.job(t.actor, "poisonRoll", {
-          target: t.target,
-          damageType: f.spec.damageType,
-        }),
-      });
     e.enqueue(...jobs);
   }
   static task(e, t) {

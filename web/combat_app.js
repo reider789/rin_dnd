@@ -9,6 +9,17 @@
   const ACTIVE_SLOT =
     "dnd-combat-active-session:" + embeddedRuntime.campaign_id;
   const INDEX_SLOT = "dnd-combat-session-index:" + embeddedRuntime.campaign_id;
+  const sessionStore = new CombatSessionStore({
+    get length() {
+      return localStorage.length;
+    },
+    key: (i) => localStorage.key(i),
+    getItem: (k) => localStorage.getItem(k),
+    setItem: (k, v) => localStorage.setItem(k, v),
+    removeItem: (k) => localStorage.removeItem(k),
+  });
+  let exportedArchive = new Map();
+  let importedArchive = [];
   const battleKey = (s) =>
     "dnd-combat-session:" +
     encodeURIComponent(s.meta.campaignId) +
@@ -126,7 +137,7 @@
     let hostOK = hostSaved === engine && hostRevision === revision;
     try {
       if (!localOK) {
-        localStorage.setItem(KEY, JSON.stringify(value));
+        sessionStore.write(KEY, JSON.stringify(value));
         localSaved = engine;
         localRevision = revision;
         localOK = true;
@@ -197,10 +208,7 @@
   function checkpoint() {
     if (!engine) return;
     try {
-      localStorage.setItem(
-        KEY + ":previous",
-        JSON.stringify(sessionValue(false)),
-      );
+      sessionStore.checkpoint(KEY, JSON.stringify(sessionValue(false)));
     } catch {}
   }
   function preserveSlot(key, incoming = null) {
@@ -208,16 +216,50 @@
       const previous = localStorage.getItem(key);
       if (previous && (!incoming || previous !== JSON.stringify(incoming))) {
         CombatRulesEngine.validate(JSON.parse(previous).session);
-        localStorage.setItem(key + ":previous", previous);
+        sessionStore.checkpoint(key, previous);
       }
     } catch {}
   }
-  function newBattle(scene, nextRuntime = runtime) {
+  function ensureArchiveRoom(next) {
+    if (!engine || next === KEY) return;
+    save();
+    try {
+      sessionStore.allowSwitch(next);
+    } catch (e) {
+      if (e.message.startsWith("Архив боёв заполнен")) throw e;
+    }
+  }
+  function newBattle(scene, nextRuntime = runtime, exportCurrent = false) {
+    if (scene.kind !== "story")
+      scene = {
+        ...scene,
+        scene_id: scene.scene_id || scene.id || scene.battle_id || scene.name,
+        battle_id: "training-" + Date.now() + "-" + seed().toString(36),
+      };
     const next = new CombatRulesEngine(
       CombatCampaignAdapter.create(nextRuntime, scene, seed()),
     );
     next.initialize();
-    checkpoint();
+    let released;
+    if (exportCurrent && engine) {
+      sessionStore.allowSwitch(battleKey(next.s), KEY);
+      const value = sessionValue();
+      download(
+        runtime.campaign_id + "-battle-" + engine.s.meta.battleId + ".json",
+        value,
+      );
+      released = KEY;
+      // This separate control explicitly exports and removes this local copy.
+      sessionStore.remove(KEY, null);
+      const index = JSON.parse(readLocal(INDEX_SLOT) || "{}");
+      delete index[KEY];
+      try {
+        localStorage.setItem(INDEX_SLOT, JSON.stringify(index));
+      } catch {}
+    } else {
+      ensureArchiveRoom(battleKey(next.s));
+      checkpoint();
+    }
     runtime = nextRuntime;
     KEY = battleKey(next.s);
     if (runtime.content_pack)
@@ -230,7 +272,9 @@
     weapon = null;
     path = [];
     pointMode = null;
-    notice = "Выбери цель и действие.";
+    notice = released
+      ? "Предыдущий бой выгружен в JSON и удалён из браузера. Его можно восстановить через «Загрузить сохранение»."
+      : "Выбери цель и действие.";
     error = false;
     save();
     render();
@@ -256,6 +300,7 @@
       throw Error("Сохранение другой кампании");
     next.initialize();
     next.run();
+    ensureArchiveRoom(battleKey(next.s));
     const nextScene = nextRuntime.content_pack
       ? CombatContentPack.encounter(nextRuntime)
       : nextRuntime === embeddedRuntime
@@ -681,6 +726,15 @@
     }
     if (spell === "lesserRestoration")
       base.condition = $("magic-condition")?.value || undefined;
+    if (spell === "dispelMagic") {
+      const value = $("magic-dispel")?.value;
+      if (value) {
+        const [kind, ...id] = value.split(":");
+        base.dispelTarget = { kind, id: id.join(":") };
+        base.targets = [];
+        delete base.target;
+      }
+    }
     if (spell === "dimensionDoor") {
       base.passenger = $("magic-passenger")?.value || undefined;
       try {
@@ -716,6 +770,43 @@
         poisoned: "Отравлен",
       };
     let spellControls = "";
+    if (spell === "dispelMagic") {
+      const choices = [
+        ...known.map((id) => ({
+          value: "creature:" + id,
+          name: engine.name(id),
+        })),
+        ...engine.s.effects
+          .filter(
+            (x) =>
+              Object.hasOwn(CombatMagic.SPELLS, x.kind) &&
+              known.includes(x.owner),
+          )
+          .map((x) => ({
+            value: (engine.s.objects[x.id] ? "object:" : "effect:") + x.id,
+            name:
+              CombatMagic.label(x.kind) +
+              " · " +
+              engine.name(x.owner) +
+              (engine.s.objects[x.id]
+                ? " · " + engine.cell(engine.s.objects[x.id])
+                : ""),
+          })),
+      ];
+      spellControls =
+        '<label>Цель рассеивания<select id="magic-dispel">' +
+        choices
+          .map(
+            (x) =>
+              '<option value="' +
+              esc(x.value) +
+              '">' +
+              esc(x.name) +
+              "</option>",
+          )
+          .join("") +
+        "</select></label>";
+    }
     if (spell === "findSteed")
       spellControls =
         '<label>Способ призыва<select id="magic-steed-payment">' +
@@ -982,7 +1073,7 @@
           .map(
             (x) =>
               "<p>" +
-              esc(CombatMagic.SPELLS[x.kind]?.[0] || x.kind) +
+              esc(CombatMagic.label(x.kind)) +
               " · " +
               Math.max(0, x.until - engine.s.elapsed) +
               " с" +
@@ -1753,39 +1844,7 @@
           " · КД " +
           a.ac +
           " · " +
-          esc(
-            a.statuses
-              .map(
-                (z) =>
-                  ({
-                    prone: "лежит",
-                    unconscious: "без сознания",
-                    grappled: "в захвате",
-                    dodge: "уклоняется",
-                    invisible: "невидим",
-                    restrained: "опутан",
-                    blinded: "ослеплён",
-                    deafened: "оглох",
-                    stunned: "ошеломлён",
-                    paralyzed: "парализован",
-                    incapacitated: "недееспособен",
-                    poisoned: "отравлен",
-                    frightened: "испуган",
-                    petrified: "окаменел",
-                    frost: "охлаждён",
-                    shield: "магический щит",
-                    aim: "точный прицел",
-                    bait: "прикрыт манёвром",
-                    protected: "под защитой",
-                    sap: "ослаблен",
-                    slow: "замедлен",
-                    goaded: "спровоцирован",
-                    charmed: "очарован",
-                    exhaustion: "истощение",
-                  })[z.kind] || z.kind,
-              )
-              .join(", "),
-          ) +
+          esc(a.statuses.map((z) => CombatMagic.label(z.kind)).join(", ")) +
           "</p>" +
           (inv.length
             ? "<p>" +
@@ -1840,6 +1899,38 @@
               "</option>",
           )
           .join("");
+      const archived = sessionStore.archive(KEY),
+        stats = sessionStore.stats(KEY);
+      $("storage-usage").textContent =
+        "Архив: " +
+        stats.count +
+        " · " +
+        ((stats.archive * 2) / 1048576).toFixed(1) +
+        " / " +
+        ((stats.limit * 2) / 1048576).toFixed(1) +
+        " МБ" +
+        (stats.archive >= stats.limit * 0.8
+          ? " · выгрузи старые бои, чтобы оставить место текущему"
+          : "");
+      const chosenArchive = $("archive-session").value;
+      $("archive-session").innerHTML =
+        '<option value="">Выбери старый бой…</option>' +
+        archived
+          .map(([key, raw]) => {
+            let name = key;
+            try {
+              const s = JSON.parse(raw).session;
+              name = s.meta.name + " · " + s.meta.battleId;
+            } catch {}
+            return (
+              '<option value="' + esc(key) + '">' + esc(name) + "</option>"
+            );
+          })
+          .join("");
+      $("archive-session").value = chosenArchive;
+      $("archive-delete").disabled =
+        !chosenArchive ||
+        exportedArchive.get(chosenArchive) !== readLocal(chosenArchive);
     } catch {
       recovery.innerHTML = '<option value="">Хранилище недоступно</option>';
     }
@@ -2021,11 +2112,85 @@
       return;
     }
     if (op === "new") {
-      newBattle(defaultScene);
+      try {
+        newBattle(defaultScene);
+      } catch (e) {
+        notice = e.message;
+        error = true;
+        render();
+      }
+      return;
+    }
+    if (op === "export-current-new") {
+      try {
+        newBattle(defaultScene, runtime, true);
+      } catch (e) {
+        notice = e.message;
+        error = true;
+        render();
+      }
       return;
     }
     if (op === "save") {
       save();
+      return;
+    }
+    if (op === "archive-export") {
+      try {
+        const entries = sessionStore.archive(KEY);
+        const archive = {
+          kind: "dnd-combat-archive",
+          version: 1,
+          sessions: entries.map(([key, raw]) => ({
+            key,
+            value: JSON.parse(raw),
+          })),
+        };
+        download("combat-archive.json", archive);
+        exportedArchive = new Map(entries);
+        notice =
+          "Архив выгружен. Теперь можно удалить выбранные старые бои; текущий бой защищён.";
+        render();
+      } catch (e) {
+        notice = e.message;
+        error = true;
+        render();
+      }
+      return;
+    }
+    if (op === "archive-restore") {
+      try {
+        const index = Number($("archive-imported").value);
+        if (!Number.isInteger(index) || !importedArchive[index])
+          throw Error("Выбери бой из загруженного архива");
+        load(importedArchive[index].value);
+      } catch (e) {
+        notice = e.message;
+        error = true;
+        render();
+      }
+      return;
+    }
+    if (op === "archive-delete") {
+      try {
+        const key = $("archive-session").value,
+          raw = readLocal(key);
+        if (!raw || exportedArchive.get(key) !== raw)
+          throw Error("Сначала выгрузи архив с этим сохранением");
+        sessionStore.remove(key, KEY);
+        exportedArchive.delete(key);
+        const index = JSON.parse(readLocal(INDEX_SLOT) || "{}");
+        delete index[key];
+        localStorage.setItem(INDEX_SLOT, JSON.stringify(index));
+        notice =
+          "Старый бой удалён из браузера. Его можно восстановить из выгруженного архива.";
+        save();
+        render();
+      } catch (e) {
+        notice = e.message;
+        error = true;
+        render();
+      }
       return;
     }
     if (op === "recover") {
@@ -2113,6 +2278,11 @@
     if (command) act(command);
   });
   root.addEventListener("change", (e) => {
+    if (e.target.id === "archive-session") {
+      $("archive-delete").disabled =
+        exportedArchive.get(e.target.value) !== readLocal(e.target.value);
+      return;
+    }
     if (["mastery", "healing-target", "healing-amount"].includes(e.target.id)) {
       captureDraft();
       updateAvailableCommands();
@@ -2162,7 +2332,41 @@
   });
   $("import-file").addEventListener("change", async (e) => {
     try {
-      if (e.target.files[0]) load(JSON.parse(await e.target.files[0].text()));
+      if (e.target.files[0]) {
+        const value = JSON.parse(await e.target.files[0].text());
+        if (value.kind === "dnd-combat-archive") {
+          if (
+            value.version !== 1 ||
+            !Array.isArray(value.sessions) ||
+            !value.sessions.length
+          )
+            throw Error("Пустой или повреждённый архив");
+          for (const entry of value.sessions) {
+            if (entry.value?.contentPack)
+              CombatContentPack.compile(entry.value.contentPack);
+            new CombatRulesEngine(entry.value?.session);
+          }
+          importedArchive = value.sessions;
+          $("archive-imported").innerHTML = importedArchive
+            .map(
+              (x, i) =>
+                '<option value="' +
+                i +
+                '">' +
+                esc(
+                  x.value.session.meta.name +
+                    " · " +
+                    x.value.session.meta.battleId,
+                ) +
+                "</option>",
+            )
+            .join("");
+          $("archive-restore").disabled = false;
+          notice =
+            "Архив проверен. Выбери нужный бой в «Бои и настройки» и нажми «Восстановить из архива».";
+          render();
+        } else load(value);
+      }
     } catch (err) {
       notice = err.message;
       error = true;

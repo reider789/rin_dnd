@@ -77,6 +77,7 @@ def prepare_report(report,state,build_result,state_hash):
             selected=[{**effect,'expires_at':clock+effect['remaining_seconds']} for effect in effects if effect['owner']==cid]
             value={'effects':selected,'temporary_hp':continuity.get('temporary_hp',{}).get(cid,0),'temp_source':continuity.get('temp_sources',{}).get(cid),'recorded_at':clock,'summons':[u for u in continuity.get('units',[]) if u.get('summoner')==cid],'objects':[o for o in continuity.get('objects',[]) if o.get('owner')==cid],'zones':[{**z,'expires_at':clock+z['remaining_seconds']} for z in continuity.get('zones',[]) if z.get('owner')==cid], 'statuses':[{**z,**({'expires_at':clock+z['until']-seconds} if 'until' in z else {})} for z in continuity.get('statuses',{}).get(cid,[]) if 'until' not in z or z['until']>seconds]}
             if cid in continuity.get('life',{}):value['life']=continuity['life'][cid]
+            if 'scene' in continuity:value['scene']=continuity['scene']
             for summon in value['summons']:
                 sid=summon['id']
                 # Old reports kept summons only in units. Preserve their exact

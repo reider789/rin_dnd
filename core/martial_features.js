@@ -196,7 +196,13 @@ class CombatMartialFeatures {
     return true;
   }
   static weaponRoll(e, t) {
-    if((typeof module!=="undefined"?require("./advanced_features").CombatAdvancedFeatures:CombatAdvancedFeatures).beforeWeapon(e,t))return;
+    if (
+      (typeof module !== "undefined"
+        ? require("./advanced_features").CombatAdvancedFeatures
+        : CombatAdvancedFeatures
+      ).beforeWeapon(e, t)
+    )
+      return;
     const u = e.unit(t.actor),
       maneuvers =
         !t.maneuverUsed && this.count(e, t.actor) > 0 ? this.options(e, t) : [],
@@ -265,7 +271,7 @@ class CombatMartialFeatures {
       minimumDie,
       bonus:
         (t.mode === "nick" ? Math.min(0, t.spec.flat) : t.spec.flat) +
-        (["action","haste"].includes(t.mode) && t.spec.heavy
+        (["action", "haste"].includes(t.mode) && t.spec.heavy
           ? u.features.greatWeaponMaster || 0
           : 0),
       next: {
@@ -293,7 +299,12 @@ class CombatMartialFeatures {
         t.attack.spec.kind !== "melee" ||
         !defender.features.maneuvers?.includes("riposte") ||
         !spec ||
-        defender.reaction <= 0 || !(typeof module!=="undefined"?require("./magic").CombatMagic:CombatMagic).canReact(e,t.target) ||
+        defender.reaction <= 0 ||
+        !(
+          typeof module !== "undefined"
+            ? require("./magic").CombatMagic
+            : CombatMagic
+        ).canReact(e, t.target) ||
         e.incapacitated(t.target) ||
         this.count(e, t.target) <= 0
       )
@@ -326,7 +337,7 @@ class CombatMartialFeatures {
     } else if (t.kind === "savageSecond") {
       const flat =
         (t.mode === "nick" ? Math.min(0, t.spec.flat) : t.spec.flat) +
-        (["action","haste"].includes(t.mode) && t.spec.heavy
+        (["action", "haste"].includes(t.mode) && t.spec.heavy
           ? u.features.greatWeaponMaster || 0
           : 0);
       const result =
@@ -349,12 +360,84 @@ class CombatMartialFeatures {
         return true;
       }
       const f = t.frame;
+      const M =
+        typeof module !== "undefined"
+          ? require("./magic").CombatMagic
+          : CombatMagic;
+      const components = t.components || [
+        { amount: t.amount, damageType: f.spec.damageType },
+      ];
+      if (f.smite && !t.smiteResolved) {
+        const hitContinue = {
+          ...t,
+          components,
+          smiteResolved: true,
+          frame: { ...f, smiteIntegrated: true },
+        };
+        const sf = {
+          id: "spell-" + ++e.s.sequence,
+          actor: t.actor,
+          spell: "divineSmite",
+          level: f.smite,
+          targets: [t.target],
+          critical: f.critical,
+          offered: [],
+          cancelled: false,
+          paidSlot: Boolean(f.smitePaid),
+          hitContinue,
+        };
+        e.s.spellFrames[sf.id] = sf;
+        e.enqueue(M.task(t.actor, "window", { frame: sf.id }));
+        return true;
+      }
+      if (t.smiteResult)
+        components.push({ amount: t.result.total, damageType: "radiant" });
+      if (t.rider)
+        components.push({
+          amount: t.result.total,
+          damageType: t.rider.damageType,
+        });
+      const riders =
+        t.riders ||
+        (["melee", "ranged"].includes(f.spec.kind)
+          ? [
+              ...(f.forge
+                ? [
+                    {
+                      label: "Кузнечный резонанс",
+                      damageType: "thunder",
+                      die: 8,
+                    },
+                  ]
+                : []),
+              ...(M.effects(e, t.actor, "crusaderMantle").length
+                ? [{ label: "Мантия крестоносца", damageType: "radiant" }]
+                : []),
+              ...(M.effects(e, t.actor, "enlarge").length
+                ? [{ label: "Рост", damageType: f.spec.damageType }]
+                : []),
+            ]
+          : []);
+      if (riders.length) {
+        const [rider, ...rest] = riders;
+        e.enqueue({
+          kind: "roll",
+          actor: t.actor,
+          label: rider.label,
+          count: f.critical ? 2 : 1,
+          sides: rider.die || 4,
+          bonus: 0,
+          next: { ...t, smiteResult: false, components, rider, riders: rest },
+        });
+        return true;
+      }
       e.enqueue(
         {
           kind: "damage",
           actor: t.actor,
           target: t.target,
-          amount: t.amount,
+          amount: components.reduce((n, p) => n + p.amount, 0),
+          components,
           damageType: f.spec.damageType,
           attack: f.spec,
           critical: f.critical,
@@ -375,7 +458,10 @@ class CombatMartialFeatures {
         frame: { ...t.frame, maneuverAdded: true },
       });
     else if (t.kind === "weaponHitEffects") {
-      (typeof module!=="undefined"?require("./advanced_features").CombatAdvancedFeatures:CombatAdvancedFeatures).afterWeapon(e,t);
+      (typeof module !== "undefined"
+        ? require("./advanced_features").CombatAdvancedFeatures
+        : CombatAdvancedFeatures
+      ).afterWeapon(e, t);
       const f = t.frame,
         target = e.unit(t.target),
         mastery = f.spec.mastery,
@@ -404,13 +490,11 @@ class CombatMartialFeatures {
         if (mastery === "push" && (target.size ?? 2) <= 3)
           this.push(e, t.actor, t.target, 10);
         if (mastery === "slow" && damage > 0) {
-          const before = e.speed(t.target);
           e.status(t.target, "slow", {
             source: t.actor,
             expiresOnSourceStart: t.actor,
             stackBySource: true,
           });
-          e.adjustMovementForSpeed(t.target, before);
         }
       }
       if (

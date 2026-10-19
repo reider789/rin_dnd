@@ -279,7 +279,6 @@ test("Slow expiry and Dash preserve distance already spent beyond the reduced bu
     source: "hunter_a",
     expiresOnSourceStart: "hunter_a",
   });
-  e.adjustMovementForSpeed("ena", 30);
   assert.equal(e.unit("ena").move, 0);
   const resumed = reload(e);
   D.refresh(resumed, "hunter_a");

@@ -257,6 +257,39 @@ class CombatRulesEngine {
         }[t.kind] || [];
       require(fields.every((k) => t[k] != null));
       if (t.amount != null) require(Number.isFinite(t.amount) && t.amount >= 0);
+      if (t.components) {
+        const types = new Set([
+          "acid",
+          "bludgeoning",
+          "cold",
+          "fire",
+          "force",
+          "lightning",
+          "necrotic",
+          "piercing",
+          "poison",
+          "psychic",
+          "radiant",
+          "slashing",
+          "thunder",
+        ]);
+        require(Array.isArray(t.components) &&
+          t.components.length > 0 &&
+          t.components.length <= 16 &&
+          t.components.every(
+            (p) =>
+              Number.isInteger(p.amount) &&
+              p.amount >= 0 &&
+              p.amount <= 1000000 &&
+              types.has(p.damageType),
+          ), "Повреждены части урона");
+        if (t.kind === "damage")
+          require(t.amount ===
+            t.components.reduce(
+              (n, p) => n + p.amount,
+              0,
+            ), "Части урона расходятся с суммой");
+      }
       if (t.path)
         require(
           Array.isArray(t.path) &&
@@ -298,6 +331,7 @@ class CombatRulesEngine {
         "movement",
         "original",
         "frame",
+        "resume",
       ])
         if (
           t[k]?.kind &&
@@ -309,6 +343,8 @@ class CombatRulesEngine {
           visit(t[k], depth + 1);
     };
     s.queue.forEach((t) => visit(t));
+    for (const f of Object.values(s.spellFrames || {}))
+      if (f.hitContinue) visit(f.hitContinue);
     const p = s.pending;
     if (!p) return;
     const required = {
@@ -340,7 +376,7 @@ class CombatRulesEngine {
     require(required[p.kind].every(
       (k) => p[k] != null,
     ), "В решении отсутствуют необходимые данные");
-    for (const k of ["attack", "damage", "movement", "roll"])
+    for (const k of ["attack", "damage", "movement", "roll", "resume"])
       if (p[k]) visit(p[k]);
     if (p.targets)
       require(Array.isArray(p.targets) && p.targets.every((id) => s.units[id]));
@@ -1256,7 +1292,7 @@ class CombatRulesEngine {
   attackSpec(id, key) {
     const a = this.unit(id).attacks.find((x) => x.id === key);
     if (!a) throw Error("Неизвестное оружие");
-    return structuredClone(a);
+    return { ...structuredClone(a), dynamicWeaponBase: true };
   }
   knowsPosition(id, target) {
     const t = this.unit(target);
@@ -1521,7 +1557,7 @@ class CombatRulesEngine {
       disadv: disadvantage.length > 0,
     };
   }
-  saveTask(id, stat, dc, next) {
+  saveTask(id, stat, dc, next, context = {}) {
     const u = this.unit(id),
       auto =
         ["STR", "DEX"].includes(stat) &&
@@ -1542,12 +1578,16 @@ class CombatRulesEngine {
       bonus:
         (u.saves?.[stat] ?? u.stats?.[stat] ?? 0) +
         RulesDefenses.saveBonus(this, id) +
-        RulesMagic.saveBonus(this, id, stat),
+        RulesMagic.saveBonus(this, id, stat) +
+        (stat === "DEX" && context.origin ? this.cover(context.origin, id) : 0),
       mode: adv === disadv ? 0 : adv ? 1 : -1,
       autoFail: auto,
       save: true,
       dc,
       next,
+      ...(context.origin
+        ? { saveOrigin: { x: context.origin.x, y: context.origin.y } }
+        : {}),
     };
   }
   speed(id) {
@@ -1603,12 +1643,14 @@ class CombatRulesEngine {
     );
   }
   status(id, kind, extra = {}) {
-    const u = this.unit(id);
+    const u = this.unit(id),
+      previous = this.speed(id);
     u.statuses = u.statuses.filter(
       (z) =>
         z.kind !== kind || (extra.stackBySource && z.source !== extra.source),
     );
-    u.statuses.push({ kind, ...extra });
+    const { stackBySource, ...stored } = extra;
+    u.statuses.push({ kind, ...stored });
     if (
       [
         "incapacitated",
@@ -1619,11 +1661,14 @@ class CombatRulesEngine {
       ].includes(kind)
     )
       this.endConcentration(id);
+    this.adjustMovementForSpeed(id, previous);
   }
   removeStatus(id, kind) {
+    const previous = this.speed(id);
     this.unit(id).statuses = this.unit(id).statuses.filter(
       (z) => z.kind !== kind,
     );
+    this.adjustMovementForSpeed(id, previous);
   }
   endConcentration(id) {
     RulesMagic.endConcentration(this, id);
@@ -1640,18 +1685,25 @@ class CombatRulesEngine {
   }
   run() {
     let n = 0;
-    while (!this.s.pending && this.s.queue.length) {
-      if (++n > 2000) throw Error("Слишком длинная последовательность");
-      this.task(this.s.queue.shift());
-      RulesDefenses.refresh(this);
+    this.running = true;
+    try {
+      while (!this.s.pending && this.s.queue.length) {
+        if (++n > 2000) throw Error("Слишком длинная последовательность");
+        this.task(this.s.queue.shift());
+        RulesMagic.maintain(this);
+        RulesDefenses.refresh(this);
 
-      this.observeAll();
+        this.observeAll();
+      }
+      if (!this.s.pending && !this.s.queue.length) {
+        const live = new Set(this.s.effects.map((x) => x.id));
+        for (const id of Object.keys(this.s.spellFrames))
+          if (!live.has(id)) delete this.s.spellFrames[id];
+      }
+    } finally {
+      this.running = false;
     }
-    if (!this.s.pending && !this.s.queue.length) {
-      const live = new Set(this.s.effects.map((x) => x.id));
-      for (const id of Object.keys(this.s.spellFrames))
-        if (!live.has(id)) delete this.s.spellFrames[id];
-    }
+    this.checkEnd();
   }
   observeAll() {
     for (const id of this.s.order) {
@@ -1815,12 +1867,15 @@ class CombatRulesEngine {
       u.darkMoveWindow = false;
       u.surgeAction = 0;
       u.statuses = u.statuses.filter((z) => z.expiresAtEnd !== t.actor);
-      for (const other of s.order)
+      for (const other of s.order) {
+        const previous = this.speed(other);
         this.unit(other).statuses = this.unit(other).statuses.filter(
           (z) =>
             z.expiresOnSourceEnd !== t.actor ||
             u.turnCount < (z.expiresOnSourceEndTurn || 0),
         );
+        this.adjustMovementForSpeed(other, previous);
+      }
       u.flurryLeft = 0;
       this.emit("turnEnded", t.actor, this.name(t.actor) + " завершает ход.");
       for (let n = 0; n < s.order.length; n++) {
@@ -1886,6 +1941,19 @@ class CombatRulesEngine {
     }
     if (t.kind === "attackRoll") {
       if (!this.active(t.actor) || !this.active(t.target)) return;
+      if (!t.weaponPrepared) {
+        const legacy =
+          ["30.5.1", "30.5.0"].includes(s.engineVersion) &&
+          !t.spec.dynamicWeaponBase &&
+          !["reaction", "haste"].includes(t.mode);
+        t = {
+          ...t,
+          spec: legacy
+            ? t.spec
+            : RulesAdvanced.weaponSpec(this, t.actor, t.spec),
+          weaponPrepared: true,
+        };
+      }
       if (RulesDefenses.beforeAttack(this, t)) return;
       const target = this.unit(t.target);
       if (
@@ -2063,7 +2131,6 @@ class CombatRulesEngine {
     if (t.kind === "applyAttackCondition") {
       RulesCapabilities.effect(t.effect);
       if (!this.active(t.target) || t.result?.success) return;
-      const previousSpeed = this.speed(t.target);
       this.status(t.target, t.effect.condition, {
         source: t.actor,
         ...(t.effect.duration === "source-next-start"
@@ -2073,7 +2140,6 @@ class CombatRulesEngine {
           ? { expiresAtStart: t.target }
           : {}),
       });
-      this.adjustMovementForSpeed(t.target, previousSpeed);
       this.emit(
         "attackCondition",
         t.target,
@@ -2113,8 +2179,9 @@ class CombatRulesEngine {
     if (t.kind === "damage") {
       if (t.amount <= 0) return;
       const target = this.unit(t.target),
-        physical = ["bludgeoning", "piercing", "slashing"].includes(
-          t.damageType,
+        physicalTypes = ["bludgeoning", "piercing", "slashing"],
+        physical = this.damageParts(t).some((p) =>
+          physicalTypes.includes(p.damageType),
         );
       if (
         !t.finalTransfer &&
@@ -2140,13 +2207,16 @@ class CombatRulesEngine {
         !t.mitigated &&
         !t.armorReduced &&
         t.attack &&
-        ["bludgeoning", "piercing", "slashing"].includes(t.damageType) &&
+        physical &&
         target.features.heavyArmor &&
         target.features.heavyArmorReduction
       ) {
         t = {
-          ...t,
-          amount: Math.max(0, t.amount - target.features.heavyArmorReduction),
+          ...this.reduceDamage(
+            t,
+            target.features.heavyArmorReduction,
+            physicalTypes,
+          ),
           armorReduced: true,
         };
       }
@@ -2158,13 +2228,21 @@ class CombatRulesEngine {
         return;
       let amount = t.amount;
       if (!t.mitigated && !t.finalTransfer) {
-        if (target.immunities?.includes(t.damageType)) amount = 0;
-        else {
-          if (target.resistances?.includes(t.damageType))
-            amount = Math.floor(amount / 2);
-          if (target.vulnerabilities?.includes(t.damageType)) amount *= 2;
-        }
-        amount = RulesMagic.mitigate(this, t, amount);
+        const components = this.damageParts(t).map((p) => {
+          let n = target.immunities?.includes(p.damageType) ? 0 : p.amount;
+          if (target.resistances?.includes(p.damageType)) n = Math.floor(n / 2);
+          if (target.vulnerabilities?.includes(p.damageType)) n *= 2;
+          return {
+            ...p,
+            amount: RulesMagic.mitigate(
+              this,
+              { ...t, damageType: p.damageType },
+              n,
+            ),
+          };
+        });
+        amount = components.reduce((n, p) => n + p.amount, 0);
+        t = { ...t, components };
       }
       if (RulesMagic.split(this, t, amount)) return;
       if (
@@ -2211,6 +2289,7 @@ class CombatRulesEngine {
           lost,
           temp,
           damageType: t.damageType,
+          ...(t.components ? { components: t.components } : {}),
           source: t.actor,
           strikeId: t.strikeId,
         },
@@ -2270,7 +2349,9 @@ class CombatRulesEngine {
       for (const id of s.order) {
         const a = this.unit(id);
         if (
+          !t.considered?.includes(id) &&
           a.team !== u.team &&
+          this.active(t.actor) &&
           a.ready?.trigger === "attackAlly" &&
           a.reaction > 0 &&
           RulesMagic.canReact(this, id) &&
@@ -2287,12 +2368,19 @@ class CombatRulesEngine {
               mode: "reaction",
             };
             if (a.controlled) {
-              this.decision("ready", id, { attack });
+              this.decision("ready", id, {
+                attack,
+                resume: { ...t, considered: [...(t.considered || []), id] },
+              });
               return;
             }
             a.ready = null;
             a.reaction--;
-            this.enqueue(attack);
+            this.enqueue(attack, {
+              ...t,
+              considered: [...(t.considered || []), id],
+            });
+            return;
           } catch {}
         }
       }
@@ -2675,6 +2763,41 @@ class CombatRulesEngine {
       amount,
     };
   }
+  damageParts(t) {
+    const parts = t.components || [
+      { amount: t.amount, damageType: t.damageType },
+    ];
+    const grouped = new Map();
+    for (const p of parts)
+      grouped.set(p.damageType, (grouped.get(p.damageType) || 0) + p.amount);
+    return [...grouped].map(([damageType, amount]) => ({ damageType, amount }));
+  }
+  reduceDamage(t, reduction, types = null) {
+    const components = this.damageParts(t).map((p) => {
+      const n =
+        types && !types.includes(p.damageType)
+          ? 0
+          : Math.min(reduction, p.amount);
+      reduction -= n;
+      return { ...p, amount: p.amount - n };
+    });
+    return {
+      ...t,
+      components,
+      amount: components.reduce((n, p) => n + p.amount, 0),
+    };
+  }
+  halfDamage(t) {
+    let total = 0,
+      allocated = 0;
+    const components = this.damageParts(t).map((p) => {
+      total += p.amount;
+      const amount = Math.floor(total / 2) - allocated;
+      allocated += amount;
+      return { ...p, amount };
+    });
+    return { ...t, components, amount: allocated };
+  }
   deflect(t, use) {
     const u = this.unit(t.target);
     if (!use) {
@@ -2710,7 +2833,11 @@ class CombatRulesEngine {
         ".",
       { reduction, amount },
     );
-    if (amount) this.enqueue({ ...t, amount, deflectResolved: true });
+    if (amount)
+      this.enqueue({
+        ...this.reduceDamage(t, reduction),
+        deflectResolved: true,
+      });
     else if (u.focus > 0) {
       const range =
           t.attack.kind === "melee" || t.attack.kind === "meleeSpell" ? 5 : 60,
@@ -2871,8 +2998,8 @@ class CombatRulesEngine {
           "Реакция потрачена",
         );
         u.reaction--;
-        this.enqueue(p.attack);
-      }
+        this.enqueue(p.attack, ...(p.resume ? [p.resume] : []));
+      } else if (p.resume) this.enqueue(p.resume);
       return;
     }
     if (p.kind === "defenseLuck") {
@@ -2958,7 +3085,8 @@ class CombatRulesEngine {
     this.emit("heal", id, u.name + ": восстановлено " + real + " ПЗ.");
   }
   releaseGrapples() {
-    for (const id of this.s.order)
+    for (const id of this.s.order) {
+      const previous = this.speed(id);
       this.unit(id).statuses = this.unit(id).statuses.filter(
         (z) =>
           z.kind !== "grappled" ||
@@ -2967,9 +3095,18 @@ class CombatRulesEngine {
             !this.incapacitated(z.source) &&
             this.distance(this.unit(id), this.unit(z.source)) <= 5),
       );
+      this.adjustMovementForSpeed(id, previous);
+    }
   }
   checkEnd() {
-    if (this.s.phase === "ended") return;
+    // A hit can still have riders, transfers, saves and decisions in flight.
+    if (
+      this.running ||
+      this.s.pending ||
+      this.s.queue.length ||
+      this.s.phase === "ended"
+    )
+      return;
     if (
       this.s.order.some((id) => {
         const u = this.unit(id);

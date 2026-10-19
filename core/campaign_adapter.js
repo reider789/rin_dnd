@@ -139,6 +139,43 @@ class CombatCampaignAdapter {
       initiative = {},
       baseline = {},
       inventoryBaseline = {};
+    if (
+      continuity.scene &&
+      ((continuity.objects || []).length || (continuity.zones || []).length)
+    ) {
+      const previous = continuity.scene;
+      const cells = (list) =>
+        (list || [])
+          .map((c) => {
+            const p = this.cell(c);
+            return p.x + "," + p.y;
+          })
+          .sort();
+      const cover = Object.fromEntries(
+        Object.entries(scene.cover || {}).map(([key, value]) => {
+          const p = this.cell(key);
+          return [p.x + "," + p.y, value];
+        }),
+      );
+      const sorted = (o) =>
+        JSON.stringify(
+          Object.entries(o).sort(([a], [b]) => a.localeCompare(b)),
+        );
+      const same =
+        previous.width === width &&
+        previous.height === height &&
+        JSON.stringify([...previous.walls].sort()) ===
+          JSON.stringify(cells(scene.walls)) &&
+        JSON.stringify([...previous.rubble].sort()) ===
+          JSON.stringify(cells(scene.rubble)) &&
+        sorted(previous.cover) === sorted(cover) &&
+        (scene.scene_id || scene.id || scene.battle_id || scene.name) ===
+          previous.id;
+      if (!same)
+        throw Error(
+          "На прежнем поле остаётся магия. Продолжи ту же сцену либо явно заверши её эффекты перед сменой карты",
+        );
+    }
     let randomValue = seed >>> 0 || 1,
       draws = 0;
     const initiativeFor = (r, u) => {
@@ -281,6 +318,7 @@ class CombatCampaignAdapter {
         battleId: scene.battle_id || "training-" + Date.now(),
         kind: scene.kind === "story" ? "story" : "training",
         name: scene.name,
+        sceneId: scene.scene_id || scene.id || scene.battle_id || scene.name,
         theme: scene.theme || "forest",
         resultKind: runtime.result_kind || "rin-combat-result",
         contentPack: runtime.content_pack
@@ -369,6 +407,11 @@ class CombatCampaignAdapter {
   static outcome(s) {
     if (s.phase !== "ended" || s.pending || s.queue.length)
       throw Error("Сначала заверши бой и все решения");
+    const M =
+      typeof module !== "undefined"
+        ? require("./magic").CombatMagic
+        : CombatMagic;
+    s = M.normalizedAt(s, s.elapsed + 6);
     const mapping = {
         hp: "hp",
         focus: "focus",
@@ -395,6 +438,7 @@ class CombatCampaignAdapter {
     const summons = s.order.filter(
       (id) =>
         s.units[id].summoner &&
+        !s.units[s.units[id].summoner]?.dead &&
         Object.hasOwn(after, s.units[id].summoner) &&
         s.units[id].hp > 0 &&
         !s.units[id].dead &&
@@ -416,7 +460,7 @@ class CombatCampaignAdapter {
       phase: s.phase,
       before: s.baseline,
       after,
-      elapsed_seconds: s.elapsed + 6,
+      elapsed_seconds: s.elapsed,
       round: s.round,
       inventory_before: Object.fromEntries(
         Object.keys(after).map((id) => [id, s.inventoryBaseline[id]]),
@@ -440,30 +484,39 @@ class CombatCampaignAdapter {
         ]),
       ),
       continuity: {
+        scene: {
+          id: s.meta.sceneId || s.meta.battleId,
+          name: s.meta.name,
+          ...structuredClone(s.terrain),
+          positions: Object.fromEntries(
+            [...retained].map((id) => [
+              id,
+              { x: s.units[id].x, y: s.units[id].y },
+            ]),
+          ),
+        },
         effects: (s.effects || [])
-          .filter((x) => retained.has(x.owner) && x.until > s.elapsed + 6)
+          .filter((x) => retained.has(x.owner) && x.until > s.elapsed)
           .map((x) => ({
             ...structuredClone(x),
             targets: x.targets.filter((id) => retained.has(id)),
-            remaining_seconds: x.until - s.elapsed - 6,
+            remaining_seconds: x.until - s.elapsed,
           })),
         objects: Object.values(s.objects || {})
           .filter(
             (o) =>
               Object.hasOwn(after, o.owner) &&
-              s.effects.some((x) => x.id === o.id && x.until > s.elapsed + 6),
+              s.effects.some((x) => x.id === o.id && x.until > s.elapsed),
           )
           .map((o) => ({
             ...structuredClone(o),
             grappled: retained.has(o.grappled) ? o.grappled : null,
           })),
         zones: s.zones
-          .filter(
-            (z) => Object.hasOwn(after, z.owner) && z.until > s.elapsed + 6,
-          )
+          .filter((z) => Object.hasOwn(after, z.owner) && z.until > s.elapsed)
           .map((z) => ({
             ...structuredClone(z),
-            remaining_seconds: z.until - s.elapsed - 6,
+            remaining_seconds: z.until - s.elapsed,
           })),
         units: summons.map((id) => structuredClone(s.units[id])),
         life: Object.fromEntries(
@@ -480,6 +533,11 @@ class CombatCampaignAdapter {
             id,
             s.units[id].statuses.filter(
               (z) =>
+                // Turn-scoped tactics finish within the final six seconds.
+                !z.expiresAtStart &&
+                !z.expiresAtEnd &&
+                !z.expiresOnSourceStart &&
+                !z.expiresOnSourceEnd &&
                 ![
                   "shield",
                   "aim",
@@ -492,7 +550,7 @@ class CombatCampaignAdapter {
                 ].includes(z.kind) &&
                 (!z.effect ||
                   s.effects.some(
-                    (x) => x.id === z.effect && x.until > s.elapsed + 6,
+                    (x) => x.id === z.effect && x.until > s.elapsed,
                   )) &&
                 (z.kind !== "grappled" || retained.has(z.source)),
             ),
