@@ -21,12 +21,12 @@
     "web/session_store.js": "89a09697a9c6b99d23614f2ec5fc5a421000f61f241964a0c76b3fd56836d0d7",
     "web/combat_app.js": "ff4f8ff39e7257f3f4e5ef3c0d79aba69da1222787a568ef76a2ab303bcade4a",
     "web/shell.html": "067e516286ab065573d66b2073216e49931b208fc6093fb1e413b42f09e9e131",
-    "web/desktop.css": "7bf6d8950b4038dda864c2fd9194ed5fde2bb40e7da797a038dede54d218bf02",
+    "web/desktop.css": "7b0f41ee10a7036451f20f2890645591c025d330feada91349ab260b04f2bd98",
     "config/combat_profiles.json": "91e59d5e10e910a12a82dd9ae089333ac764f3f49317fb7285f81f99802fb287",
     "encounters/caravan_ambush_training.json": "e0855a32f8401b0ad1307e29eb2a428ffed46dcb9113ba504e4a6c0b1be9d714"
   },
-  "bundle_sha256": "f051e2b2d2aafee8942a09d227cf0700490b47af5f01b3dd8080d5bbb23d0ed5",
-  "bytes": 901876,
+  "bundle_sha256": "0c81e49a6b3390af8dfe5a5782205335a7b02d01706582544e9156fa9b0530ca",
+  "bytes": 902125,
   "art_mode": "scene",
   "art_assets": [
     "backgrounds.forest",
