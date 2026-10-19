@@ -34,7 +34,7 @@
     if (!draftScope) return;
     const values = {};
     for (const el of root.querySelectorAll("select[id],input[id]:not([type=file]),textarea[id]"))
-      values[el.id] = el.type === "checkbox" ? el.checked : el.value;
+      values[el.id] = el.multiple ? [...el.selectedOptions].map(o=>o.value) : el.type === "checkbox" ? el.checked : el.value;
     drafts.set(draftScope, values);
     panelOpen.set(draftScope, [...root.querySelectorAll("aside details")].map((el) => el.open));
   }
@@ -43,7 +43,8 @@
     for (const [id, value] of Object.entries(values)) {
       const el = $(id);
       if (!el) continue;
-      if (el.type === "checkbox") el.checked = value;
+      if(el.multiple){for(const o of el.options)o.selected=Array.isArray(value)&&value.includes(o.value);}
+      else if (el.type === "checkbox") el.checked = value;
       else if (el.tagName !== "SELECT" || [...el.options].some((o) => o.value === value)) el.value = value;
     }
     const open = panelOpen.get(draftScope);
@@ -192,6 +193,7 @@
   function act(c) {
     try {
       engine.dispatch(c);
+      if(c.sacred&&$("sacred-weapon")){$("sacred-weapon").checked=false;captureDraft();}
       notice = "";
       error = false;
       path = [];
@@ -467,8 +469,17 @@
         choice("approve", "Зафиксировать решение") +
         choice("cancel", "Отменить заявку");
     }
+    if(p.kind === "magicChoice"){
+      const labels={counterspell:"Контрзаклинание",missileShield:"Щит против Волшебной стрелы",vitality:"Аура жизненной силы",shieldMaster:"Мастер щита · избежать урона",strikeExtras:"Способности после попадания",cunning:"Хитрый удар · стоимость 1к6",shieldBash:"Удар щитом",forge:"Кузнечный резонанс",smite:"Божественная кара",living:"Живая стрела",itemRuling:"Дымовая бомба · правило мастера"};
+      const choices={yes:"Использовать",no:"Пропустить",skip:"Пропустить",heal:"Лечить",cunning:"Хитрый удар",shieldBash:"Удар щитом",forge:"Резонанс",smite:"Кара",living:"Живая стрела",use:"Применить правило мастера",poison:"Отравить",trip:"Опрокинуть",withdraw:"Отойти",stealth:"Скрытная атака",prone:"Сбить с ног",push:"Оттолкнуть",reactions:"Лишить реакций",free:"Бесплатное применение"};
+      title=(labels[p.choice]||p.choice)+" · "+name;
+      body=p.choice==="cunning"?"Урон Скрытой атаки уменьшается на одну кость (две при критическом попадании).":"Выбери действие.";
+      if(p.targets?.length)body+='<select id="magic-decision-target">'+p.targets.map(k=>'<option value="'+esc(k)+'">'+esc(engine.name(k))+'</option>').join('')+'</select>';
+      if(p.choice==='itemRuling')body='В карточке не заданы параметры дыма. Введи согласованное с мастером правило; до подтверждения предмет не расходуется.<label>Дальность, фт<input id="ruling-range" type="number" min="0" max="600"></label><label>Радиус, фт<input id="ruling-radius" type="number" min="0" max="100"></label><label>Длительность, секунд<input id="ruling-duration" type="number" min="1" max="86400"></label>';
+      buttons=p.options.map(k=>choice(k,choices[k]||(k.startsWith("slot")?"Ячейка "+k.slice(4):k))).join('');
+    }
     $("decision").innerHTML =
-      '<div class="panel decision"><h3>' +
+      '<div class="panel decision"><h3>'  +
       esc(title) +
       "</h3><p>" +
       body +
@@ -483,10 +494,47 @@
     const board = $("board"), boardTop = board.getBoundingClientRect().top + scroll;
     board.parentElement.style.maxWidth = "min(100%, " + Math.max(260, (innerHeight - boardTop - 90) * engine.s.terrain.width / engine.s.terrain.height) + "px)";
   }
+  function magicCommand(kind) {
+    const id=engine.actorId,spell=$("magic-spell")?.value,targets=[...($("magic-targets")?.selectedOptions||[])].map(o=>o.value);
+    let point;try{point=CombatCampaignAdapter.cell($("magic-point")?.value?.trim().toUpperCase());}catch{}
+    const base={kind,actor:id,spell,targets,target:targets[0]||selected,point,level:Number($("magic-level")?.value||0),sculpt:[...($("magic-sculpt")?.selectedOptions||[])].map(o=>o.value),handMode:$("magic-hand")?.value||"interpose"};
+
+    if(kind==="useItem"){base.item=$("combat-item")?.value;base.cost=$("item-bonus")?.checked?"bonus":"action";}
+    return base;
+  }
+  function magicPanel(id,play) {
+    const u=engine.unit(id),catalogue=CombatMagic.catalogue(u),known=engine.s.order.filter(k=>engine.unit(k).team===u.team||engine.knowsPosition(id,k)&&engine.canSee(id,k));
+    const targets=known.map(k=>'<option value="'+esc(k)+'"'+(k===selected?' selected':'')+'>'+esc(engine.name(k))+'</option>').join('');
+    const options=catalogue.filter(x=>x.id!=="divineSmite").map(x=>'<option value="'+x.id+'">'+esc(x.name)+(x.level?' · '+x.level:' · заговор')+'</option>').join('');
+    const slots='<option value="0">Заговор / предмет</option>'+Object.entries(u.slots).map(([n,p])=>'<option value="'+n+'">'+n+' круг · '+p.current+'/'+p.max+'</option>').join('');
+    const hand=Object.values(engine.s.objects).find(o=>o.owner===id),sphere=engine.s.effects.some(x=>x.owner===id&&x.kind==='stormSphere');
+    let html='';
+    if(options||u.features.abjureFoes||hand||sphere)html='<details class="magic-panel" '+(u.casting?'open':'')+'><summary>Заклинания и эффекты</summary><div class="magic-form">'+(options?'<label>Заклинание<select id="magic-spell">'+options+'</select></label><label>Ячейка<select id="magic-level">'+slots+'</select></label>':'')+'<label>Цели · Ctrl для нескольких<select id="magic-targets" multiple size="3">'+targets+'</select></label><label>Клетка / направление<div class="inline-field"><input id="magic-point" value="'+engine.cell({x:Math.min(u.x+1,engine.s.terrain.width-1),y:u.y})+'" aria-label="Клетка заклинания"><button data-op="magicPoint">Выбрать на поле</button></div></label>'+(u.features.sculptSpells?'<label>Защитить Скульптурой<select id="magic-sculpt" multiple size="2">'+known.filter(k=>k!==id&&engine.unit(k).team===u.team).map(k=>'<option value="'+esc(k)+'">'+esc(engine.name(k))+'</option>').join('')+'</select></label>':'')+'<label>Рука Бигби<select id="magic-hand"><option value="interpose">Преграда · полуукрытие</option><option value="fist">Кулак · атака</option><option value="grasp">Захват</option><option value="crush">Сдавливание</option><option value="push">Толчок</option><option value="move">Перемещение</option></select></label><div class="choices">'+(options?button('cast','Применить заклинание',!play):'')+(hand?button('hand','Управлять рукой · бонусное',!play):'')+(sphere?button('stormStrike','Молния сферы · бонусное',!play):'')+(u.features.abjureFoes?button('abjure','Изгнание врагов',!play):'')+'</div><p id="magic-reason" role="status"></p></div></details>';
+    if(u.hasteAction)html+='<div class="choices">'+[['attack','Ускорение · атака'],['dash','Ускорение · рывок'],['disengage','Ускорение · отход'],['hide','Ускорение · спрятаться']].map(([k,label])=>button('haste-'+k,label,!play)).join('')+'</div>';
+    if(u.summoner&&u.powerAvailable)html+=button('steedPower','Способность скакуна · бонусное',!play);
+    if(engine.has(id,"burning"))html+=button("extinguish","Погасить пламя",!play);
+    const counters=Object.entries(u.counters||{}).filter(([k])=>['storm_bracers','storm_daily','vaeltir_focus','leaf_charges','living_arrow','forge_resonance','mantle_stars','smite_free','faithful_steed'].includes(k));
+    const names={storm_bracers:'Наручи · заряды',storm_daily:'Наручи · дневной лимит',vaeltir_focus:'Фокус Ваэльтира',leaf_charges:'Шаг листвы',living_arrow:'Живая стрела',forge_resonance:'Кузнечный резонанс',mantle_stars:'Звёзды мантии',smite_free:'Бесплатная Кара',faithful_steed:'Бесплатный скакун'};
+    if(counters.length)html+='<p class="item-counters">'+counters.map(([k,p])=>names[k]+': '+p.current+'/'+p.max).join(' · ')+'</p>';
+    html+='<div class="choices">'+(u.counters.leaf_charges?button('leafStep','Шаг листвы',!play):'')+(u.counters.living_arrow?button('livingArrow',u.livingArmed?'Живая стрела подготовлена':'Подготовить Живую стрелу',!play):'')+(u.counters.mantle_stars?button('mantleMissile','Мантия · Волшебная стрела V',!play):'')+((engine.has(id,'grappled')||engine.has(id,'restrained'))?button('escapeMagic','Освободиться от магии',!play):'')+'</div>';
+    const items=Object.entries(u.equipment?.consumables||{}).filter(([iid])=>u.items[iid]>0);
+    if(!options&&!u.features.abjureFoes&&!hand&&!sphere&&(items.length||u.summoner))html+='<label>Клетка для предмета<input id="magic-point" value="'+engine.cell(u)+'"><button data-op="magicPoint">Выбрать на поле</button></label>';
+    if(items.length)html+='<details><summary>Расходники</summary><select id="combat-item">'+items.map(([iid,k])=>'<option value="'+esc(iid)+'">'+esc(runtime.characters[id]?.inventory.find(i=>i.id===iid)?.name||k)+' · '+u.items[iid]+'</option>').join('')+'</select>'+(u.features.thiefHands?'<label><input type="checkbox" id="item-bonus"> Быстрые руки · бонусное действие</label>':'')+button('useItem','Использовать выбранный предмет',!play)+'</details>';
+    if(u.features.sacredWeapon)html+='<label><input id="sacred-weapon" type="checkbox"> Священное оружие при следующем действии Атака · 1 канал</label><label><input id="sacred-radiant" type="checkbox"> Священное оружие · урон излучением</label>';
+    const effects=engine.s.effects.filter(x=>x.targets.includes(id)||x.owner===id);
+    if(effects.length)html+='<details open><summary>Действующие эффекты</summary>'+effects.map(x=>'<p>'+esc(CombatMagic.SPELLS[x.kind]?.[0]||x.kind)+' · '+Math.max(0,x.until-engine.s.elapsed)+' с'+(x.concentration?' · концентрация':'')+'</p>').join('')+'</details>';
+    if(u.reference?.length)html+='<details><summary>Полная карточка и снаряжение</summary>'+u.reference.map(x=>'<p><b>'+esc(x.name)+'</b><br>'+esc(x.text)+(x.status?'<small>'+esc(x.status)+'</small>':'')+'</p>').join('')+'</details>';
+    return html;
+  }
+
   function commandFromButton(b) {
     const op = b.dataset.op, id = engine.actorId, u = engine.unit(id);
     const base = { actor: id, target: selected, weapon };
-    const strike = (mode, key = weapon) => ({ ...base, kind: "attack", mode, weapon: key, mastery: $("mastery")?.value || null });
+    if(["cast","hand","stormStrike","abjure","mantleMissile","useItem"].includes(op))return magicCommand(op);
+    if(op.startsWith("haste-"))return {...base,kind:"hasteAction",action:op.slice(6)};
+    if(op==="steedPower")return {...magicCommand(op),kind:op};
+    if(["leafStep","livingArrow","escapeMagic","extinguish"].includes(op))return {...base,kind:op};
+    const strike = (mode, key = weapon) => ({ ...base, kind: "attack", mode, weapon: key, mastery: $("mastery")?.value || null, sacred:$("sacred-weapon")?.checked||false,radiant:$("sacred-radiant")?.checked||false });
     const moves = { patientFree: ["disengage", false], patientPaid: ["disengage", true], windFree: ["dash", false], windPaid: ["dash", true], cunningHide: ["hide", false], cunningDash: ["dash", false], cunningDisengage: ["disengage", false] };
     if (moves[op]) return { ...base, kind: moves[op][0], cost: "bonus", paid: moves[op][1] };
     if (op === "attack" || op === "hew") return strike(op === "hew" ? "hew" : "action");
@@ -516,6 +564,7 @@
       const result = availability.get(key);
       b.disabled = !playable || !result.enabled;
       b.title = result.reason;
+      if(b.dataset.op==="cast" && $("magic-reason"))$("magic-reason").textContent=result.reason;
     }
   }
   const renderedPanels = new Map();
@@ -610,6 +659,8 @@
         (wall ? " wall" : "") +
         (rough ? " rubble" : "") +
         (dark ? " dark" : "") +
+        (s.zones.some(z=>["web","smoke","stormSphere"].includes(z.kind)&&engine.zoneAt(p,z))?" spell-zone":"")+
+        (Object.values(s.objects).some(o=>o.x===x&&o.y===y)?" magic-object":"")+
         (occupant === selected && visible ? " selected" : "") +
         (path.some((q) => q.x === x && q.y === y) ? " path" : "");
       b.style.backgroundImage = wall
@@ -652,7 +703,7 @@
       (pointMode
         ? pointMode === "attackAt"
           ? "Выбери клетку для атаки вслепую."
-          : "Выбери центр Тьмы на карте."
+          : pointMode==="magicPoint"?"Выбери точку или направление заклинания на поле.":"Выбери центр Тьмы на карте."
         : selected
           ? "Цель: " + engine.name(selected)
           : "Выбери цель на карте.");
@@ -668,7 +719,7 @@
     const owner = s.order.find(
       (k) =>
         engine.unit(k).controlled &&
-        s.zones.some((z) => z.owner === k && z.concentration),
+        CombatMagic.concentrating(engine,k),
     );
     if (owner)
       panels.route += button(
@@ -685,7 +736,7 @@
       "/" +
       u.max +
       " · КД " +
-      u.ac +
+      engine.ac(id) +
       "<br>Действие " +
       u.action +
       ((u.surgeAction || 0) > 0 ? " + Всплеск " + u.surgeAction : "") +
@@ -993,6 +1044,7 @@
           .join("") +
         "</details>"
       : "";
+    panels.magic = magicPanel(id,play);
     decision();
     panels.inspector = s.order
       .filter(
@@ -1103,6 +1155,8 @@
         maneuver: $("strike-maneuver")?.value || null,
         ally: $("strike-ally")?.value,
         savage: $("strike-savage")?.checked || false,
+        target:$("magic-decision-target")?.value,
+        range:$("ruling-range")?.value?Number($("ruling-range").value):undefined,radius:$("ruling-radius")?.value?Number($("ruling-radius").value):undefined,duration:$("ruling-duration")?.value?Number($("ruling-duration").value):undefined,
       });
       return;
     }
@@ -1141,6 +1195,7 @@
               )))
             ? occupant
             : null;
+      if(pointMode==="magicPoint"){$("magic-point").value=engine.cell(point);pointMode=null;notice="Точка выбрана: "+engine.cell(point);captureDraft();updateAvailableCommands();$("notice").textContent=notice;return;}
       if (pointMode) {
         act({ kind: pointMode, actor: id, point, weapon });
         return;
@@ -1207,6 +1262,7 @@
       act({ kind: "endConcentration", actor: b.dataset.owner });
       return;
     }
+    if(op==="magicPoint"){pointMode="magicPoint";notice="Выбери точку или направление заклинания на поле.";render();return;}
     if (op === "new") {
       newBattle(defaultScene);
       return;
@@ -1301,6 +1357,8 @@
       } catch (err) { notice = err.message; error = true; render(); }
       return;
     }
+    if(e.target.id==="magic-spell"){const level=CombatMagic.SPELLS[e.target.value][1];if($("magic-level"))$("magic-level").value=["stormSphere","drainingWave"].includes(e.target.value)?"0":String(level);}
+    if(e.target.id?.startsWith("magic-")||e.target.id==="combat-item"||e.target.id?.startsWith("sacred-")){captureDraft();availability.clear();updateAvailableCommands();return;}
     if (e.target.id === "weapon") {
       weapon = e.target.value;
       render();

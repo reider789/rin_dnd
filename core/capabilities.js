@@ -2,7 +2,7 @@
 // The only registration point for supported data-level mechanics. No code from packs is executed.
 class CombatCapabilities {
   static API = 1;
-  static ENGINE = "30.4.0";
+  static ENGINE = "30.5.0";
   static RULES = "dnd-2024-2026-10";
   static FEATURES = {
     martialArts: "boolean",
@@ -60,6 +60,11 @@ class CombatCapabilities {
     sharpshooter: "boolean",
     layOnHands: "boolean",
     knowEnemy: "boolean",
+    sculptSpells: "boolean", potentCantrip: "boolean", empoweredEvocation: "boolean",
+    sacredWeapon: "boolean", abjureFoes: "boolean", shieldMaster: "boolean", divineSmite: "boolean",
+    cunningStrike: "boolean", stealthAttack: "boolean", thiefHands: "boolean", climbSpeed: [5, 120],
+    cunningDC: [1,30], poisonerKit: "boolean", silentShadow: "boolean",
+
   };
   static COUNTERS = [
     "second_wind",
@@ -77,7 +82,7 @@ class CombatCapabilities {
     "arcane_recovery",
     "smite_free",
     "storm_thrower_ammo",
-    "know_enemy",
+    "know_enemy", "storm_bracers", "storm_daily", "vaeltir_focus", "faithful_steed", "mantle_stars",
   ];
   static counter(value) {
     this.require(
@@ -128,7 +133,7 @@ class CombatCapabilities {
       "Неподдержанное состояние эффекта",
     );
     this.require(
-      effect.duration === "target-next-start" ||
+      effect.duration === "target-next-start" || effect.duration === "source-next-start" ||
         (effect.condition === "prone" && effect.duration === "until-removed"),
       "Неподдержанная длительность эффекта",
     );
@@ -216,12 +221,12 @@ class CombatCapabilities {
           "light",
           "mastery",
           "unarmed",
-          "ammo",
+          "ammo", "ammoCounter",
           "ammoInventoryId",
           "ammoItem",
           "effects",
           "heavy",
-          "twoHanded",
+          "twoHanded", "spellKey", "potent", "magicAdvantage",
         ].includes(k),
       ),
       "Неподдержанное поле атаки",
@@ -246,7 +251,7 @@ class CombatCapabilities {
       engine: this.ENGINE,
       rules: this.RULES,
       features: structuredClone(this.FEATURES),
-      handlers: ["features", "onHitCondition"],
+      handlers: ["features", "onHitCondition", "spellcasting", "magicItems", "advancedClasses"],
       counters: [...this.COUNTERS],
       conditions: ["poisoned", "prone", "frost"],
     };

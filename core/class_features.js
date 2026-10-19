@@ -299,7 +299,7 @@ class CombatClassFeatures {
           attack: null,
         });
     } else if (t.kind === "secondWindResult") {
-      e.heal(t.actor, t.result.total);
+      e.heal(t.actor, (typeof module!=="undefined"?require("./magic").CombatMagic:CombatMagic).effects(e,t.actor,"beaconHope").length ? 10+u.features.fighterLevel : t.result.total);
       if (u.controlled && u.features.tacticalShift && e.speed(t.actor) > 0)
         e.decision("freeMovement", t.actor, {
           budget: Math.floor(e.speed(t.actor) / 2),
@@ -331,7 +331,7 @@ class CombatClassFeatures {
       t.attackHit !== false &&
       t.attack &&
       u.features.uncannyDodge &&
-      u.reaction > 0 &&
+      u.reaction > 0 && (typeof module!=="undefined"?require("./magic").CombatMagic:CombatMagic).canReact(e,t.target) &&
       !e.incapacitated(t.target) &&
       e.canSee(t.target, t.actor)
     ) {

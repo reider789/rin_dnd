@@ -13,6 +13,8 @@ function createBattle(pack, encounter, seed = 1) {
   return { runtime, scene, engine };
 }
 module.exports = {
+  CombatMagic:require("../core/magic").CombatMagic,
+  CombatAdvancedFeatures:require("../core/advanced_features").CombatAdvancedFeatures,
   CombatCapabilities,
   CombatContentPack,
   CombatRulesEngine,

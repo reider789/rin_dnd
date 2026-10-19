@@ -5,6 +5,7 @@
   "title": "Рин Вейр",
   "source": "state/_campaign-state.json",
   "source_state_revision": 1,
+  "source_clock": 0,
   "source_state_sha256": "bf8bd1f85817996db5961dd8c658c028f7c87a7632fd53f75a98812a013139e9",
   "is_canonical": false,
   "characters": {

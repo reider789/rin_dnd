@@ -196,6 +196,7 @@ class CombatMartialFeatures {
     return true;
   }
   static weaponRoll(e, t) {
+    if((typeof module!=="undefined"?require("./advanced_features").CombatAdvancedFeatures:CombatAdvancedFeatures).beforeWeapon(e,t))return;
     const u = e.unit(t.actor),
       maneuvers =
         !t.maneuverUsed && this.count(e, t.actor) > 0 ? this.options(e, t) : [],
@@ -264,7 +265,7 @@ class CombatMartialFeatures {
       minimumDie,
       bonus:
         (t.mode === "nick" ? Math.min(0, t.spec.flat) : t.spec.flat) +
-        (t.mode === "action" && t.spec.heavy
+        (["action","haste"].includes(t.mode) && t.spec.heavy
           ? u.features.greatWeaponMaster || 0
           : 0),
       next: {
@@ -292,7 +293,7 @@ class CombatMartialFeatures {
         t.attack.spec.kind !== "melee" ||
         !defender.features.maneuvers?.includes("riposte") ||
         !spec ||
-        defender.reaction <= 0 ||
+        defender.reaction <= 0 || !(typeof module!=="undefined"?require("./magic").CombatMagic:CombatMagic).canReact(e,t.target) ||
         e.incapacitated(t.target) ||
         this.count(e, t.target) <= 0
       )
@@ -325,7 +326,7 @@ class CombatMartialFeatures {
     } else if (t.kind === "savageSecond") {
       const flat =
         (t.mode === "nick" ? Math.min(0, t.spec.flat) : t.spec.flat) +
-        (t.mode === "action" && t.spec.heavy
+        (["action","haste"].includes(t.mode) && t.spec.heavy
           ? u.features.greatWeaponMaster || 0
           : 0);
       const result =
@@ -374,6 +375,7 @@ class CombatMartialFeatures {
         frame: { ...t.frame, maneuverAdded: true },
       });
     else if (t.kind === "weaponHitEffects") {
+      (typeof module!=="undefined"?require("./advanced_features").CombatAdvancedFeatures:CombatAdvancedFeatures).afterWeapon(e,t);
       const f = t.frame,
         target = e.unit(t.target),
         mastery = f.spec.mastery,
