@@ -78,6 +78,7 @@ class CombatContinuity {
             "objects",
             "zones",
             "life",
+            "scene",
           ].includes(k),
         ),
       "Неверное продолжение эффектов",
@@ -187,6 +188,46 @@ class CombatContinuity {
       this.object(p) &&
       this.integer(p.x, outside ? -40 : 0, outside ? 79 : 39) &&
       this.integer(p.y, outside ? -40 : 0, outside ? 79 : 39);
+    if (c.scene !== undefined) {
+      const s = c.scene;
+      this.require(
+        this.object(s) &&
+          typeof s.id === "string" &&
+          s.id.length > 0 &&
+          s.id.length <= 200 &&
+          typeof s.name === "string" &&
+          s.name.length <= 300 &&
+          this.integer(s.width, 1, 40) &&
+          this.integer(s.height, 1, 40) &&
+          ["walls", "rubble"].every(
+            (k) =>
+              Array.isArray(s[k]) &&
+              s[k].every(
+                (v) =>
+                  typeof v === "string" &&
+                  /^\d+,\d+$/.test(v) &&
+                  v
+                    .split(",")
+                    .every((n, i) => Number(n) < (i ? s.height : s.width)),
+              ),
+          ) &&
+          this.object(s.cover) &&
+          Object.entries(s.cover).every(
+            ([k, v]) =>
+              /^\d+,\d+$/.test(k) &&
+              k
+                .split(",")
+                .every((n, i) => Number(n) < (i ? s.height : s.width)) &&
+              [0, 2, 5].includes(v),
+          ) &&
+          this.object(s.positions) &&
+          Object.entries(s.positions).every(
+            ([id, p]) =>
+              actors.has(id) && point(p) && p.x < s.width && p.y < s.height,
+          ),
+        "Повреждена сцена продолжения",
+      );
+    }
     for (const x of c.effects || []) {
       this.require(
         this.object(x) &&
@@ -254,6 +295,11 @@ class CombatContinuity {
         "Нет состояния жизни героя с нулём ПЗ; нужен разбор старого отчёта",
       );
       if (life !== undefined) this.validateLife(life, hp);
+      if (summonIds.has(id))
+        this.require(
+          !c.life?.[(c.units || []).find((u) => u.id === id).summoner]?.dead,
+          "Призыв не может сохраняться после смерти хозяина",
+        );
       this.require(
         c.temporary_hp?.[id] === undefined ||
           this.integer(c.temporary_hp[id], 0, 1000),
@@ -324,6 +370,13 @@ class CombatContinuity {
           this.require(typeof z.magic === "boolean", "Неверный тип состояния");
         if (z.kind === "grappled")
           this.require(actors.has(z.source), "Нет участника захвата");
+        this.require(
+          !z.expiresAtStart &&
+            !z.expiresAtEnd &&
+            !z.expiresOnSourceStart &&
+            !z.expiresOnSourceEnd,
+          "Перед переносом заверши состояния до следующего хода",
+        );
         if (z.effect !== undefined)
           this.require(
             effects.has(z.effect) && effects.get(z.effect).targets.includes(id),
@@ -338,6 +391,7 @@ class CombatContinuity {
           this.id(o.id) &&
           !objectIds.has(o.id) &&
           point(o) &&
+          (!c.scene || (o.x < c.scene.width && o.y < c.scene.height)) &&
           actors.has(o.owner) &&
           effects.get(o.id)?.kind === "bigbyHand" &&
           effects.get(o.id).owner === o.owner &&

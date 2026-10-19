@@ -25,12 +25,34 @@
         ><button data-op="import">Загрузить сохранение</button
         ><button data-op="report" id="report-button">Итоги для мастера</button
         ><button data-op="fullscreen">На весь экран</button>
-        <details class="tools"><summary>Бои и настройки</summary><div class="toolbox">
-          <button data-op="scenario">Загрузить сценарий</button>
-          <button data-op="pack">Загрузить пакет кампании</button>
-          <select id="recovery" aria-label="Открыть сохранённый бой"></select>
-          <button data-op="recover">Предыдущее сохранение</button>
-        </div></details>
+        <details class="tools">
+          <summary>Бои и настройки</summary>
+          <div class="toolbox">
+            <button data-op="scenario">Загрузить сценарий</button>
+            <button data-op="pack">Загрузить пакет кампании</button>
+            <select id="recovery" aria-label="Открыть сохранённый бой"></select>
+            <button data-op="recover">Предыдущее сохранение</button>
+            <p id="storage-usage"></p>
+            <button data-op="archive-export">Выгрузить архив</button>
+            <button data-op="export-current-new">
+              Скачать текущий, удалить его из браузера и начать новый
+            </button>
+            <label
+              >Удаление старого боя после выгрузки<select
+                id="archive-session"
+              ></select
+            ></label>
+            <button data-op="archive-delete" id="archive-delete" disabled>
+              Удалить выбранный старый бой
+            </button>
+            <label
+              >Бой из загруженного архива<select id="archive-imported"></select
+            ></label>
+            <button data-op="archive-restore" id="archive-restore" disabled>
+              Восстановить из архива
+            </button>
+          </div>
+        </details>
         <span id="save-status"></span>
       </div>
       <input

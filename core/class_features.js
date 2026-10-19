@@ -265,7 +265,7 @@ class CombatClassFeatures {
       if (c.choice === "yes") {
         e.require(u.reaction > 0, "Реакция потрачена");
         u.reaction--;
-        damage.amount = Math.floor(damage.amount / 2);
+        Object.assign(damage, e.halfDamage(damage));
       }
       e.enqueue(damage);
     } else return false;
@@ -299,7 +299,15 @@ class CombatClassFeatures {
           attack: null,
         });
     } else if (t.kind === "secondWindResult") {
-      e.heal(t.actor, (typeof module!=="undefined"?require("./magic").CombatMagic:CombatMagic).effects(e,t.actor,"beaconHope").length ? 10+u.features.fighterLevel : t.result.total);
+      e.heal(
+        t.actor,
+        (typeof module !== "undefined"
+          ? require("./magic").CombatMagic
+          : CombatMagic
+        ).effects(e, t.actor, "beaconHope").length
+          ? 10 + u.features.fighterLevel
+          : t.result.total,
+      );
       if (u.controlled && u.features.tacticalShift && e.speed(t.actor) > 0)
         e.decision("freeMovement", t.actor, {
           budget: Math.floor(e.speed(t.actor) / 2),
@@ -331,7 +339,11 @@ class CombatClassFeatures {
       t.attackHit !== false &&
       t.attack &&
       u.features.uncannyDodge &&
-      u.reaction > 0 && (typeof module!=="undefined"?require("./magic").CombatMagic:CombatMagic).canReact(e,t.target) &&
+      u.reaction > 0 &&
+      (typeof module !== "undefined"
+        ? require("./magic").CombatMagic
+        : CombatMagic
+      ).canReact(e, t.target) &&
       !e.incapacitated(t.target) &&
       e.canSee(t.target, t.actor)
     ) {
@@ -339,8 +351,7 @@ class CombatClassFeatures {
       else {
         u.reaction--;
         e.enqueue({
-          ...t,
-          amount: Math.floor(t.amount / 2),
+          ...e.halfDamage(t),
           uncannyResolved: true,
         });
       }

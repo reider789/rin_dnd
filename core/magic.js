@@ -165,6 +165,45 @@ class CombatMagic {
     "objectDamage",
     "shadowSearch",
   ]);
+  static LABELS = {
+    abjure: "Изгнание врагов",
+    sacredWeapon: "Священное оружие",
+    fireResistance: "Сопротивление огню",
+    antitoxin: "Противоядие",
+    haste: "Ускорение",
+    enlarge: "Рост",
+    giantStrength: "Сила великана",
+    climbing: "Лазание",
+    prone: "Лежит",
+    unconscious: "Без сознания",
+    grappled: "В захвате",
+    dodge: "Уклоняется",
+    invisible: "Невидим",
+    restrained: "Опутан",
+    blinded: "Ослеплён",
+    deafened: "Оглох",
+    stunned: "Ошеломлён",
+    paralyzed: "Парализован",
+    incapacitated: "Недееспособен",
+    poisoned: "Отравлен",
+    frightened: "Испуган",
+    petrified: "Окаменел",
+    frost: "Охлаждён",
+    aim: "Точный прицел",
+    bait: "Прикрыт манёвром",
+    protected: "Под защитой",
+    sap: "Ослаблен",
+    slow: "Замедлен",
+    goaded: "Спровоцирован",
+    charmed: "Очарован",
+    exhaustion: "Истощение",
+    noReactions: "Без реакций",
+    burning: "Горение",
+    rooted: "Укоренён",
+  };
+  static label(kind) {
+    return this.SPELLS[kind]?.[0] || this.LABELS[kind] || kind;
+  }
   static catalogue(u) {
     return [
       ...new Set([
@@ -273,7 +312,7 @@ class CombatMagic {
           !Array.isArray(s.spellFrames),
         "Повреждены этапы заклинаний",
       );
-      for (const [id, f] of Object.entries(s.spellFrames))
+      for (const [id, f] of Object.entries(s.spellFrames)) {
         req(
           f &&
             f.id === id &&
@@ -282,6 +321,14 @@ class CombatMagic {
               ["abjure", "sacredWeapon", "item"].includes(f.spell)),
           "Повреждено заклинание",
         );
+        if (f.dispelTarget)
+          req(
+            ["creature", "object", "effect"].includes(f.dispelTarget.kind) &&
+              typeof f.dispelTarget.id === "string" &&
+              /^[A-Za-z0-9][A-Za-z0-9_.:-]{0,119}$/.test(f.dispelTarget.id),
+            "Повреждена цель рассеивания",
+          );
+      }
     }
     if (s.objects !== undefined) {
       req(
@@ -367,7 +414,7 @@ class CombatMagic {
     e.s.effects.push(x);
     if (["slow", "haste"].includes(kind))
       for (const id of targets) e.adjustMovementForSpeed(id, speeds[id]);
-    e.emit("effect", f.actor, this.SPELLS[f.spell]?.[0] || kind, {
+    e.emit("effect", f.actor, this.label(kind), {
       effect: structuredClone(x),
     });
     return x;
@@ -375,27 +422,62 @@ class CombatMagic {
   static remove(e, ids) {
     if (!ids.length) return;
     const speeds = Object.fromEntries(e.s.order.map((id) => [id, e.speed(id)]));
-    for (const x of e.s.effects || [])
+    this.removeState(e.s, ids);
+    for (const id of e.s.order) e.adjustMovementForSpeed(id, speeds[id]);
+  }
+  static removeState(s, ids) {
+    for (const x of s.effects || [])
       if (ids.includes(x.id)) {
         if (x.kind === "aid")
           for (const id of x.targets) {
-            const u = e.unit(id);
+            const u = s.units[id];
             u.max -= x.amount;
             u.hp = Math.min(u.hp, u.max);
           }
         if (x.kind === "heroism")
           for (const id of x.targets)
-            if (e.unit(id).tempSource === x.id) {
-              e.unit(id).temp = 0;
-              delete e.unit(id).tempSource;
+            if (s.units[id].tempSource === x.id) {
+              s.units[id].temp = 0;
+              delete s.units[id].tempSource;
             }
-        delete e.s.objects[x.id];
-        e.s.zones = e.s.zones.filter((z) => z.effect !== x.id);
+        delete s.objects[x.id];
+        s.zones = s.zones.filter((z) => z.effect !== x.id);
       }
-    for (const u of Object.values(e.s.units))
+    for (const u of Object.values(s.units))
       u.statuses = u.statuses.filter((x) => !ids.includes(x.effect));
-    e.s.effects = (e.s.effects || []).filter((x) => !ids.includes(x.id));
-    for (const id of e.s.order) e.adjustMovementForSpeed(id, speeds[id]);
+    s.effects = (s.effects || []).filter((x) => !ids.includes(x.id));
+  }
+  static expireState(s, at) {
+    const expired = s.effects.filter((x) => x.until <= at);
+    this.removeState(
+      s,
+      expired.map((x) => x.id),
+    );
+    s.zones = s.zones.filter((z) => z.until > at);
+    for (const u of Object.values(s.units)) {
+      if (u.mindSliver?.until <= at) delete u.mindSliver;
+      u.statuses = u.statuses.filter(
+        (z) =>
+          (z.until === undefined || z.until > at) &&
+          (!z.effect || s.effects.some((x) => x.id === z.effect)),
+      );
+    }
+    return expired;
+  }
+  static normalizedAt(state, at) {
+    // Journal and baselines are immutable here; avoid copying a long event log.
+    const s = {
+      ...state,
+      elapsed: at,
+      ...structuredClone({
+        units: state.units,
+        effects: state.effects,
+        objects: state.objects,
+        zones: state.zones,
+      }),
+    };
+    this.expireState(s, at);
+    return s;
   }
   static endConcentration(e, id) {
     const ids = (e.s.effects || [])
@@ -503,13 +585,51 @@ class CombatMagic {
   static targets(e, c) {
     return c.targets?.length ? [...c.targets] : c.target ? [c.target] : [];
   }
+  static dispelSelection(e, c) {
+    const target = c.dispelTarget || {
+      kind: e.s.objects[c.target] ? "object" : "creature",
+      id: c.target || c.targets?.[0],
+    };
+    e.require(
+      target &&
+        ["creature", "object", "effect"].includes(target.kind) &&
+        typeof target.id === "string",
+      "Выбери цель рассеивания",
+    );
+    let point;
+    if (target.kind === "creature") {
+      const u = e.unit(target.id);
+      e.require(!u.dead, "Цель мертва");
+      point = u;
+    } else if (target.kind === "object") point = e.s.objects[target.id];
+    else {
+      const x = e.s.effects.find(
+        (x) => x.id === target.id && Object.hasOwn(this.SPELLS, x.kind),
+      );
+      point =
+        x &&
+        (e.s.objects[x.id] ||
+          e.s.zones.find((z) => z.effect === x.id) ||
+          x.point ||
+          e.s.units[x.targets[0] || x.owner]);
+    }
+    e.require(
+      point &&
+        e.distance(e.unit(c.actor), point) <= this.SPELLS.dispelMagic[3] &&
+        e.wallLOS(e.unit(c.actor), point),
+      "Цель рассеивания вне дистанции / за стеной",
+    );
+    return { kind: target.kind, id: target.id };
+  }
   static validate(e, c, u) {
     e.require(c.spell !== "divineSmite", "Кара применяется после попадания");
     const def = this.SPELLS[c.spell];
     e.require(def, "Неизвестное заклинание");
     const [name, base, cost, range, shape] = def,
       id = c.actor,
-      targets = this.targets(e, c);
+      targets = c.spell === "dispelMagic" ? [] : this.targets(e, c),
+      dispelTarget =
+        c.spell === "dispelMagic" ? this.dispelSelection(e, c) : undefined;
     e.require(
       this.catalogue(u).some((x) => x.id === c.spell),
       "Заклинание не подготовлено / предмет не настроен",
@@ -569,6 +689,7 @@ class CombatMagic {
       "Нет нужного действия",
     );
     if (
+      c.spell !== "dispelMagic" &&
       ["ally", "enemy", "any", "attack", "allies", "enemies"].includes(shape)
     ) {
       e.require(
@@ -670,11 +791,16 @@ class CombatMagic {
         "Выбери одно состояние для восстановления",
       );
     }
-    if (c.spell === "wardingBond")
+    if (c.spell === "wardingBond") {
+      e.require(
+        targets[0] !== id,
+        "Защитная связь требует другого согласного союзника",
+      );
       e.require(
         u.casting?.components?.wardingBond === true,
         "Нет подтверждённых платиновых колец (2 × 50 зм)",
       );
+    }
     if (c.spell === "protectionEvil")
       e.require(
         u.casting?.components?.protectionEvil === true,
@@ -711,7 +837,8 @@ class CombatMagic {
       point: c.point,
       sculpt: c.sculpt || [],
       handMode: c.handMode || "interpose",
-      target: c.target,
+      target: c.spell === "dispelMagic" ? undefined : c.target,
+      dispelTarget,
       passenger: c.passenger,
       passengerPoint: c.passengerPoint,
       offered: [],
@@ -850,7 +977,11 @@ class CombatMagic {
     }
     if (c.kind === "attackObject") {
       const o = e.s.objects[c.object],
-        spec = e.attackSpec(c.actor, c.weapon);
+        spec = (
+          typeof module !== "undefined"
+            ? require("./advanced_features").CombatAdvancedFeatures
+            : CombatAdvancedFeatures
+        ).weaponSpec(e, c.actor, e.attackSpec(c.actor, c.weapon));
       e.require(
         o && e.distance(u, o) <= spec.range && e.wallLOS(u, o),
         "Предмет вне дистанции",
@@ -952,6 +1083,7 @@ class CombatMagic {
       ],
     };
     const exists = Boolean(e.s.units[id]);
+    if (exists) this.dismissSummon(e, id);
     e.s.units[id] = A.unit(id, p, {
       ...f.point,
       team: u.team,
@@ -967,6 +1099,57 @@ class CombatMagic {
       powerAvailable: true,
     });
     e.emit("summon", f.actor, "Призван Верный скакун.", { target: id });
+  }
+  static dismissSummon(e, id) {
+    const u = e.unit(id);
+    // Remove only this incarnation's links; shared Bless/Aid keep other targets.
+    this.remove(
+      e,
+      e.s.effects.filter((x) => x.owner === id).map((x) => x.id),
+    );
+    for (const x of e.s.effects) x.targets = x.targets.filter((v) => v !== id);
+    for (const v of Object.values(e.s.units))
+      v.statuses = v.statuses.filter(
+        (z) =>
+          z.source !== id &&
+          z.expiresOnSourceStart !== id &&
+          z.expiresOnSourceEnd !== id,
+      );
+    for (const o of Object.values(e.s.objects))
+      if (o.grappled === id) o.grappled = null;
+    u.statuses = [];
+    u.temp = 0;
+    delete u.tempSource;
+    u.fled = true;
+    u.action = 0;
+    u.bonus = 0;
+    u.reaction = 0;
+    u.move = 0;
+    e.emit("summonEnded", u.summoner, "Верный скакун исчезает.", {
+      target: id,
+    });
+  }
+  static maintain(e) {
+    this.remove(
+      e,
+      e.s.effects
+        .filter(
+          (x) =>
+            x.kind === "wardingBond" &&
+            (!e.active(x.owner) ||
+              x.targets.some(
+                (id) =>
+                  !e.s.units[id] ||
+                  e.distance(e.unit(x.owner), e.unit(id)) > 60,
+              )),
+        )
+        .map((x) => x.id),
+    );
+    for (const id of e.s.order) {
+      const u = e.unit(id);
+      if (u.summoner && !u.fled && (u.hp === 0 || e.unit(u.summoner).dead))
+        this.dismissSummon(e, id);
+    }
   }
   static frame(e, id) {
     const f = e.s.spellFrames[id];
@@ -1069,6 +1252,7 @@ class CombatMagic {
     if (t.op === "window") {
       const f = this.frame(e, t.frame);
       if (f.cancelled) {
+        if (f.hitContinue) e.enqueue(f.hitContinue);
         if (f.after) e.enqueue(f.after);
         return true;
       }
@@ -1115,6 +1299,7 @@ class CombatMagic {
     } else if (t.op === "resolve") {
       const f = this.frame(e, t.frame);
       if (!f.cancelled) this.resolve(e, f);
+      else if (f.hitContinue) e.enqueue(f.hitContinue);
       if (f.after) e.enqueue(f.after);
     } else if (t.op === "areaRoll") {
       const f = this.frame(e, t.frame);
@@ -1150,6 +1335,7 @@ class CombatMagic {
             t.stat,
             t.dc ?? u.casting.dc,
             this.task(t.actor, "save", { ...t, kind: "magicTask", op: "save" }),
+            { origin: f.point || e.unit(t.actor) },
           ),
         );
       else this.apply(e, t, false);
@@ -1242,8 +1428,7 @@ class CombatMagic {
       );
       e.enqueue(
         {
-          ...t.damage,
-          amount: t.damage.amount - transferred,
+          ...e.reduceDamage(t.damage, transferred),
           leafResolved: true,
           mitigated: true,
         },
@@ -1259,6 +1444,7 @@ class CombatMagic {
       );
     } else if (t.op === "itemSave") {
       if (t.result.success) {
+        const previous = e.speed(t.target);
         if (t.remove === "hand") {
           const o = e.s.objects[t.object];
           if (o) o.grappled = null;
@@ -1266,6 +1452,7 @@ class CombatMagic {
           e.unit(t.target).statuses = e
             .unit(t.target)
             .statuses.filter((x) => !x.magic);
+        e.adjustMovementForSpeed(t.target, previous);
       }
     } else if (t.op === "shadowSearch") {
       if (t.result.success) {
@@ -1437,10 +1624,12 @@ class CombatMagic {
           count: (1 + lv + extra) * (f.critical ? 2 : 1),
           sides: 8,
           bonus: 0,
-          next: this.task(f.actor, "extraDamage", {
-            target: t,
-            damageType: "radiant",
-          }),
+          next: f.hitContinue
+            ? { ...f.hitContinue, smiteResult: true }
+            : this.task(f.actor, "extraDamage", {
+                target: t,
+                damageType: "radiant",
+              }),
         });
         break;
       }
@@ -1623,7 +1812,7 @@ class CombatMagic {
       case "lesserRestoration": {
         const v = e.unit(t);
         const condition = f.condition || this.restorationOptions(e, t)[0];
-        v.statuses = v.statuses.filter((x) => x.kind !== condition);
+        e.removeStatus(t, condition);
         if (condition === "paralyzed") {
           const holds = this.effects(e, t, "holdMonster");
           for (const x of holds) x.targets = x.targets.filter((id) => id !== t);
@@ -1635,6 +1824,18 @@ class CombatMagic {
         break;
       }
       case "wardingBond":
+        this.remove(
+          e,
+          e.s.effects
+            .filter(
+              (x) =>
+                x.kind === "wardingBond" &&
+                [f.actor, ...targets].some(
+                  (id) => x.owner === id || x.targets.includes(id),
+                ),
+            )
+            .map((x) => x.id),
+        );
         this.add(e, f, "wardingBond", targets, 3600);
         break;
       case "crusaderMantle":
@@ -1717,8 +1918,14 @@ class CombatMagic {
         break;
       }
       case "dispelMagic": {
+        const selected = f.dispelTarget || { kind: "creature", id: t };
         const effects = (e.s.effects || []).filter(
-          (x) => x.targets?.includes(t) || (x.owner === t && x.aura),
+          (x) =>
+            Object.hasOwn(this.SPELLS, x.kind) &&
+            (selected.kind === "creature"
+              ? x.targets?.includes(selected.id) ||
+                (x.owner === selected.id && x.aura)
+              : x.id === selected.id),
         );
         for (const x of effects) {
           if (x.level <= lv) this.remove(e, [x.id]);
@@ -1999,8 +2206,11 @@ class CombatMagic {
   static handSave(e, t) {
     const o = e.s.objects[t.object];
     if (!o || t.result.success) return;
-    if (t.handMode === "grasp") o.grappled = t.target;
-    else {
+    if (t.handMode === "grasp") {
+      const previous = e.speed(t.target);
+      o.grappled = t.target;
+      e.adjustMovementForSpeed(t.target, previous);
+    } else {
       const p = { ...o };
       this.push(
         e,
@@ -2082,16 +2292,9 @@ class CombatMagic {
       if (x.kind === "haste" && !x.noLethargy && x.concentration !== false)
         for (const id of x.targets)
           e.status(id, "incapacitated", { expiresAtEnd: id });
-    this.remove(
-      e,
-      expired.map((x) => x.id),
-    );
-    for (const u of Object.values(e.s.units)) {
-      if (u.mindSliver?.until <= e.s.elapsed) delete u.mindSliver;
-      u.statuses = u.statuses.filter(
-        (z) => !z.effect || e.s.effects.some((x) => x.id === z.effect),
-      );
-    }
+    const speeds = Object.fromEntries(e.s.order.map((id) => [id, e.speed(id)]));
+    this.expireState(e.s, e.s.elapsed);
+    for (const uid of e.s.order) e.adjustMovementForSpeed(uid, speeds[uid]);
     const u = e.unit(id);
     u.hasteAction = this.effects(e, id, "haste").length ? 1 : 0;
     if (e.incapacitated(id)) {
@@ -2369,6 +2572,9 @@ class CombatMagic {
             amount,
             damageType: t.damageType,
             bondTransfer: true,
+            ...(t.components
+              ? { components: structuredClone(t.components) }
+              : {}),
           });
     for (const x of this.effects(e, t.target, "compelledDuel"))
       if (e.unit(t.actor)?.team === e.unit(x.owner).team && t.actor !== x.owner)
