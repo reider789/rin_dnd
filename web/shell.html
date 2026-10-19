@@ -23,10 +23,15 @@
         ><button data-op="save">Сохранить</button
         ><button data-op="export">Скачать сохранение</button
         ><button data-op="import">Загрузить сохранение</button
-        ><button data-op="scenario">Загрузить сценарий</button
-        ><button data-op="pack">Загрузить пакет кампании</button
         ><button data-op="report" id="report-button">Итоги для мастера</button
-        ><span id="save-status"></span>
+        ><button data-op="fullscreen">На весь экран</button>
+        <details class="tools"><summary>Бои и настройки</summary><div class="toolbox">
+          <button data-op="scenario">Загрузить сценарий</button>
+          <button data-op="pack">Загрузить пакет кампании</button>
+          <select id="recovery" aria-label="Открыть сохранённый бой"></select>
+          <button data-op="recover">Предыдущее сохранение</button>
+        </div></details>
+        <span id="save-status"></span>
       </div>
       <input
         type="file"
@@ -68,6 +73,7 @@
           <div id="actions"></div>
           <div id="abilities"></div>
           <div id="policies"></div>
+          <div id="turn-controls"></div>
         </aside>
       </div>
       <section class="journal-section">

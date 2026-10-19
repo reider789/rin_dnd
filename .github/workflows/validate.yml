@@ -1,10 +1,49 @@
 name: Rin Combat v30
 on:
   push:
+    branches: [main]
+    paths:
+      - 'core/**'
+      - 'sdk/**'
+      - 'web/**'
+      - 'config/**'
+      - 'encounters/**'
+      - 'examples/**'
+      - 'tools/**'
+      - 'tests/**'
+      - 'art/**'
+      - 'assets/**'
+      - 'state/**'
+      - 'rules/**'
+      - 'index.html'
+      - '*manifest.json'
+      - 'entrypoint.json'
+      - '.github/workflows/validate.yml'
   pull_request:
+    branches: [main]
+    paths:
+      - 'core/**'
+      - 'sdk/**'
+      - 'web/**'
+      - 'config/**'
+      - 'encounters/**'
+      - 'examples/**'
+      - 'tools/**'
+      - 'tests/**'
+      - 'art/**'
+      - 'assets/**'
+      - 'state/**'
+      - 'rules/**'
+      - 'index.html'
+      - '*manifest.json'
+      - 'entrypoint.json'
+      - '.github/workflows/validate.yml'
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: combat-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   combat:
     runs-on: ubuntu-latest
@@ -18,4 +57,4 @@ jobs:
           node-version: '22'
       - run: python -m pip install playwright==1.55.0
       - run: python -m playwright install --with-deps chromium
-      - run: python tools/run_tests.py --browser
+      - run: python tools/run_tests.py --suite combat --browser

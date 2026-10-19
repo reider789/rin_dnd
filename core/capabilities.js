@@ -2,7 +2,7 @@
 // The only registration point for supported data-level mechanics. No code from packs is executed.
 class CombatCapabilities {
   static API = 1;
-  static ENGINE = "30.3.0";
+  static ENGINE = "30.4.0";
   static RULES = "dnd-2024-2026-10";
   static FEATURES = {
     martialArts: "boolean",

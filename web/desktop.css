@@ -11,10 +11,11 @@
 }
 body {
   margin: 0;
-  padding: 22px;
+  padding: 12px 18px;
+  min-width: 1000px;
 }
 main {
-  max-width: 1540px;
+  max-width: 1920px;
   margin: auto;
 }
 header {
@@ -22,11 +23,11 @@ header {
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid #8d7650;
-  padding: 0 0 18px;
+  padding: 0 0 8px;
 }
 h1 {
   font:
-    32px Georgia,
+    26px Georgia,
     serif;
   color: #ecd1a0;
   margin: 5px 0;
@@ -63,7 +64,7 @@ header p {
   display: flex;
   flex-wrap: wrap;
   gap: 7px;
-  padding: 15px 0;
+  padding: 8px 0;
   align-items: center;
 }
 button,
@@ -76,7 +77,7 @@ button {
   color: #eee4d1;
   border: 1px solid #6e817c;
   border-radius: 6px;
-  padding: 9px 13px;
+  padding: 6px 9px;
   cursor: pointer;
   text-align: left;
 }
@@ -94,8 +95,8 @@ button:disabled {
 }
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.6fr) minmax(340px, 1fr);
-  gap: 22px;
+  grid-template-columns: minmax(0, 1.6fr) minmax(380px, 1fr);
+  gap: 14px;
   align-items: start;
 }
 .map-column {
@@ -106,8 +107,8 @@ aside {
   background: #1d2a33;
   border: 1px solid #435453;
   border-radius: 10px;
-  padding: 18px;
-  max-height: calc(100vh - 30px);
+  padding: 12px;
+  max-height: calc(100vh - 160px);
   overflow: auto;
   position: sticky;
   top: 15px;
@@ -137,14 +138,17 @@ aside {
   border-radius: 6px;
   overflow: hidden;
   background: #364334;
+  width: 100%;
+  max-width: 100%;
 }
 .board {
   display: grid;
   background-size: cover;
   background-position: center;
+  width: 100%;
 }
 .tile {
-  aspect-ratio: 1;
+  min-height: 0;
   padding: 0;
   border: 1px solid #ffffff25;
   border-radius: 0;
@@ -251,10 +255,12 @@ aside {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 7px;
-  margin: 12px 0;
+  margin: 8px 0;
 }
 .choices button {
   min-width: 0;
+  font-size: 13px;
+  line-height: 1.35;
 }
 .choices small {
   display: block;
@@ -336,6 +342,12 @@ summary {
   font-size: 12px;
   color: #b5c6b7;
 }
+#turn-controls { position: sticky; bottom: -12px; background: #1d2a33; padding: 8px 0; z-index: 2; }
+.tools { position: relative; padding: 6px 9px; }
+.toolbox { position: absolute; top: 100%; right: 0; width: 350px; background: #1d2a33; padding: 12px; border: 1px solid #8d7650; z-index: 10; display: grid; gap: 8px; box-shadow: 0 6px 20px #0009; }
+.additional { margin: 8px 0; padding: 6px 9px; }
+#combat-app:fullscreen { background: #111820; padding: 12px 18px; overflow: auto; max-width: none; }
+button:focus-visible, select:focus-visible { outline: 2px solid #ecd1a0; outline-offset: 2px; }
 #actor > h2 {
   margin: 0;
 }
