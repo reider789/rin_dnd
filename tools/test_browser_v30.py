@@ -48,7 +48,7 @@ def run():
   page.wait_for_function(f"{api}.snapshot().meta.campaignId==='border-watch'")
   assert page.evaluate(f'{api}.snapshot().meta.campaignId')=='border-watch'
   assert set(page.evaluate(f'Object.keys({api}.snapshot().units)'))=={'ena','tal','hunter_a','hunter_b'}
-  assert page.evaluate("localStorage.getItem('rin-veir-combat-session-v30')!==null")
+  assert page.evaluate("localStorage.getItem('dnd-combat-session:rin-veir:rin-ambush-replay-training')!==null")
   portable=page.evaluate(f'{api}.snapshot()');page.reload();page.wait_for_function(f'Boolean({api})')
   assert page.evaluate(f'{api}.snapshot()')==portable
   invalid=json.loads(json.dumps(pack));invalid['abilities']['venom-claws']['handler']='unknownSpell'

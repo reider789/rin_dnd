@@ -23,10 +23,17 @@ class CombatRulesEngine {
   constructor(state) {
     CombatRulesEngine.validate(state);
     this.state = structuredClone(state);
+    this.revision = 0;
   }
   static validate(s) {
     if (!s || s.version !== 30 || s.rulesVersion !== this.RULES)
       throw Error("Несовместимая версия боя");
+    const version = String(s.engineVersion || "").split(".").map(Number),
+      current = this.VERSION.split(".").map(Number);
+    if (version.length !== 3 || version.some((n) => !Number.isInteger(n) || n < 0) ||
+        version[0] !== current[0] || version[1] > current[1] ||
+        (version[1] === current[1] && version[2] > current[2]))
+      throw Error("Сохранение требует другой версии движка");
     if (
       !s.meta?.battleId ||
       !Array.isArray(s.order) ||
@@ -70,7 +77,9 @@ class CombatRulesEngine {
         u.hp < 0 ||
         u.hp > u.max ||
         !Array.isArray(u.statuses) ||
-        !u.attacks
+        !Array.isArray(u.attacks) || !u.attacks.length ||
+        !Number.isFinite(u.ac) || !Number.isFinite(u.speed) ||
+        typeof u.name !== "string" || !u.team
       )
         throw Error("Повреждена карточка: " + id);
       if (
@@ -141,10 +150,64 @@ class CombatRulesEngine {
         RulesCapabilities.counter(value);
       }
       for (const attack of u.attacks) RulesCapabilities.attack(attack);
+      const statuses = new Set(["prone", "unconscious", "grappled", "dodge", "invisible", "restrained", "blinded", "deafened", "stunned", "paralyzed", "incapacitated", "poisoned", "frightened", "petrified", "frost", "shield", "aim", "bait", "protected", "sap", "slow", "goaded", "charmed", "exhaustion"]);
+      if (u.statuses.some((z) => !z || !statuses.has(z.kind)))
+        throw Error("Неизвестное состояние участника: " + id);
     }
-    if (s.pending && (!s.pending.id || !s.pending.kind))
-      throw Error("Повреждено решение игрока");
+    this.validateContinuations(s);
     return true;
+  }
+  static validateContinuations(s) {
+    const require = (ok, text = "Повреждена последовательность боя") => {
+      if (!ok) throw Error(text);
+    };
+    require(["active", "ended"].includes(s.phase));
+    require(Number.isInteger(s.round) && s.round >= 1 && Number.isInteger(s.sequence));
+    require(s.meta.campaignId && Array.isArray(s.zones));
+    require(Array.isArray(s.terrain.walls) && Array.isArray(s.terrain.rubble));
+    const kinds = new Set(["initiativeSetup", "startTurn", "endTurn", "roll", "attackRoll", "attackResult", "attackEffects", "applyAttackCondition", "damageResult", "sneakResult", "damage", "concentrationResult", "deflectResult", "redirectRollResult", "attackCompleted", "checkResult", "emptyAttackResult", "redirectDamage", "moveStep", "hideResult", "searchResult", "contestResult", "escapeResult", "healingResult", "stabilizeResult", "deathSaveResult", "saveDamage", "secondWindResult", "tacticalMindResult", "baitResult", "martialMiss", "precisionResult", "weaponDamageRoll", "savageFirst", "savageSecond", "weaponDamage", "maneuverDamageResult", "weaponHitEffects", "maneuverEffect"]);
+    const visit = (t, depth = 0) => {
+      require(t && depth < 80 && kinds.has(t.kind), "Неизвестный или повреждённый шаг боя");
+      for (const k of ["actor", "target", "ally", "recipient"])
+        if (t[k] != null) require(Boolean(s.units[t[k]]), "В шаге боя неизвестный участник");
+      const fields = {
+        attackRoll: ["actor", "target", "spec"], attackResult: ["actor", "target", "spec"],
+        damage: ["actor", "target", "amount"], weaponDamage: ["actor", "target", "frame", "amount"],
+        moveStep: ["actor", "path", "provoked"],
+      }[t.kind] || [];
+      require(fields.every((k) => t[k] != null));
+      if (t.amount != null) require(Number.isFinite(t.amount) && t.amount >= 0);
+      if (t.path) require(Array.isArray(t.path) && t.path.every((p) => Number.isInteger(p.x) && Number.isInteger(p.y) && p.x >= 0 && p.y >= 0 && p.x < s.terrain.width && p.y < s.terrain.height));
+      if (t.kind === "roll") {
+        require(Number.isInteger(t.count) && t.count > 0 && t.count <= 100 &&
+          Number.isInteger(t.sides) && t.sides >= 2 && t.sides <= 100 && t.next);
+      }
+      for (const k of ["next", "attack", "damage", "movement", "original", "frame"])
+        if (t[k]?.kind && !(k === "attack" && ["melee", "ranged", "meleeSpell", "rangedSpell"].includes(t[k].kind))) visit(t[k], depth + 1);
+    };
+    s.queue.forEach((t) => visit(t));
+    const p = s.pending;
+    if (!p) return;
+    const required = {
+      initiativeSwap: ["targets"], metabolism: [], deflect: ["damage"],
+      redirect: ["targets", "range"], knockout: ["damage"],
+      opportunity: ["attack", "movement"], ready: ["attack"],
+      defenseLuck: ["attack"], roll: ["roll"], adjudication: ["description", "cost"],
+      classRoll: ["roll", "ability"], freeMovement: ["budget", "label"],
+      uncannyDodge: ["damage"], precision: ["attack"], riposte: ["target", "spec"],
+      strikeChoice: ["attack", "maneuvers"], defensiveReaction: ["attack", "ability"],
+    };
+    require(typeof p.id === "string" && Boolean(s.units[p.actor]) &&
+      Object.hasOwn(required, p.kind), "Неизвестное или повреждённое решение игрока");
+    require(required[p.kind].every((k) => p[k] != null), "В решении отсутствуют необходимые данные");
+    for (const k of ["attack", "damage", "movement", "roll"]) if (p[k]) visit(p[k]);
+    if (p.targets) require(Array.isArray(p.targets) && p.targets.every((id) => s.units[id]));
+    if (["roll", "classRoll"].includes(p.kind))
+      require(Array.isArray(p.roll.rolls) && p.roll.rolls.length > 0);
+    if (p.kind === "strikeChoice") require(Array.isArray(p.maneuvers));
+    if (p.kind === "freeMovement") require(Number.isFinite(p.budget) && p.budget >= 0);
+    if (p.kind === "defensiveReaction") require(["shield", "protection", "cloak", "mark"].includes(p.ability));
+    if (p.kind === "classRoll") require(["indomitable", "tacticalMind"].includes(p.ability));
   }
   get s() {
     return this.state;
@@ -315,9 +378,10 @@ class CombatRulesEngine {
       type,
       actor,
       text,
-      ...data,
+      ...structuredClone(data),
     };
     this.s.events.push(e);
+    this.revision++;
     return e;
   }
   name(id) {
@@ -359,7 +423,9 @@ class CombatRulesEngine {
     this.run();
   }
   dispatch(command) {
-    const before = structuredClone(this.s);
+    // Events are append-only. Copy mutable combat state, retain the journal.
+    const events = this.s.events, length = events.length, revision = this.revision;
+    const before = structuredClone({ ...this.s, events: [] });
     try {
       if (!command || typeof command.kind !== "string")
         throw Error("Неверная команда");
@@ -382,14 +448,24 @@ class CombatRulesEngine {
         this.command({ ...command, actor: id }, u);
       }
       this.run();
+      this.revision++;
       return this.s;
     } catch (error) {
+      events.length = length;
+      before.events = events;
       this.state = before;
+      this.revision = revision;
       throw error;
     }
   }
   command(c, u) {
     const id = c.actor;
+    if (["attack", "grapple", "shove", "helpAttack", "knowEnemy"].includes(c.kind) && c.target) {
+      const target = this.unit(c.target);
+      this.require(this.knowsPosition(id, c.target) ||
+        (c.kind === "attack" && c.guessedCell && c.guessedCell.x === target.x && c.guessedCell.y === target.y),
+        "Позиция цели неизвестна: выбери клетку для атаки");
+    }
     if (
       RulesClassFeatures.command(this, c, u) ||
       RulesMartial.command(this, c, u)
@@ -414,7 +490,7 @@ class CombatRulesEngine {
           this.unit(k).y === p.y,
       );
       if (target) {
-        this.command({ ...c, kind: "attack", target }, u);
+        this.command({ ...c, kind: "attack", target, guessedCell: p }, u);
         return;
       }
       this.require(
@@ -981,6 +1057,43 @@ class CombatRulesEngine {
     const a = this.unit(id).attacks.find((x) => x.id === key);
     if (!a) throw Error("Неизвестное оружие");
     return structuredClone(a);
+  }
+  knowsPosition(id, target) {
+    const t = this.unit(target);
+    return this.unit(id).team === t.team || !t.hidden;
+  }
+  displayedAt(x, y) {
+    return this.occupied(x, y) || this.s.order.find((id) => {
+      const u = this.unit(id);
+      return !u.fled && u.x === x && u.y === y;
+    });
+  }
+  availableAction(command) {
+    // Use the real handler on a small detached state, never advance its queue.
+    // Validation, costs and target rules therefore cannot drift from execution.
+    const id = command.actor || this.actorId;
+    const preview = Object.create(CombatRulesEngine.prototype);
+    // These commands mutate only their declared actors and enqueue continuations.
+    // Global handlers (notably Bait/releaseGrapples) retain full isolation.
+    const local = new Set(["attack", "attackAt", "move", "endTurn", "policy", "flurry", "dash", "disengage", "dodge", "hide", "search", "check", "stand", "grapple", "shove", "escape", "ready", "helpAttack", "healPotion", "stabilize", "flee", "minorIllusion", "secondWind", "actionSurge", "steadyAim", "layOnHands", "knowEnemy", "restoreKnowEnemy"]);
+    if (local.has(command.kind)) {
+      const units = { ...this.s.units };
+      for (const key of new Set([id, ...(command.kind === "layOnHands" ? [command.target] : [])]))
+        if (units[key]) units[key] = structuredClone(units[key]);
+      preview.state = { ...this.s, units, events: [], queue: [],
+        help: structuredClone(this.s.help || []), zones: structuredClone(this.s.zones),
+        random: structuredClone(this.s.random) };
+    } else preview.state = structuredClone({ ...this.s, events: [] });
+    preview.revision = 0;
+    try {
+      preview.require(!this.s.pending, "Сначала заверши текущее решение");
+      preview.require(this.s.phase === "active", "Бой завершён");
+      preview.require(id === this.actorId && !this.incapacitated(id), "Сейчас нельзя действовать");
+      if (["attack", "grapple", "shove", "helpAttack", "knowEnemy", "bait", "stabilize", "layOnHands"].includes(command.kind))
+        preview.require(command.target, "Выбери цель на карте");
+      preview.command({ ...command, actor: id }, preview.unit(id));
+      return { enabled: true, reason: "" };
+    } catch (error) { return { enabled: false, reason: error.message }; }
   }
   validateAttack(id, target, spec, from = null) {
     const u = from || this.unit(id),
@@ -2471,7 +2584,7 @@ class CombatRulesEngine {
       this.emit("battleEnded", null, "Бой завершён.");
     }
   }
-  export() {
+  export({ clone = true } = {}) {
     return {
       kind: "dnd-combat-session",
       version: Object.values(this.s.units).some(
@@ -2524,7 +2637,7 @@ class CombatRulesEngine {
         : this.s.meta.contentPack
           ? 31
           : 30,
-      session: structuredClone(this.s),
+      session: clone ? structuredClone(this.s) : this.s,
     };
   }
 }
