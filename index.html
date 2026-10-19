@@ -367,6 +367,8 @@ button:focus-visible, select:focus-visible { outline: 2px solid #ecd1a0; outline
   color: #b3bfba;
 }
 
+.magic-form{display:grid;gap:8px}.magic-form label{display:grid;gap:4px}.magic-form select[multiple]{min-height:58px}.inline-field{display:flex;gap:6px}.inline-field input{width:75px}.spell-zone{box-shadow:inset 0 0 12px #7ba8ae88}.magic-object:after{content:"✋";position:absolute;right:3px;top:2px;font-size:24px;color:#a9dfff;filter:drop-shadow(0 0 4px #2978c9)}.item-counters{font-size:12px;line-height:1.7}#magic-reason{font-size:12px;color:var(--muted,#c8bda4)}#magic details p{font-size:12px;line-height:1.45}#magic small{display:block}
+
     </style>
   </head>
   <body>
@@ -433,6 +435,7 @@ button:focus-visible, select:focus-visible { outline: 2px solid #ecd1a0; outline
           <div id="decision" aria-live="polite"></div>
           <div id="actions"></div>
           <div id="abilities"></div>
+          <div id="magic"></div>
           <div id="policies"></div>
           <div id="turn-controls"></div>
         </aside>
@@ -447,7 +450,7 @@ button:focus-visible, select:focus-visible { outline: 2px solid #ecd1a0; outline
       </section>
     </main>
     <script type="application/json" id="runtime">
-      {"schema_version":2,"combat_schema_version":30,"campaign_id":"rin-veir","title":"Рин Вейр","source":"state/_campaign-state.json","source_state_revision":1,"source_state_sha256":"bf8bd1f85817996db5961dd8c658c028f7c87a7632fd53f75a98812a013139e9","is_canonical":false,"characters":{"rin":{"name":"Рин Вейр","class_and_level":"Разбойник 1 / Монах 3 (Воин Тени), D&D 2024","ac_description":"16","speed":"40 фт","resources":{"hp":{"current":31,"max":31},"focus":{"current":0,"max":3},"arrows":{"current":20,"max":20},"luck":{"current":2,"max":2},"heroic":{"current":1,"max":1},"personal_money_cp":18289,"unusual_metabolism":{"current":1,"max":1}},"inventory":[{"id":"cherta","name":"«Черта» (короткий меч)","quantity":1,"description":"Основное оружие, Vex","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"daggers","name":"Кинжалы","quantity":4,"description":"Один может применять Nick","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"shortbow","name":"Короткий лук","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"arrows","name":"Стрелы","quantity":20,"description":"В рабочем колчане; не смешивать с найденными до перекладки","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"quiver","name":"Колчан","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"thieves_tools","name":"Воровские инструменты","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"burglars_pack","name":"Набор взломщика","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"pouches","name":"Поясные сумки","quantity":2,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"clothes","name":"Дорожная одежда и серое пальто","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"bedroll","name":"Постельные принадлежности","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"game_set","name":"Игровой набор","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"monastery_documents","name":"Документы Последнего Света","quantity":1,"description":"Похищены при уходе; часть содержания неизвестна","status":"скрыто при себе","origin":"канон кампании","combat_available":true},{"id":"edric_letter","name":"Письмо Эдрика для Сайрена","quantity":1,"description":"Прочитано вместе с Сайреном","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"edric_plate","name":"Контактная пластинка Эдрика","quantity":1,"description":"Контакт Остен Рей, пароль о книге без последней страницы","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"circle_vii","name":"Жетон VII","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"circle_orders","name":"Записка с приказом Разомкнутого Круга","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"horse","name":"Верховая лошадь","quantity":1,"description":"Оставлена в Сером Броде на конюшне; местоположение подлежит сверке","status":"конюшня Серого Брода","origin":"канон кампании","combat_available":false},{"id":"saddle","name":"Верховое седло","quantity":1,"description":"На лошади","status":"конюшня Серого Брода","origin":"канон кампании","combat_available":false},{"id":"saddlebags","name":"Седельные сумки","quantity":1,"description":"На лошади","status":"конюшня Серого Брода","origin":"канон кампании","combat_available":false},{"id":"food_wraps","name":"Сухие дорожные свёртки","quantity":2,"description":"На лошади","status":"конюшня Серого Брода","origin":"канон кампании","combat_available":false},{"id":"rope","name":"Тонкая верёвка","quantity":1,"description":"На лошади","status":"конюшня Серого Брода","origin":"канон кампании","combat_available":false},{"id":"blank_tokens","name":"Жетоны без номера","quantity":3,"description":"На лошади","status":"конюшня Серого Брода","origin":"канон кампании","combat_available":false},{"id":"route_map","name":"Карта Серый Брод — Вейлхольм","quantity":1,"description":"Отмечена старая обсерватория и «VII — активен»","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"circle_notebook","name":"Записная книжка Разомкнутого Круга","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"sealed_cylinder","name":"Запечатанный металлический цилиндр","quantity":1,"description":"Не вскрыт","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"unclear_flasks","name":"Флаконы мутной жидкости","quantity":3,"description":"2 у Мары; 1 в седельной сумке","status":"частично у Мары","origin":"канон кампании","combat_available":false},{"id":"needle_case","name":"Футляр с тремя иглами","quantity":1,"description":"Возможно опасное содержимое","status":"у Мары","origin":"канон кампании","combat_available":false},{"id":"thin_pick","name":"Тонкая металлическая отмычка","quantity":1,"description":"Найдена у Лорена","status":"у Мары","origin":"канон кампании","combat_available":false},{"id":"bandit_sabers","name":"Трофейные сабли","quantity":3,"description":"С пяти дорожных разбойников","status":"караванная повозка","origin":"засада на дороге","combat_available":false},{"id":"bandit_bows","name":"Трофейные короткие луки","quantity":2,"description":"С дорожных разбойников","status":"караванная повозка","origin":"засада на дороге","combat_available":false},{"id":"bandit_armors","name":"Поношенные кожаные доспехи","quantity":5,"description":"С дорожных разбойников","status":"караванная повозка","origin":"засада на дороге","combat_available":false},{"id":"bandit_arrows","name":"Трофейные стрелы","quantity":32,"description":"Ещё не зачислены в личный колчан","status":"караванная повозка","origin":"засада на дороге","combat_available":false},{"id":"bandit_quivers","name":"Трофейные колчаны","quantity":2,"description":"С дорожных разбойников","status":"караванная повозка","origin":"засада на дороге","combat_available":false},{"id":"bandit_pouches","name":"Трофейные кошели","quantity":5,"description":"Монеты учтены в личном кошельке","status":"караванная повозка","origin":"засада на дороге","combat_available":false}],"consumables":{},"combat_profile":{"scores":{"STR":8,"DEX":17,"CON":14,"INT":8,"WIS":16,"CHA":10},"proficiency":2,"saveProficiencies":["DEX","INT"],"skillProficiencies":{"stealth":["DEX",2],"perception":["WIS",2],"sleightOfHand":["DEX",1]},"features":{"martialArts":true,"monkFocus":true,"monkLevel":3,"martialDie":6,"flurryCount":2,"deflectAttacks":3,"shadowArts":true,"uncannyMetabolism":true,"sneakDice":1,"masteries":["vex","nick"],"alert":true},"senses":{"darkvision":60},"deathSaves":true,"attacks":[{"id":"shortsword","name":"«Черта»","ability":"DEX","count":1,"die":6,"kind":"melee","range":5,"damageType":"piercing","sneakEligible":true,"inventoryId":"cherta","light":true,"mastery":"vex"},{"id":"dagger","name":"Кинжал","ability":"DEX","count":1,"die":6,"kind":"melee","range":5,"damageType":"piercing","sneakEligible":true,"inventoryId":"daggers","light":true,"mastery":"nick"},{"id":"unarmed","name":"Безоружный удар","ability":"DEX","count":1,"die":6,"kind":"melee","range":5,"damageType":"bludgeoning","unarmed":true},{"id":"bow","name":"Короткий лук","ability":"DEX","count":1,"die":6,"kind":"ranged","range":320,"damageType":"piercing","sneakEligible":true,"inventoryId":"shortbow","ammo":"arrows","normalRange":80,"ammoInventoryId":"arrows"},{"id":"daggerThrow","name":"Метнуть кинжал","ability":"DEX","count":1,"die":6,"kind":"ranged","range":60,"damageType":"piercing","sneakEligible":true,"inventoryId":"daggers","normalRange":20,"ammoItem":"daggers"}],"verified_class_and_level":"Разбойник 1 / Монах 3 (Воин Тени), D&D 2024","tokenKey":"heroes.rin","ac":16,"speed":40},"skills_attacks_spells":[{"name":"«Черта», короткий меч","description":"+5 к попаданию · 1к6+3 · Vex"},{"name":"Безоружный удар","description":"+5 к попаданию · 1к6+3"},{"name":"Скрытая атака","description":"1к6 один раз за ход при выполнении условий"},{"name":"Тьма Воина Тени","description":"1 фокус, действие, 15 фт радиус, 60 фт дальность, концентрация до 10 минут; видит внутри своей Тьмы"},{"name":"Шквал ударов","description":"1 фокус, две безоружные атаки"}]}},"npc_profiles":{"guard":{"name":"Охранник","hp":11,"ac":16,"speed":30,"scores":{"STR":13,"DEX":12,"CON":12,"INT":10,"WIS":11,"CHA":10},"proficiency":2,"features":{},"attacks":[{"id":"spear","name":"Копьё","kind":"melee","bonus":3,"flat":1,"count":1,"die":6,"range":5,"damageType":"piercing"}],"tactics":{"role":"guardian","morale":0.15,"canFlee":false,"hold":false}}},"rules_version":"dnd-2024-2026-10"}
+      {"schema_version":2,"combat_schema_version":30,"campaign_id":"rin-veir","title":"Рин Вейр","source":"state/_campaign-state.json","source_state_revision":1,"source_clock":0,"source_state_sha256":"bf8bd1f85817996db5961dd8c658c028f7c87a7632fd53f75a98812a013139e9","is_canonical":false,"characters":{"rin":{"name":"Рин Вейр","class_and_level":"Разбойник 1 / Монах 3 (Воин Тени), D&D 2024","ac_description":"16","speed":"40 фт","resources":{"hp":{"current":31,"max":31},"focus":{"current":0,"max":3},"arrows":{"current":20,"max":20},"luck":{"current":2,"max":2},"heroic":{"current":1,"max":1},"personal_money_cp":18289,"unusual_metabolism":{"current":1,"max":1}},"inventory":[{"id":"cherta","name":"«Черта» (короткий меч)","quantity":1,"description":"Основное оружие, Vex","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"daggers","name":"Кинжалы","quantity":4,"description":"Один может применять Nick","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"shortbow","name":"Короткий лук","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"arrows","name":"Стрелы","quantity":20,"description":"В рабочем колчане; не смешивать с найденными до перекладки","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"quiver","name":"Колчан","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"thieves_tools","name":"Воровские инструменты","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"burglars_pack","name":"Набор взломщика","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"pouches","name":"Поясные сумки","quantity":2,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"clothes","name":"Дорожная одежда и серое пальто","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"bedroll","name":"Постельные принадлежности","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"game_set","name":"Игровой набор","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"monastery_documents","name":"Документы Последнего Света","quantity":1,"description":"Похищены при уходе; часть содержания неизвестна","status":"скрыто при себе","origin":"канон кампании","combat_available":true},{"id":"edric_letter","name":"Письмо Эдрика для Сайрена","quantity":1,"description":"Прочитано вместе с Сайреном","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"edric_plate","name":"Контактная пластинка Эдрика","quantity":1,"description":"Контакт Остен Рей, пароль о книге без последней страницы","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"circle_vii","name":"Жетон VII","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"circle_orders","name":"Записка с приказом Разомкнутого Круга","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"horse","name":"Верховая лошадь","quantity":1,"description":"Оставлена в Сером Броде на конюшне; местоположение подлежит сверке","status":"конюшня Серого Брода","origin":"канон кампании","combat_available":false},{"id":"saddle","name":"Верховое седло","quantity":1,"description":"На лошади","status":"конюшня Серого Брода","origin":"канон кампании","combat_available":false},{"id":"saddlebags","name":"Седельные сумки","quantity":1,"description":"На лошади","status":"конюшня Серого Брода","origin":"канон кампании","combat_available":false},{"id":"food_wraps","name":"Сухие дорожные свёртки","quantity":2,"description":"На лошади","status":"конюшня Серого Брода","origin":"канон кампании","combat_available":false},{"id":"rope","name":"Тонкая верёвка","quantity":1,"description":"На лошади","status":"конюшня Серого Брода","origin":"канон кампании","combat_available":false},{"id":"blank_tokens","name":"Жетоны без номера","quantity":3,"description":"На лошади","status":"конюшня Серого Брода","origin":"канон кампании","combat_available":false},{"id":"route_map","name":"Карта Серый Брод — Вейлхольм","quantity":1,"description":"Отмечена старая обсерватория и «VII — активен»","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"circle_notebook","name":"Записная книжка Разомкнутого Круга","quantity":1,"description":"","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"sealed_cylinder","name":"Запечатанный металлический цилиндр","quantity":1,"description":"Не вскрыт","status":"при себе","origin":"канон кампании","combat_available":true},{"id":"unclear_flasks","name":"Флаконы мутной жидкости","quantity":3,"description":"2 у Мары; 1 в седельной сумке","status":"частично у Мары","origin":"канон кампании","combat_available":false},{"id":"needle_case","name":"Футляр с тремя иглами","quantity":1,"description":"Возможно опасное содержимое","status":"у Мары","origin":"канон кампании","combat_available":false},{"id":"thin_pick","name":"Тонкая металлическая отмычка","quantity":1,"description":"Найдена у Лорена","status":"у Мары","origin":"канон кампании","combat_available":false},{"id":"bandit_sabers","name":"Трофейные сабли","quantity":3,"description":"С пяти дорожных разбойников","status":"караванная повозка","origin":"засада на дороге","combat_available":false},{"id":"bandit_bows","name":"Трофейные короткие луки","quantity":2,"description":"С дорожных разбойников","status":"караванная повозка","origin":"засада на дороге","combat_available":false},{"id":"bandit_armors","name":"Поношенные кожаные доспехи","quantity":5,"description":"С дорожных разбойников","status":"караванная повозка","origin":"засада на дороге","combat_available":false},{"id":"bandit_arrows","name":"Трофейные стрелы","quantity":32,"description":"Ещё не зачислены в личный колчан","status":"караванная повозка","origin":"засада на дороге","combat_available":false},{"id":"bandit_quivers","name":"Трофейные колчаны","quantity":2,"description":"С дорожных разбойников","status":"караванная повозка","origin":"засада на дороге","combat_available":false},{"id":"bandit_pouches","name":"Трофейные кошели","quantity":5,"description":"Монеты учтены в личном кошельке","status":"караванная повозка","origin":"засада на дороге","combat_available":false}],"consumables":{},"combat_profile":{"scores":{"STR":8,"DEX":17,"CON":14,"INT":8,"WIS":16,"CHA":10},"proficiency":2,"saveProficiencies":["DEX","INT"],"skillProficiencies":{"stealth":["DEX",2],"perception":["WIS",2],"sleightOfHand":["DEX",1]},"features":{"martialArts":true,"monkFocus":true,"monkLevel":3,"martialDie":6,"flurryCount":2,"deflectAttacks":3,"shadowArts":true,"uncannyMetabolism":true,"sneakDice":1,"masteries":["vex","nick"],"alert":true},"senses":{"darkvision":60},"deathSaves":true,"attacks":[{"id":"shortsword","name":"«Черта»","ability":"DEX","count":1,"die":6,"kind":"melee","range":5,"damageType":"piercing","sneakEligible":true,"inventoryId":"cherta","light":true,"mastery":"vex"},{"id":"dagger","name":"Кинжал","ability":"DEX","count":1,"die":6,"kind":"melee","range":5,"damageType":"piercing","sneakEligible":true,"inventoryId":"daggers","light":true,"mastery":"nick"},{"id":"unarmed","name":"Безоружный удар","ability":"DEX","count":1,"die":6,"kind":"melee","range":5,"damageType":"bludgeoning","unarmed":true},{"id":"bow","name":"Короткий лук","ability":"DEX","count":1,"die":6,"kind":"ranged","range":320,"damageType":"piercing","sneakEligible":true,"inventoryId":"shortbow","ammo":"arrows","normalRange":80,"ammoInventoryId":"arrows"},{"id":"daggerThrow","name":"Метнуть кинжал","ability":"DEX","count":1,"die":6,"kind":"ranged","range":60,"damageType":"piercing","sneakEligible":true,"inventoryId":"daggers","normalRange":20,"ammoItem":"daggers"}],"verified_class_and_level":"Разбойник 1 / Монах 3 (Воин Тени), D&D 2024","tokenKey":"heroes.rin","ac":16,"speed":40},"skills_attacks_spells":[{"name":"«Черта», короткий меч","description":"+5 к попаданию · 1к6+3 · Vex"},{"name":"Безоружный удар","description":"+5 к попаданию · 1к6+3"},{"name":"Скрытая атака","description":"1к6 один раз за ход при выполнении условий"},{"name":"Тьма Воина Тени","description":"1 фокус, действие, 15 фт радиус, 60 фт дальность, концентрация до 10 минут; видит внутри своей Тьмы"},{"name":"Шквал ударов","description":"1 фокус, две безоружные атаки"}]}},"npc_profiles":{"guard":{"name":"Охранник","hp":11,"ac":16,"speed":30,"scores":{"STR":13,"DEX":12,"CON":12,"INT":10,"WIS":11,"CHA":10},"proficiency":2,"features":{},"attacks":[{"id":"spear","name":"Копьё","kind":"melee","bonus":3,"flat":1,"count":1,"die":6,"range":5,"damageType":"piercing"}],"tactics":{"role":"guardian","morale":0.15,"canFlee":false,"hold":false}}},"rules_version":"dnd-2024-2026-10"}
     </script>
     <script type="application/json" id="scene">
       {"name":"Засада у лесной дороги — учебный бой","kind":"training","battle_id":"rin-ambush-replay-training","source_revision":1,"chronicle_anchor":"Учебная реконструкция уже завершённой засады","narrative_context":"Только тест механики. Не повторять бой в летописи. На караван напали трое пеших разбойников и двое лучников.","theme":"forest","walls":["F1","F2","F7","F8"],"rubble":["E3","G5"],"heroes":{"rin":{"cell":"B6","initiative":20},"guard_a":{"cell":"C4","initiative":13,"name":"Охранник А"},"guard_b":{"cell":"C5","initiative":9,"name":"Охранник Б"},"guard_c":{"cell":"C6","initiative":8,"name":"Охранник В"}},"enemies":[{"name":"Главарь","cell":"H4","hp":14,"ac":12,"initiative":15,"attack":{"bonus":3,"count":1,"die":6,"flat":1,"range":5},"tokenKey":"warrior"},{"name":"Налётчик 1","cell":"I5","hp":11,"ac":12,"initiative":5,"attack":{"bonus":3,"count":1,"die":6,"flat":1,"range":5},"tokenKey":"rogue"},{"name":"Налётчик 2","cell":"H6","hp":11,"ac":12,"initiative":3,"attack":{"bonus":3,"count":1,"die":6,"flat":1,"range":5},"tokenKey":"rogue"},{"name":"Лучник 1","cell":"G2","hp":11,"ac":12,"initiative":14,"attack":{"bonus":3,"count":1,"die":6,"flat":1,"range":80},"tokenKey":"archer"},{"name":"Лучник 2","cell":"J7","hp":11,"ac":12,"initiative":18,"attack":{"bonus":3,"count":1,"die":6,"flat":1,"range":80},"tokenKey":"archer"}]}
@@ -525,7 +528,7 @@ if(typeof module!=="undefined")module.exports={CombatBattlefield};
 // The only registration point for supported data-level mechanics. No code from packs is executed.
 class CombatCapabilities {
   static API = 1;
-  static ENGINE = "30.4.0";
+  static ENGINE = "30.5.0";
   static RULES = "dnd-2024-2026-10";
   static FEATURES = {
     martialArts: "boolean",
@@ -583,6 +586,11 @@ class CombatCapabilities {
     sharpshooter: "boolean",
     layOnHands: "boolean",
     knowEnemy: "boolean",
+    sculptSpells: "boolean", potentCantrip: "boolean", empoweredEvocation: "boolean",
+    sacredWeapon: "boolean", abjureFoes: "boolean", shieldMaster: "boolean", divineSmite: "boolean",
+    cunningStrike: "boolean", stealthAttack: "boolean", thiefHands: "boolean", climbSpeed: [5, 120],
+    cunningDC: [1,30], poisonerKit: "boolean", silentShadow: "boolean",
+
   };
   static COUNTERS = [
     "second_wind",
@@ -600,7 +608,7 @@ class CombatCapabilities {
     "arcane_recovery",
     "smite_free",
     "storm_thrower_ammo",
-    "know_enemy",
+    "know_enemy", "storm_bracers", "storm_daily", "vaeltir_focus", "faithful_steed", "mantle_stars",
   ];
   static counter(value) {
     this.require(
@@ -651,7 +659,7 @@ class CombatCapabilities {
       "Неподдержанное состояние эффекта",
     );
     this.require(
-      effect.duration === "target-next-start" ||
+      effect.duration === "target-next-start" || effect.duration === "source-next-start" ||
         (effect.condition === "prone" && effect.duration === "until-removed"),
       "Неподдержанная длительность эффекта",
     );
@@ -739,12 +747,12 @@ class CombatCapabilities {
           "light",
           "mastery",
           "unarmed",
-          "ammo",
+          "ammo", "ammoCounter",
           "ammoInventoryId",
           "ammoItem",
           "effects",
           "heavy",
-          "twoHanded",
+          "twoHanded", "spellKey", "potent", "magicAdvantage",
         ].includes(k),
       ),
       "Неподдержанное поле атаки",
@@ -769,7 +777,7 @@ class CombatCapabilities {
       engine: this.ENGINE,
       rules: this.RULES,
       features: structuredClone(this.FEATURES),
-      handlers: ["features", "onHitCondition"],
+      handlers: ["features", "onHitCondition", "spellcasting", "magicItems", "advancedClasses"],
       counters: [...this.COUNTERS],
       conditions: ["poisoned", "prone", "frost"],
     };
@@ -831,7 +839,7 @@ class CombatContentPack {
         "default_encounter",
         "encounters",
         "notes",
-        "source_state_sha256",
+        "source_state_sha256", "continuity", "campaign_clock",
       ],
       "пакет",
     );
@@ -902,10 +910,11 @@ class CombatContentPack {
           "conditionImmunities",
           "tactics",
           "tokenKey",
-          "size",
+          "size", "casting", "equipment", "reference", "summoner", "summonLevel", "summonDC", "creatureType", "powerAvailable", "initialHP",
         ],
         key,
       );
+      C.require(p.initialHP===undefined||(Number.isInteger(p.initialHP)&&p.initialHP>=0&&p.initialHP<=p.hp),"Неверные текущие ПЗ профиля");
       p.features ??= {};
       C.require(
         p.size === undefined ||
@@ -968,13 +977,16 @@ class CombatContentPack {
           }
         }
       }
+      const M = typeof module !== "undefined" ? require("./magic").CombatMagic : CombatMagic;
+      M.validateCasting(p.casting);
+      if(p.equipment) C.require(Object.keys(p.equipment).every(k=>["armor","forgeAttuned","stormBracers","vaeltirFocus","leafPartner","rootPartner","potionIds","consumables","reference"].includes(k)), "Неизвестный предметный обработчик");
       C.features(p.features);
       for (const a of p.attacks) C.attack(a);
       if (p.conditionImmunities)
         C.require(
           Array.isArray(p.conditionImmunities) &&
             p.conditionImmunities.every((x) =>
-              ["poisoned", "prone", "frost"].includes(x),
+              ["poisoned", "prone", "frost", "paralyzed", "stunned", "restrained", "blinded", "deafened", "frightened", "charmed", "unconscious"].includes(x),
             ),
           "Неверный иммунитет к состоянию",
         );
@@ -1024,7 +1036,7 @@ class CombatContentPack {
           new Set(inventory.map((v) => v.id)).size === inventory.length &&
           inventory.every(
             (v) =>
-              id(v.id) &&
+              typeof v.id === "string" && v.id.length>0 && v.id.length<=200 && !["__proto__","constructor","prototype"].includes(v.id) &&
               Number.isInteger(v.quantity) &&
               v.quantity >= 0 &&
               typeof v.combat_available === "boolean",
@@ -1420,7 +1432,7 @@ class CombatClassFeatures {
           attack: null,
         });
     } else if (t.kind === "secondWindResult") {
-      e.heal(t.actor, t.result.total);
+      e.heal(t.actor, (typeof module!=="undefined"?require("./magic").CombatMagic:CombatMagic).effects(e,t.actor,"beaconHope").length ? 10+u.features.fighterLevel : t.result.total);
       if (u.controlled && u.features.tacticalShift && e.speed(t.actor) > 0)
         e.decision("freeMovement", t.actor, {
           budget: Math.floor(e.speed(t.actor) / 2),
@@ -1452,7 +1464,7 @@ class CombatClassFeatures {
       t.attackHit !== false &&
       t.attack &&
       u.features.uncannyDodge &&
-      u.reaction > 0 &&
+      u.reaction > 0 && (typeof module!=="undefined"?require("./magic").CombatMagic:CombatMagic).canReact(e,t.target) &&
       !e.incapacitated(t.target) &&
       e.canSee(t.target, t.actor)
     ) {
@@ -1475,6 +1487,7 @@ if (typeof module !== "undefined") module.exports = { CombatClassFeatures };
 
 "use strict";
 class CombatDefenses {
+  static canReact(e,id){return (typeof module!=="undefined"?require("./magic").CombatMagic:CombatMagic).canReact(e,id);}
   static inAura(e, owner, target, radius) {
     return (
       !e.incapacitated(owner) &&
@@ -1497,6 +1510,7 @@ class CombatDefenses {
     return aura + mark;
   }
   static suppresses(e, id, condition) {
+    if(condition==="frightened" && (typeof module!=="undefined"?require("./magic").CombatMagic:CombatMagic).effects(e,id,"heroism").length)return true;
     const feature = { charmed: "auraDevotion", frightened: "auraCourage" }[
       condition
     ];
@@ -1540,7 +1554,7 @@ class CombatDefenses {
         considered.includes(id) ||
         !u.features.protection ||
         !u.features.shieldEquipped ||
-        u.reaction <= 0 ||
+        u.reaction <= 0 || !this.canReact(e,id) ||
         e.incapacitated(id) ||
         u.team !== e.unit(t.target).team ||
         e.distance(u, e.unit(t.target)) > 5 ||
@@ -1569,7 +1583,7 @@ class CombatDefenses {
     const u = e.unit(id);
     return (
       u.features.shieldSpell &&
-      u.reaction > 0 &&
+      u.reaction > 0 && this.canReact(e,id) &&
       !e.incapacitated(id) &&
       !e.has(id, "shield") &&
       ((u.counters?.shield_magic_initiate?.current || 0) > 0 ||
@@ -1579,7 +1593,8 @@ class CombatDefenses {
           )))
     );
   }
-  static shield(e, id) {
+  static shield(e, id, after=null) {
+    if(e.unit(id).casting && after){(typeof module!=="undefined"?require("./magic").CombatMagic:CombatMagic).castShield(e,id,after);return;}
     const u = e.unit(id);
     e.require(this.canShield(e, id), "Щит недоступен");
     u.reaction--;
@@ -1616,8 +1631,8 @@ class CombatDefenses {
         defensesConsidered: [...considered, tag(t.target, "shield")],
       };
       if (target.features.autoShield || !target.controlled) {
-        this.shield(e, t.target);
-        e.enqueue(next);
+        this.shield(e, t.target,next);
+        if(!target.casting)e.enqueue(next);
       } else
         e.decision("defensiveReaction", t.target, {
           ability: "shield",
@@ -1627,7 +1642,7 @@ class CombatDefenses {
     }
     if (
       target.features.acReaction &&
-      target.reaction > 0 &&
+      target.reaction > 0 && this.canReact(e,t.target) &&
       !e.incapacitated(t.target) &&
       (target.counters?.cloak_charges?.current || 0) > 0 &&
       !considered.includes(tag(t.target, "cloak"))
@@ -1663,7 +1678,7 @@ class CombatDefenses {
           id === t.target ||
           u.team !== target.team ||
           !u.features.critNegation ||
-          u.reaction <= 0 ||
+          u.reaction <= 0 || !this.canReact(e,id) ||
           e.incapacitated(id) ||
           !(u.counters?.guardian_mark?.current > 0) ||
           e.distance(u, target) > 30 ||
@@ -1696,10 +1711,10 @@ class CombatDefenses {
       t = p.attack;
     if (c.choice === "yes") {
       e.require(
-        u.reaction > 0 && !e.incapacitated(p.actor),
+        u.reaction > 0 && this.canReact(e,p.actor) && !e.incapacitated(p.actor),
         "Реакция недоступна",
       );
-      if (p.ability === "shield") this.shield(e, p.actor);
+      if (p.ability === "shield") {this.shield(e, p.actor,t);if(u.casting)return true;}
       else if (p.ability === "protection") {
         u.reaction--;
         e.status(t.target, "protected", {
@@ -1936,6 +1951,7 @@ class CombatMartialFeatures {
     return true;
   }
   static weaponRoll(e, t) {
+    if((typeof module!=="undefined"?require("./advanced_features").CombatAdvancedFeatures:CombatAdvancedFeatures).beforeWeapon(e,t))return;
     const u = e.unit(t.actor),
       maneuvers =
         !t.maneuverUsed && this.count(e, t.actor) > 0 ? this.options(e, t) : [],
@@ -2004,7 +2020,7 @@ class CombatMartialFeatures {
       minimumDie,
       bonus:
         (t.mode === "nick" ? Math.min(0, t.spec.flat) : t.spec.flat) +
-        (t.mode === "action" && t.spec.heavy
+        (["action","haste"].includes(t.mode) && t.spec.heavy
           ? u.features.greatWeaponMaster || 0
           : 0),
       next: {
@@ -2032,7 +2048,7 @@ class CombatMartialFeatures {
         t.attack.spec.kind !== "melee" ||
         !defender.features.maneuvers?.includes("riposte") ||
         !spec ||
-        defender.reaction <= 0 ||
+        defender.reaction <= 0 || !(typeof module!=="undefined"?require("./magic").CombatMagic:CombatMagic).canReact(e,t.target) ||
         e.incapacitated(t.target) ||
         this.count(e, t.target) <= 0
       )
@@ -2065,7 +2081,7 @@ class CombatMartialFeatures {
     } else if (t.kind === "savageSecond") {
       const flat =
         (t.mode === "nick" ? Math.min(0, t.spec.flat) : t.spec.flat) +
-        (t.mode === "action" && t.spec.heavy
+        (["action","haste"].includes(t.mode) && t.spec.heavy
           ? u.features.greatWeaponMaster || 0
           : 0);
       const result =
@@ -2114,6 +2130,7 @@ class CombatMartialFeatures {
         frame: { ...t.frame, maneuverAdded: true },
       });
     else if (t.kind === "weaponHitEffects") {
+      (typeof module!=="undefined"?require("./advanced_features").CombatAdvancedFeatures:CombatAdvancedFeatures).afterWeapon(e,t);
       const f = t.frame,
         target = e.unit(t.target),
         mastery = f.spec.mastery,
@@ -2229,6 +2246,369 @@ class CombatMartialFeatures {
 if (typeof module !== "undefined") module.exports = { CombatMartialFeatures };
 
 
+"use strict";
+// Declarative spell data and serialized continuations. Campaign packs contain no executable code.
+class CombatMagic {
+  static SPELLS = {
+    fireBolt: ['Огненный снаряд',0,'action',120,'attack','evocation'],
+    rayFrost: ['Луч холода',0,'action',60,'attack','evocation'],
+    mindSliver: ['Расщепление разума',0,'action',60,'enemy','enchantment'],
+    mageHand: ['Магическая рука',0,'action',30,'point','conjuration'],
+    prestidigitation: ['Фокусы',0,'action',10,'point','transmutation'],
+    mageArmor: ['Доспехи мага',1,'action',5,'ally','abjuration'],
+    magicMissile: ['Волшебная стрела',1,'action',120,'enemies','evocation'],
+    thunderwave: ['Громовая волна',1,'action',0,'direction','evocation'],
+    burningHands: ['Огненные ладони',1,'action',0,'direction','evocation'],
+    fogCloud: ['Туманное облако',1,'action',120,'point','conjuration',3600],
+    shield: ['Щит',1,'reaction',0,'self','abjuration'],
+    scorchingRay: ['Палящий луч',2,'action',120,'enemies','evocation'],
+    mistyStep: ['Туманный шаг',2,'bonus',30,'point','conjuration'],
+    web: ['Паутина',2,'action',60,'point','conjuration',3600],
+    fireball: ['Огненный шар',3,'action',150,'point','evocation'],
+    slow: ['Замедление',3,'action',120,'enemies','transmutation',60],
+    counterspell: ['Контрзаклинание',3,'reaction',60,'enemy','abjuration'],
+    dispelMagic: ['Рассеивание магии',3,'action',120,'any','abjuration'],
+    fly: ['Полёт',3,'action',5,'allies','transmutation',600],
+    dimensionDoor: ['Дверь в измерение',4,'action',500,'point','conjuration'],
+    greaterInvisibility: ['Высшая невидимость',4,'action',5,'ally','illusion',60],
+    coneCold: ['Конус холода',5,'action',0,'direction','evocation'],
+    seeming: ['Кажущаяся внешность',5,'action',30,'allies','illusion'],
+    holdMonster: ['Удержание чудовища',5,'action',90,'enemies','enchantment',60],
+    bigbyHand: ['Рука Бигби',5,'action',120,'point','evocation',60],
+    bless: ['Благословение',1,'action',30,'allies','enchantment',60],
+    cureWounds: ['Лечение ран',1,'action',5,'ally','abjuration'],
+    heroism: ['Героизм',1,'action',5,'allies','enchantment',60],
+    command: ['Приказ: Стой',1,'action',60,'enemies','enchantment'],
+    compelledDuel: ['Вынужденная дуэль',1,'bonus',30,'enemy','enchantment',60],
+    protectionEvil: ['Защита от зла и добра',1,'action',5,'ally','abjuration',600],
+    shieldFaith: ['Щит веры',1,'bonus',60,'ally','abjuration',600],
+    aid: ['Помощь',2,'action',30,'allies','abjuration'],
+    lesserRestoration: ['Малое восстановление',2,'bonus',5,'ally','abjuration'],
+    zoneTruth: ['Зона истины',2,'action',60,'point','enchantment'],
+    wardingBond: ['Защитная связь',2,'action',5,'ally','abjuration'],
+    beaconHope: ['Маяк надежды',3,'action',30,'allies','abjuration',60],
+    crusaderMantle: ['Мантия крестоносца',3,'action',0,'self','evocation',60],
+    auraVitality: ['Аура жизненной силы',3,'action',0,'self','abjuration',60],
+    divineSmite: ['Божественная кара',1,'bonus',0,'enemy','evocation'],
+    findSteed: ['Верный скакун',2,'action',30,'point','conjuration'],
+    stormSphere: ['Сфера бури · наручи',4,'action',150,'point','evocation',60],
+    drainingWave: ['Истощающая волна · фокус',0,'action',0,'direction','necromancy'],
+  };
+  static OPS = new Set(['window','resolve','counterResult','areaRoll','apply','save','heal','missile','missileDamage','hand','handSave','handAttack','handDamage','stormTick','repeat','dispel','extraDamage','leafSplit','resumeDamage','itemSave','poisonDamage','smiteDamage','objectHit','objectDamage','shadowSearch']);
+  static catalogue(u) { return [...new Set([...(u.casting?.prepared||[]),...(u.casting?.cantrips||[]),...(u.equipment?.stormBracers?['stormSphere']:[]),...(u.equipment?.vaeltirFocus?['drainingWave']:[])])].map(id=>({id,name:this.SPELLS[id][0],level:this.SPELLS[id][1],cost:this.SPELLS[id][2],target:this.SPELLS[id][4]})); }
+  static validateCasting(c) {
+    if (!c) return;
+    const C=typeof module!== 'undefined'?require('./capabilities').CombatCapabilities:CombatCapabilities;
+    C.require(Object.keys(c).every(k=>['ability','attack','dc','level','prepared','cantrips','book','components','recoveryLevels','reference'].includes(k)), 'Неизвестное поле магии');
+    C.require(['INT','WIS','CHA'].includes(c.ability)&&Number.isInteger(c.attack)&&Number.isInteger(c.dc)&&c.dc>=1&&c.dc<=30&&Number.isInteger(c.level)&&c.level>0&&c.level<=20,'Неверный профиль заклинателя');
+    for(const k of ['prepared','cantrips']) C.require(Array.isArray(c[k])&&new Set(c[k]).size===c[k].length&&c[k].every(x=>Object.hasOwn(this.SPELLS,x)), 'Нет обработчика подготовленного заклинания');
+    C.require(c.cantrips.every(x=>this.SPELLS[x][1]===0)&&c.prepared.every(x=>this.SPELLS[x][1]>0),'Неверная подготовка');
+  }
+  static validateState(s){
+    const req=(ok,msg)=>{if(!ok)throw Error(msg);};
+    if(s.effects!==undefined){req(Array.isArray(s.effects),'Повреждены магические эффекты');const ids=new Set();for(const x of s.effects){req(x&&typeof x.id==='string'&&!ids.has(x.id)&&s.units[x.owner]&&Array.isArray(x.targets)&&x.targets.every(id=>s.units[id])&&Number.isFinite(x.until)&&Number.isInteger(x.level)&&x.level>=0&&x.level<=9,'Повреждён магический эффект');ids.add(x.id);req(Object.hasOwn(this.SPELLS,x.kind)||['abjure','sacredWeapon','fireResistance','antitoxin','haste','enlarge','giantStrength','climbing'].includes(x.kind),'Неизвестный магический эффект');}}
+    if(s.spellFrames!==undefined){req(s.spellFrames&&typeof s.spellFrames==='object'&&!Array.isArray(s.spellFrames),'Повреждены этапы заклинаний');for(const [id,f] of Object.entries(s.spellFrames))req(f&&f.id===id&&s.units[f.actor]&&(Object.hasOwn(this.SPELLS,f.spell)||['abjure','sacredWeapon','item'].includes(f.spell)),'Повреждено заклинание');}
+    if(s.objects!==undefined){req(s.objects&&typeof s.objects==='object'&&!Array.isArray(s.objects),'Повреждены предметы на поле');for(const [id,o] of Object.entries(s.objects)){req(o&&o.id===id&&s.units[o.owner]&&Number.isInteger(o.hp)&&o.hp>=0&&o.hp<=o.max&&o.ac===20&&Number.isInteger(o.x)&&o.x>=0&&o.x<s.terrain.width&&Number.isInteger(o.y)&&o.y>=0&&o.y<s.terrain.height&&(!o.grappled||s.units[o.grappled]),'Повреждена Рука Бигби');req(s.effects.some(x=>x.id===id&&x.kind==='bigbyHand'),'Нет заклинания Руки Бигби');}}
+  }
+  static init(s) { s.effects??=[];s.spellFrames??={};s.objects??={}; }
+  static task(actor,op,data={}) {return {kind:'magicTask',actor,op,...data};}
+  static effects(e,id,kind) { return (e.s.effects||[]).filter(x=>x.kind===kind&&(x.targets?.includes(id)||(x.aura&&e.active(x.owner)&&!e.incapacitated(x.owner)&&e.unit(id).team===e.unit(x.owner).team&&e.distance(e.unit(id),e.unit(x.owner))<=x.aura))); }
+  static has(e,id,kind) { return (kind==='invisible'&&this.effects(e,id,'greaterInvisibility').length>0)||(kind==='frightened'&&this.effects(e,id,'abjure').length>0)||(kind==='paralyzed'&&this.effects(e,id,'holdMonster').length>0)||(kind==='grappled'&&Object.values(e.s.objects||{}).some(o=>o.grappled===id)); }
+  static concentrating(e,id) {return (e.s.effects||[]).some(x=>x.owner===id&&x.concentration)||e.s.zones.some(x=>x.owner===id&&x.concentration);}
+  static add(e,f,kind,targets,duration,extra={}) {
+    this.init(e.s);
+    const speeds=Object.fromEntries(targets.map(id=>[id,e.speed(id)]));
+    const x={id:'effect-'+ ++e.s.sequence,kind,owner:f.actor,targets:[...targets],level:f.level||0,dc:e.unit(f.actor).casting?.dc||f.dc||10,until:e.s.elapsed+duration,concentration:Boolean(this.SPELLS[f.spell]?.[6]),...extra};
+    e.s.spellFrames[x.id]={...f,id:x.id};e.s.effects.push(x);if(['slow','haste'].includes(kind))for(const id of targets)e.adjustMovementForSpeed(id,speeds[id]);e.emit('effect',f.actor,this.SPELLS[f.spell]?.[0]||kind,{effect:structuredClone(x)});return x;
+  }
+  static remove(e,ids) {
+    if(!ids.length)return;
+    const speeds=Object.fromEntries(e.s.order.map(id=>[id,e.speed(id)]));
+    for(const x of e.s.effects||[]) if(ids.includes(x.id)) {
+      if(x.kind==='aid')for(const id of x.targets){const u=e.unit(id);u.max-=x.amount;u.hp=Math.min(u.hp,u.max);}
+      if(x.kind==='heroism')for(const id of x.targets)if(e.unit(id).tempSource===x.id){e.unit(id).temp=0;delete e.unit(id).tempSource;}
+      delete e.s.objects[x.id];e.s.zones=e.s.zones.filter(z=>z.effect!==x.id);
+    }
+    for(const u of Object.values(e.s.units))u.statuses=u.statuses.filter(x=>!ids.includes(x.effect));e.s.effects=(e.s.effects||[]).filter(x=>!ids.includes(x.id));for(const id of e.s.order)e.adjustMovementForSpeed(id,speeds[id]);
+  }
+  static endConcentration(e,id){const ids=(e.s.effects||[]).filter(x=>x.owner===id&&x.concentration).map(x=>x.id);this.remove(e,ids);if(ids.length)e.emit('concentrationEnded',id,e.name(id)+': концентрация прекращена.');}
+  static ac(e,id,from){const u=e.unit(id);let n=this.effects(e,id,'haste').length?2:0;if(this.effects(e,id,'mageArmor').length&&!u.equipment?.armor)n+=Math.max(0,13+u.stats.DEX-u.ac);n+=this.effects(e,id,'shieldFaith').length?2:0;n+=this.effects(e,id,'wardingBond').length?1:0;n-=this.effects(e,id,'slow').length?2:0;return n;}
+  static cover(e,from,id){let result=0;for(const o of Object.values(e.s.objects||{}))if(o.interposing&&e.unit(o.owner).team===e.unit(id).team&&e.crosses(from,e.unit(id),{...o,radius:2.5}))result=2;return result;}
+  static saveBonus(e,id,stat){const u=e.unit(id);let n=this.effects(e,id,'wardingBond').length?1:0;if(stat==='DEX'&&this.effects(e,id,'slow').length)n-=2;if(stat==='STR'&&this.effects(e,id,'giantStrength').length)n+=Math.max(0,5-u.stats.STR);return n;}
+  static saveAdv(e,id,stat,next){return (stat==='DEX'&&this.effects(e,id,'haste').length>0)||(stat==='STR'&&this.effects(e,id,'enlarge').length>0)||(stat==='CON'&&next?.itemKind==='poison'&&this.effects(e,id,'antitoxin').length>0)||stat==='WIS'&&this.effects(e,id,'beaconHope').length>0;}
+  static rollBonus(e,t){let n=0;const id=t.actor;if((t.save||t.attackRoll)&&this.effects(e,id,'bless').length)n+=e.roll(4);if(t.save&&!t.deathSave){const u=e.unit(id);if(u.mindSliver){n-=e.roll(4);delete u.mindSliver;}}
+    if(t.check&&t.stat==='STR'&&this.effects(e,id,'giantStrength').length)n+=Math.max(0,5-e.unit(id).stats.STR);if(n)e.emit('magicRollBonus',id,'Магический модификатор броска: '+(n>0?'+':'')+n,{amount:n});return n;}
+  static speed(e,id,n){if(this.effects(e,id,'haste').length)n*=2;if(this.effects(e,id,'slow').length)n=Math.floor(n/2/5)*5;return n;}
+  static difficult(e,id,p){return e.s.zones.some(z=>['web','stormSphere'].includes(z.kind)&&e.zoneAt(p,z))||Object.values(e.s.objects||{}).some(o=>o.interposing&&e.unit(o.owner).team!==e.unit(id).team&&o.x===p.x&&o.y===p.y);}
+  static canReact(e,id){return !this.effects(e,id,'slow').length&&!e.unit(id).statuses.some(z=>z.kind==='noReactions');}
+  static targets(e,c){return c.targets?.length?[...c.targets]:c.target?[c.target]:[];}
+  static validate(e,c,u){
+    e.require(c.spell!=='divineSmite','Кара применяется после попадания');const def=this.SPELLS[c.spell];e.require(def,'Неизвестное заклинание');
+    const [name,base,cost,range,shape]=def,id=c.actor,targets=this.targets(e,c);
+    e.require(this.catalogue(u).some(x=>x.id===c.spell),'Заклинание не подготовлено / предмет не настроен');
+    e.require(!['reaction','minute'].includes(cost),cost==='minute'?'Нужно 10 последовательных действий Магия: используй длительное сотворение':'Это заклинание применяется в окне реакции');
+    const item=['stormSphere','drainingWave'].includes(c.spell),level=item?base:Number(c.level??base);
+    e.require(Number.isInteger(level)&&level>=base&&level<=9&&(base>0||level===0),'Неверный круг заклинания');
+    const free=c.spell==='findSteed'&&u.counters.faithful_steed?.current>0&&c.free!==false;
+    if(base&&!item&&!free){e.require(u.slotTurn!==e.s.turnSerial,'В этом ходу уже потрачена ячейка');e.require(u.slots[level]?.current>0,'Нет ячейки этого круга');}
+    if(c.spell==='stormSphere')e.require(u.counters.storm_bracers?.current>0&&u.counters.storm_daily?.current>0,'Нет заряда наручей или дневного применения');
+    if(c.spell==='drainingWave')e.require(u.counters.vaeltir_focus?.current>0,'Нет зарядов фокуса');
+    e.require(cost==='bonus'?u.bonus>0:u.action>0,'Нет нужного действия');
+    if(['ally','enemy','any','attack','allies','enemies'].includes(shape)){
+      e.require(targets.length>0&&(['magicMissile','scorchingRay'].includes(c.spell)||new Set(targets).size===targets.length),'Выбери цели');
+      const max={bless:3+level-1,heroism:level,aid:3,command:level,fly:level-2,slow:6,holdMonster:1+level-5,magicMissile:2+level,scorchingRay:level+1,beaconHope:100,seeming:100}[c.spell]||1;
+      e.require(targets.length<=max,'Слишком много целей');
+      for(const t of targets){const v=e.unit(t);e.require(!v.dead&&e.distance(u,v)<=range&&e.wallLOS(u,v),'Цель вне дистанции / за стеной');if(['enemy','enemies','attack'].includes(shape))e.require(e.canSee(id,t)&&e.knowsPosition(id,t),'Нужна видимая цель');if(['ally','allies'].includes(shape))e.require(v.team===u.team,'Выбери союзника');}
+    }
+    if(['point','direction'].includes(shape)){e.require(c.point&&e.inside(c.point)&&!e.wall(c.point),'Выбери клетку');if(range)e.require(e.distance(u,c.point)<=range&&(c.spell==='dimensionDoor'||e.wallLOS(u,c.point)),'Точка вне дистанции / за стеной');if(shape==='direction')e.require(e.distance(u,c.point)>0,'Выбери направление');}
+    if(['mistyStep','dimensionDoor'].includes(c.spell))e.require(!e.occupied(c.point.x,c.point.y,id),'Клетка занята');
+    if(c.spell==='mistyStep')e.require(e.canSee(id,c.point),'Точка должна быть видна');
+    if(c.spell==='dimensionDoor'&&c.passenger){const v=e.unit(c.passenger),p=c.passengerPoint;e.require(v.team===u.team&&e.distance(u,v)<=5&&v.size<=u.size&&!e.incapacitated(c.passenger)&&p&&e.inside(p)&&!e.wall(p)&&!e.occupied(p.x,p.y,c.passenger)&&e.distance(p,c.point)<=5&&e.distance(p,c.point)>0,'Пассажиру нужна соседняя свободная клетка');}
+    if(c.spell==='findSteed')e.require(!e.occupied(c.point.x,c.point.y),'Нужно свободное место для скакуна');
+    if(c.spell==='bigbyHand'){e.require(!e.occupied(c.point.x,c.point.y),'Рука создаётся в свободном месте');this.validateHand(e,c,{...c.point,owner:id},true);}
+    if(c.spell==='mageArmor')e.require(!e.unit(targets[0]).equipment?.armor,'Доспехи мага действуют без надетой брони');
+    if(c.spell==='wardingBond')e.require(u.casting?.components?.wardingBond===true,'Нет подтверждённых платиновых колец (2 × 50 зм)');
+    if(c.spell==='protectionEvil')e.require(u.casting?.components?.protectionEvil===true,'Нужны подтверждённые расходуемые святая вода или серебро');
+    if(c.spell==='slow'){const ps=targets.map(t=>e.unit(t));e.require(Math.max(...ps.map(p=>p.x))-Math.min(...ps.map(p=>p.x))<8&&Math.max(...ps.map(p=>p.y))-Math.min(...ps.map(p=>p.y))<8,'Цели должны помещаться в куб 40 фт');}
+    if(c.sculpt?.length){e.require(u.features.sculptSpells&&def[5]==='evocation'&&c.sculpt.length<=1+level&&new Set(c.sculpt).size===c.sculpt.length,'Скульптура заклинаний недоступна');for(const t of c.sculpt)e.require(t!==id&&e.canSee(id,t),'Защищаемый союзник должен быть виден');}
+    return {id:'spell-'+ ++e.s.sequence,actor:id,spell:c.spell,level,targets,point:c.point,sculpt:c.sculpt||[],handMode:c.handMode||'interpose',target:c.target,passenger:c.passenger,passengerPoint:c.passengerPoint,offered:[],item,free,steedType:c.steedType||'celestial',cancelled:false};
+  }
+  static pay(e,f,cost){const u=e.unit(f.actor);if(cost==='action')e.spendAction(f.actor,true);else if(cost==='bonus'){e.require(u.bonus>0,'Нет бонусного действия');u.bonus--;}else if(cost==='reaction'){e.require(u.reaction>0&&this.canReact(e,f.actor),'Нет реакции');u.reaction--;}
+    if(f.free&&f.spell==='findSteed'){e.require(u.counters.faithful_steed?.current>0,'Нет бесплатного применения');u.counters.faithful_steed.current--;}else if(f.item){for(const k of f.spell==='stormSphere'?['storm_bracers','storm_daily']:['vaeltir_focus'])u.counters[k].current--;}
+    else if(f.level){e.require(u.slotTurn!==e.s.turnSerial&&u.slots[f.level]?.current>0,'Ячейка недоступна');u.slots[f.level].current--;u.slotTurn=e.s.turnSerial;f.paidSlot=true;}
+  }
+  static command(e,c,u){this.init(e.s);
+    if(c.kind==='cast'){const f=this.validate(e,c,u);this.pay(e,f,this.SPELLS[f.spell][2]);e.s.spellFrames[f.id]=f;e.emit('cast',c.actor,u.name+': '+this.SPELLS[f.spell][0]+'.',{spell:f.spell,level:f.level,targets:f.targets});e.enqueue(this.task(c.actor,'window',{frame:f.id}));return true;}
+    if(c.kind==='hand'){const effect=(e.s.effects||[]).find(x=>x.owner===c.actor&&x.kind==='bigbyHand'),o=effect&&e.s.objects[effect.id];e.require(o&&u.bonus>0&&o.createdTurn<e.s.turnSerial,'Нужна рука и бонусное действие следующего хода');this.validateHand(e,c,o,false);u.bonus--;e.enqueue(this.task(c.actor,'hand',{object:effect.id,...c,kind:'magicTask',op:'hand'}));return true;}
+    if(c.kind==='stormStrike'){const effect=(e.s.effects||[]).find(x=>x.owner===c.actor&&x.kind==='stormSphere'),z=effect&&e.s.zones.find(z=>z.effect===effect.id),v=e.unit(c.target);e.require(z&&u.bonus>0&&e.distance(z,v)<=60&&e.canSee(c.actor,c.target),'Нужны сфера, бонусное действие и видимая цель в 60 фт от сферы');u.bonus--;this.attack(e,{actor:c.actor,spell:'stormSphere',level:4,id:effect.id},c.target,{count:4,die:6,flat:0,type:'lightning',bonus:8,advantage:e.zoneAt(v,z)});return true;}
+    if(c.kind==='escapeMagic'){const o=Object.values(e.s.objects).find(x=>x.grappled===c.actor),web=u.statuses.find(x=>x.kind==='restrained'&&x.magic);e.require(o||web,'Нет магического захвата');e.spendAction(c.actor);e.enqueue({kind:'roll',actor:c.actor,label:'Освободиться',count:1,sides:20,bonus:web?(u.skills.athletics??u.stats.STR):Math.max(u.skills.athletics??u.stats.STR,u.skills.acrobatics??u.stats.DEX),dc:o?o.dc:web.dc,next:this.task(c.actor,'itemSave',{target:c.actor,remove:o?'hand':'web',object:o?.id})});return true;}
+    if(c.kind==='attackObject'){const o=e.s.objects[c.object],spec=e.attackSpec(c.actor,c.weapon);e.require(o&&e.distance(u,o)<=spec.range&&e.wallLOS(u,o),'Предмет вне дистанции');e.require(u.attacksLeft>0||u.action>0||u.surgeAction>0,'Нет атаки');if(u.attacksLeft>0)u.attacksLeft--;else {e.spendAction(c.actor);u.attacksLeft=(u.features.extraAttack||1)-1;}e.enqueue({kind:'roll',actor:c.actor,count:1,sides:20,bonus:spec.bonus,dc:o.ac,label:'Атака руки',next:this.task(c.actor,'objectHit',{object:c.object,spec})});return true;}
+    return false;
+  }
+  static finishSteed(e,f){const u=e.unit(f.actor),lv=f.level,id=f.actor+'-steed';e.require(['celestial','fey','fiend'].includes(f.steedType),'Выбери природу скакуна');
+    const A=typeof module!=='undefined'?require('./campaign_adapter').CombatCampaignAdapter:CombatCampaignAdapter;
+    const p={name:'Верный скакун',hp:5+10*lv,ac:10+lv,speed:60,size:3,scores:{STR:18,DEX:12,CON:14,INT:6,WIS:12,CHA:8},proficiency:u.proficiency,features:{},attacks:[{id:'strike',name:'Потусторонний удар',kind:'melee',count:1,die:8,flat:lv,bonus:u.casting.attack,range:5,damageType:f.steedType==='fiend'?'fire':f.steedType==='fey'?'psychic':'radiant'}]};
+    const exists=Boolean(e.s.units[id]);e.s.units[id]=A.unit(id,p,{...f.point,team:u.team,controlled:u.controlled});if(!exists)e.s.order.push(id);e.s.initiative[id]=e.s.initiative[f.actor];Object.assign(e.s.units[id],{summoner:f.actor,creatureType:f.steedType,summonLevel:lv,summonDC:u.casting.dc,powerAvailable:true});e.emit('summon',f.actor,'Призван Верный скакун.',{target:id});
+  }
+  static frame(e,id){const f=e.s.spellFrames[id];e.require(f,'Потерян этап заклинания');return f;}
+  static eligibleCounter(e,f){return e.s.order.filter(id=>{const u=e.unit(id);return !f.offered.includes(id)&&u.team!==e.unit(f.actor).team&&u.reaction>0&&this.canReact(e,id)&&!e.incapacitated(id)&&u.casting?.prepared.includes('counterspell')&&u.slotTurn!==e.s.turnSerial&&Object.entries(u.slots).some(([n,p])=>+n>=3&&p.current>0)&&e.distance(u,e.unit(f.actor))<=60&&e.canSee(id,f.actor);});}
+  static decision(e,c,p){if(p.kind!=='magicChoice')return false;e.require(p.options.includes(c.choice),'Неверный выбор');const u=e.unit(p.actor);
+    if(p.choice==='counterspell'){const f=this.frame(e,p.frame);f.offered.push(p.actor);e.enqueue(this.task(f.actor,'window',{frame:f.id}));if(c.choice==='yes'){const level=Number(c.level??Object.keys(u.slots).map(Number).sort((a,b)=>a-b).find(n=>n>=3&&u.slots[n].current>0));e.require(level>=3&&u.slots[level]?.current>0,'Нет ячейки');const child={id:'spell-'+ ++e.s.sequence,actor:p.actor,spell:'counterspell',level,targets:[f.actor],targetFrame:f.id,offered:[],cancelled:false};this.pay(e,child,'reaction');e.s.spellFrames[child.id]=child;e.emit('cast',p.actor,u.name+': Контрзаклинание.',{spell:'counterspell',targetFrame:f.id});e.enqueue(this.task(p.actor,'window',{frame:child.id}));}}
+    else if(p.choice==='missileShield'){if(c.choice==='yes'){const f={id:'spell-'+ ++e.s.sequence,actor:p.actor,spell:'shield',level:1,targets:[p.actor],offered:[],cancelled:false,after:p.next};if(u.counters.shield_magic_initiate?.current>0){u.counters.shield_magic_initiate.current--;u.reaction--;}else{f.level=Object.keys(u.slots).map(Number).sort((a,b)=>a-b).find(n=>u.slots[n].current>0);this.pay(e,f,'reaction');}e.s.spellFrames[f.id]=f;e.enqueue(this.task(p.actor,'window',{frame:f.id}));}else e.enqueue(p.next);}
+    else if(p.choice==='vitality'){if(c.choice!=='skip'){e.require(p.targets.includes(c.target),'Выбери цель лечения');this.healing(e,p.actor,c.target,2,6,0,'Аура жизненной силы');}}
+    else return this.advancedDecision(e,c,p);
+    return true;
+  }
+  static choice(e,actor,choice,options,data={}){e.decision('magicChoice',actor,{choice,options,...data});}
+  static taskRun(e,t){if(t.kind!=='magicTask')return false;this.init(e.s);e.require(this.OPS.has(t.op),'Неизвестный магический этап');const u=e.unit(t.actor);
+    if(t.op==='window'){const f=this.frame(e,t.frame);if(f.cancelled){if(f.after)e.enqueue(f.after);return true;}const id=this.eligibleCounter(e,f)[0];if(id){if(e.unit(id).controlled)this.choice(e,id,'counterspell',['yes','no'],{frame:f.id});else this.decision(e,{choice:'yes'},{kind:'magicChoice',actor:id,choice:'counterspell',options:['yes','no'],frame:f.id});}else e.enqueue(this.task(f.actor,'resolve',{frame:f.id}));}
+    else if(t.op==='counterResult'){const parent=this.frame(e,t.targetFrame);if(!t.result.success){parent.cancelled=true;if(parent.paidSlot){const v=e.unit(parent.actor);v.slots[parent.level].current++;if(v.slotTurn===e.s.turnSerial)delete v.slotTurn;parent.paidSlot=false;}e.emit('counterspell',t.actor,'Заклинание прервано; исходная ячейка сохранена.',{targetFrame:parent.id});}else e.emit('counterspell',t.actor,'Заклинание выдержало Контрзаклинание.',{targetFrame:parent.id});}
+    else if(t.op==='resolve'){const f=this.frame(e,t.frame);if(!f.cancelled)this.resolve(e,f);if(f.after)e.enqueue(f.after);}
+    else if(t.op==='areaRoll'){const f=this.frame(e,t.frame);e.enqueue(...t.targets.map(target=>this.task(t.actor,'apply',{frame:f.id,target,amount:t.result.total,...t.effect})));}
+    else if(t.op==='apply'){if(t.halfMiss){this.apply(e,t,false);return true;}const f=this.frame(e,t.frame);if(f.sculpt?.includes(t.target)){e.emit('sculpt',t.actor,'Скульптура: '+e.name(t.target)+', 0 урона.',{target:t.target});return true;}if(t.stat)e.enqueue(e.saveTask(t.target,t.stat,t.dc??u.casting.dc,this.task(t.actor,'save',{...t,kind:'magicTask',op:'save'})));else this.apply(e,t,false);}
+    else if(t.op==='save')this.apply(e,t,t.result.success);
+    else if(t.op==='heal')e.heal(t.target,t.result.total);
+    else if(t.op==='missile')this.missile(e,t);
+    else if(t.op==='missileDamage'){if(!e.has(t.target,'shield'))e.enqueue({kind:'damage',actor:t.actor,target:t.target,amount:t.result.total,damageType:'force'});else e.emit('shieldBlocked',t.target,'Щит блокирует Волшебную стрелу.');}
+    else if(t.op==='hand')this.hand(e,t);
+    else if(t.op==='handSave')this.handSave(e,t);
+    else if(t.op==='handAttack'){if(t.result.kept===20||t.result.kept!==1&&t.result.total>=e.ac(t.target,e.s.objects[t.object])){const o=e.s.objects[t.object],x=e.s.effects.find(x=>x.id===t.object);if(!o||!x)return true;const flat=!o.empoweredUsed&&u.features.empoweredEvocation?u.stats.INT:0;o.empoweredUsed=true;e.enqueue({kind:'roll',actor:t.actor,label:'Кулак Бигби',count:(5+2*(x.level-5))*(t.result.kept===20?2:1),sides:8,bonus:flat,next:this.task(t.actor,'handDamage',{target:t.target,critical:t.result.kept===20})});}}
+    else if(t.op==='handDamage')e.enqueue({kind:'damage',actor:t.actor,target:t.target,amount:t.result.total,damageType:t.damageType||'force',attack:{kind:'meleeSpell'},critical:t.critical});
+    else if(t.op==='repeat'){if(t.result.success){const x=e.s.effects.find(x=>x.id===t.effect);if(x)x.targets=x.targets.filter(id=>id!==t.target);} }
+    else if(t.op==='dispel'){if(t.result.success)this.remove(e,[t.effect]);}
+    else if(t.op==='stormTick'){const x=e.s.effects.find(x=>x.id===t.effect);if(x)this.area(e,{actor:x.owner,spell:'stormSphere',level:4,id:t.effect,sculpt:[],dc:16},[t.target],2,6,0,{stat:'STR',dc:16,type:'bludgeoning',half:false});}
+    else if(t.op==='extraDamage')e.enqueue({kind:'damage',actor:t.actor,target:t.target,amount:t.result.total,damageType:t.damageType,attack:t.attack,attackHit:t.attackHit});
+    else if(t.op==='leafSplit'){const ratio=t.result.total<=3?.5:t.result.total<=5?.75:1,transferred=Math.floor(t.damage.amount*ratio);e.emit('damageTransfer',t.actor,'Кольца Корня и Листа: перенос '+transferred+' урона.',{target:t.recipient,roll:t.result.total,ratio,amount:transferred});e.enqueue({...t.damage,amount:t.damage.amount-transferred,leafResolved:true,mitigated:true},{kind:'damage',actor:t.actor,target:t.recipient,amount:transferred,damageType:t.damage.damageType,finalTransfer:true,mitigated:true});}
+    else if(t.op==='itemSave'){if(t.result.success){if(t.remove==='hand'){const o=e.s.objects[t.object];if(o)o.grappled=null;}else e.unit(t.target).statuses=e.unit(t.target).statuses.filter(x=>!x.magic);}}
+    else if(t.op==='shadowSearch'){if(t.result.success){const v=e.unit(t.target);v.hidden=false;e.removeStatus(t.target,'invisible');e.emit('found',t.actor,e.name(t.actor)+' обнаруживает '+v.name+'.',{target:t.target});}}
+    else if(t.op==='objectHit'){const o=e.s.objects[t.object];if(o&&(t.result.kept===20||t.result.kept!==1&&t.result.total>=o.ac))e.enqueue({kind:'roll',actor:t.actor,label:'Урон предмету',count:t.spec.count*(t.result.kept===20?2:1),sides:t.spec.die,bonus:t.spec.flat,minimumDie:u.features.greatWeaponFighting&&t.spec.twoHanded?3:0,next:this.task(t.actor,'objectDamage',{object:t.object,spec:t.spec})});}
+    else if(t.op==='objectDamage'){const o=e.s.objects[t.object];if(o){o.hp=Math.max(0,o.hp-t.result.total*(t.spec.id==='forgeMaul'&&u.equipment?.forgeAttuned?2:1));e.emit('objectDamage',t.actor,'Рука: осталось '+o.hp+' ПЗ.',{object:t.object});if(!o.hp)this.remove(e,[t.object]);}}
+    else if(!this.advancedTask(e,t))throw Error('Неизвестный этап магии: '+t.op);
+    return true;
+  }
+  static empowered(e,f){const u=e.unit(f.actor);return u.features.empoweredEvocation&&this.SPELLS[f.spell]?.[5]==='evocation'&&!f.item?u.stats.INT:0;}
+  static area(e,f,targets,count,sides,flat,effect){this.init(e.s);e.s.spellFrames[f.id]??=f;e.enqueue({kind:'roll',actor:f.actor,label:this.SPELLS[f.spell]?.[0]||'Урон',count,sides,bonus:flat,next:this.task(f.actor,'areaRoll',{frame:f.id,targets,effect})});}
+  static areaTargets(e,f,range,shape='radius'){const u=e.unit(f.actor),p=f.point;return e.s.order.filter(id=>{const v=e.unit(id);if(v.dead||!e.wallLOS(shape==='radius'?p:u,v))return false;const dx=v.x-u.x,dy=v.y-u.y,vx=p.x-u.x,vy=p.y-u.y,d=Math.hypot(dx,dy)*5;if(shape==='cone')return id!==f.actor&&d<=range&&dx*vx+dy*vy>=Math.hypot(dx,dy)*Math.hypot(vx,vy)*Math.SQRT1_2-1e-7;if(shape==='cube'){const ax=Math.abs(vx)>=Math.abs(vy),forward=ax?dx*Math.sign(vx):dy*Math.sign(vy),side=ax?dy:dx;return forward>=1&&forward<=3&&Math.abs(side)<=1;}return Math.hypot(v.x-p.x,v.y-p.y)*5<=range;});}
+  static healing(e,actor,target,count,sides,flat,label){if(this.effects(e,target,'beaconHope').length)e.heal(target,count*sides+flat);else e.enqueue({kind:'roll',actor,label,count,sides,bonus:flat,next:this.task(actor,'heal',{target})});}
+  static resolve(e,f){const u=e.unit(f.actor),lv=f.level,dc=f.dc||u.casting?.dc||10,ev=this.empowered(e,f),targets=f.targets||[],t=targets[0],p=f.point;this.init(e.s);
+    if(f.spell==='counterspell'){const parent=this.frame(e,f.targetFrame);if(!parent.cancelled)e.enqueue(e.saveTask(parent.actor,'CON',dc,this.task(f.actor,'counterResult',{targetFrame:parent.id})));return;}
+    if(this.SPELLS[f.spell]?.[6])e.endConcentration(f.actor);
+    switch(f.spell){
+      case 'findSteed':this.finishSteed(e,f);break;
+      case 'divineSmite':{const extra=['fiend','undead'].includes(e.unit(t).creatureType)?1:0;e.enqueue({kind:'roll',actor:f.actor,label:'Божественная кара',count:(1+lv+extra)*(f.critical?2:1),sides:8,bonus:0,next:this.task(f.actor,'extraDamage',{target:t,damageType:'radiant'})});break;}
+      case 'shield':e.status(f.actor,'shield',{expiresAtStart:f.actor});break;
+      case 'fireBolt':case 'rayFrost':{const count=u.casting.level>=17?4:u.casting.level>=11?3:u.casting.level>=5?2:1;this.attack(e,f,t,{count,die:f.spell==='fireBolt'?10:8,flat:ev,type:f.spell==='fireBolt'?'fire':'cold',potent:u.features.potentCantrip});break;}
+      case 'mindSliver':this.area(e,f,targets,u.casting.level>=17?4:u.casting.level>=11?3:u.casting.level>=5?2:1,6,0,{stat:'INT',dc,type:'psychic',half:!!u.features.potentCantrip,condition:'mindSliver'});break;
+      case 'fireball':this.area(e,f,this.areaTargets(e,f,20),8+lv-3,6,ev,{stat:'DEX',dc,type:'fire',half:true});break;
+      case 'coneCold':this.area(e,f,this.areaTargets(e,f,60,'cone'),8+lv-5,8,ev,{stat:'CON',dc,type:'cold',half:true});break;
+      case 'thunderwave':this.area(e,f,this.areaTargets(e,f,15,'cube'),2+lv-1,8,ev,{stat:'CON',dc,type:'thunder',half:true,push:10});break;
+      case 'burningHands':this.area(e,f,this.areaTargets(e,f,15,'cone'),3+lv-1,6,ev,{stat:'DEX',dc,type:'fire',half:true});break;
+      case 'drainingWave':this.area(e,f,this.areaTargets(e,f,30,'cone'),4,6,0,{stat:'CON',dc,type:'necrotic',half:true});break;
+      case 'scorchingRay':for(let i=lv;i>=0;i--)this.attack(e,f,targets[i%targets.length],{count:2,die:6,flat:i===0?ev:0,type:'fire'});break;
+      case 'magicMissile':{const jobs=[];for(let i=0;i<lv+2;i++)jobs.push(this.task(f.actor,'missile',{frame:f.id,target:targets[i%targets.length],empowered:i===0?ev:0}));e.enqueue(...jobs);break;}
+      case 'cureWounds':this.healing(e,f.actor,t,2*lv,8,u.stats[u.casting.ability],this.SPELLS[f.spell][0]);break;
+      case 'mageArmor':this.remove(e,this.effects(e,t,'mageArmor').map(x=>x.id));this.add(e,f,'mageArmor',targets,28800);break;
+      case 'mistyStep':case 'dimensionDoor':Object.assign(u,p);if(f.passenger)Object.assign(e.unit(f.passenger),f.passengerPoint);u.hidden=false;e.removeStatus(f.actor,'invisible');e.releaseGrapples();e.emit('teleport',f.actor,u.name+' перемещается в '+e.cell(p)+'.');break;
+      case 'greaterInvisibility':case 'shieldFaith':case 'beaconHope':case 'fly':case 'seeming':case 'protectionEvil':this.add(e,f,f.spell,targets,f.spell==='seeming'?28800:this.SPELLS[f.spell][6]);break;
+      case 'bless':this.add(e,f,'bless',targets,60);break;
+      case 'heroism':{const x=this.add(e,f,'heroism',targets,60,{amount:Math.max(0,u.stats[u.casting.ability])});for(const id of targets)this.heroTemp(e,id,x);break;}
+      case 'aid':{const amount=5*(lv-1);for(const id of targets){const existing=this.effects(e,id,'aid')[0];if(existing&&existing.amount>=amount)continue;if(existing)this.remove(e,[existing.id]);const v=e.unit(id);v.max+=amount;e.heal(id,amount);this.add(e,f,'aid',[id],28800,{amount});}break;}
+      case 'lesserRestoration':{const v=e.unit(t);v.statuses=v.statuses.filter(x=>!['blinded','deafened','paralyzed','poisoned'].includes(x.kind));this.remove(e,this.effects(e,t,'holdMonster').map(x=>x.id));break;}
+      case 'wardingBond':this.add(e,f,'wardingBond',targets,3600);break;
+      case 'crusaderMantle':this.add(e,f,'crusaderMantle',[],60,{aura:30});break;
+      case 'auraVitality':{const x=this.add(e,f,'auraVitality',[],60,{aura:30});this.vitality(e,x);break;}
+      case 'slow':case 'holdMonster':case 'command':case 'compelledDuel':e.enqueue(...targets.map(target=>this.task(f.actor,'apply',{frame:f.id,target,stat:'WIS',dc,condition:f.spell})));break;
+      case 'fogCloud':case 'web':case 'zoneTruth':case 'stormSphere':{const duration=f.spell==='zoneTruth'?600:this.SPELLS[f.spell][6],x=this.add(e,f,f.spell,[],duration);const z={...p,id:x.id,kind:f.spell==='fogCloud'?'smoke':f.spell,owner:f.actor,effect:x.id,radius:f.spell==='fogCloud'?20*lv:20,...(f.spell==='web'?{shape:'cube',cells:4,x:p.x-1,y:p.y-1}:{}),until:x.until,concentration:x.concentration};e.s.zones.push(z);if(f.spell==='stormSphere')this.area(e,{...f,dc:16},this.areaTargets(e,f,20),2,6,0,{stat:'STR',dc:16,type:'bludgeoning',half:false});if(f.spell==='zoneTruth')this.zoneTruth(e,z);break;}
+      case 'bigbyHand':{const x=this.add(e,f,'bigbyHand',[],60);e.s.objects[x.id]={id:x.id,...p,owner:f.actor,hp:u.max,max:u.max,ac:20,dc,createdTurn:e.s.turnSerial,grappled:null,interposing:false};e.enqueue(this.task(f.actor,'hand',{object:x.id,point:p,target:f.target||t,handMode:f.handMode}));break;}
+      case 'dispelMagic':{const effects=(e.s.effects||[]).filter(x=>x.targets?.includes(t)||x.owner===t&&x.aura);for(const x of effects){if(x.level<=lv)this.remove(e,[x.id]);else e.enqueue({kind:'roll',actor:f.actor,label:'Рассеивание магии',count:1,sides:20,bonus:u.stats[u.casting.ability],dc:10+x.level,next:this.task(f.actor,'dispel',{effect:x.id})});}break;}
+      case 'mageHand':this.add(e,f,'mageHand',[],60,{point:p});e.emit('utility',f.actor,'Рука переносит до 10 фунтов; атаки недоступны.');break;
+      case 'prestidigitation':e.emit('utility',f.actor,'Небольшой бытовой или иллюзорный эффект.');break;
+      default:throw Error('Нет обработчика заклинания '+f.spell);
+    }
+  }
+  static attack(e,f,target,a){const u=e.unit(f.actor);e.enqueue({kind:'attackRoll',actor:f.actor,target,mode:'spell',spec:{id:f.spell,name:this.SPELLS[f.spell][0],kind:'rangedSpell',count:a.count,die:a.die,flat:a.flat,bonus:a.bonus??u.casting.attack,range:this.SPELLS[f.spell][3]||600,damageType:a.type,spellKey:f.spell,potent:!!a.potent,magicAdvantage:!!a.advantage,...(f.spell==='rayFrost'?{effects:[{handler:'onHitCondition',condition:'frost',duration:'source-next-start'}]}:{})}});}
+  static afterMiss(e,t){if(!t.spec.potent)return false;e.enqueue({kind:'roll',actor:t.actor,label:'Мощный заговор · половина урона',count:t.spec.count,sides:t.spec.die,bonus:t.spec.flat,next:this.task(t.actor,'apply',{frame:'',target:t.target,type:t.spec.damageType,halfMiss:true})});return true;}
+  static apply(e,t,passed){const f=t.frame?this.frame(e,t.frame):{},u=e.unit(t.actor);if(t.condition==='holdMonster'&&e.unit(t.target).conditionImmunities.includes('paralyzed'))return;let amount=t.amount??t.result?.total??0;if(t.halfMiss)amount=Math.floor(amount/2);else if(t.type){if(t.stat==='DEX'&&t.half&&e.unit(t.target).features.evasion&&!e.incapacitated(t.target))amount=passed?0:Math.floor(amount/2);else if(passed)amount=t.half?Math.floor(amount/2):0;}
+    if(t.type&&amount>0){const job={kind:'damage',actor:t.actor,target:t.target,amount,damageType:t.type};if(passed&&t.stat==='DEX'&&t.half&&e.unit(t.target).features.shieldMaster&&e.unit(t.target).features.shieldEquipped&&e.unit(t.target).reaction>0&&this.canReact(e,t.target)&&!e.incapacitated(t.target)){this.choice(e,t.target,'shieldMaster',['yes','no'],{damage:job});}else e.enqueue(job);}
+    if(passed)return;
+    if(t.push)this.push(e,t.target,e.unit(t.actor),t.push);
+    if(t.condition==='mindSliver')e.unit(t.target).mindSliver={until:e.s.elapsed+6};
+    else if(['slow','holdMonster','compelledDuel'].includes(t.condition)){this.add(e,f,t.condition,[t.target],60);if(t.condition==='holdMonster')e.endConcentration(t.target);}
+    else if(t.condition==='command'){this.add(e,f,'command',[t.target],60,{remaining:1,concentration:false});}
+    else if(t.condition==='web'){e.status(t.target,'restrained',{magic:true,dc:t.dc,source:t.actor,until:e.s.elapsed+3600,effect:t.effect});}
+    else if(t.condition==='zoneTruth')e.unit(t.target).truthZone=t.effect;
+  }
+  static missile(e,t){const u=e.unit(t.target);if(e.has(t.target,'shield')){e.emit('shieldBlocked',t.target,'Щит блокирует Волшебную стрелу.');return;}
+    if(!t.offered&&u.features.shieldSpell&&u.reaction>0&&this.canReact(e,t.target)&&!e.incapacitated(t.target)&&(u.counters.shield_magic_initiate?.current>0||u.slotTurn!==e.s.turnSerial&&Object.values(u.slots).some(p=>p.current>0))){this.choice(e,t.target,'missileShield',['yes','no'],{next:{...t,offered:true}});return;}
+    e.enqueue({kind:'roll',actor:t.actor,label:'Волшебная стрела',count:1,sides:4,bonus:1+t.empowered,next:this.task(t.actor,'missileDamage',{target:t.target})});
+  }
+  static validateHand(e,c,o,creation){const p=c.point||o;e.require(e.inside(p)&&!e.wall(p)&&e.distance(o,p)<= (creation?0:60),'Рука перемещается не дальше 60 фт');const mode=c.handMode||'interpose';e.require(['fist','push','grasp','crush','interpose','move'].includes(mode),'Выбери режим руки');if(!['interpose','move'].includes(mode)){const v=e.unit(c.target||c.targets?.[0]);e.require(e.canSee(c.actor,c.target||c.targets[0])&&e.distance(p,v)<=5,'Цель должна быть видна и в 5 фт от руки');if(mode==='crush')e.require(o.grappled===c.target,'Рука должна удерживать эту цель');if(['push','grasp'].includes(mode))e.require(v.size<=4,'Цель Огромного размера или меньше');}}
+  static hand(e,t){const o=e.s.objects[t.object];if(!o)return;const p=t.point||o,mode=t.handMode||'interpose';if(o.grappled&&e.distance(p,e.unit(o.grappled))>5)o.grappled=null;Object.assign(o,p);o.interposing=mode==='interpose';const v=t.target&&e.unit(t.target);if(mode==='fist')e.enqueue({kind:'roll',actor:t.actor,label:'Кулак Бигби',count:1,sides:20,bonus:e.unit(t.actor).casting.attack,next:this.task(t.actor,'handAttack',{object:t.object,target:t.target})});
+    else if(['grasp','push'].includes(mode))e.enqueue(e.saveTask(t.target,mode==='grasp'?'DEX':'STR',o.dc,this.task(t.actor,'handSave',{object:t.object,target:t.target,handMode:mode})));
+    else if(mode==='crush'){const x=e.s.effects.find(x=>x.id===o.id);e.enqueue({kind:'roll',actor:t.actor,label:'Сдавливание Бигби',count:4+2*(x.level-5),sides:6,bonus:e.unit(t.actor).stats[e.unit(t.actor).casting.ability],next:this.task(t.actor,'handDamage',{target:t.target,damageType:'bludgeoning'})});}
+    e.emit('hand',t.actor,'Рука Бигби: '+mode+'.',{object:o.id,target:t.target,point:{x:o.x,y:o.y}});
+  }
+  static handSave(e,t){const o=e.s.objects[t.object];if(!o||t.result.success)return;if(t.handMode==='grasp')o.grappled=t.target;else {const p={...o};this.push(e,t.target,p,5+5*Math.max(0,e.unit(t.actor).stats[e.unit(t.actor).casting.ability]));const v=e.unit(t.target);o.x=v.x-Math.sign(v.x-p.x);o.y=v.y-Math.sign(v.y-p.y);}}
+  static push(e,id,from,feet){const u=e.unit(id),dx=Math.sign(u.x-from.x),dy=Math.sign(u.y-from.y);if(!dx&&!dy)return;for(let n=0;n<feet/5;n++){const p={x:u.x+dx,y:u.y+dy};if(e.wall(p)||e.occupied(p.x,p.y,id))break;Object.assign(u,p);}e.releaseGrapples();e.emit('forcedMove',id,e.name(id)+' оттеснён в '+e.cell(u)+'.');}
+  static heroTemp(e,id,x){const u=e.unit(id);if(u.temp<=x.amount){u.temp=x.amount;u.tempSource=x.id;}}
+  static vitality(e,x){const targets=e.s.order.filter(id=>e.unit(id).team===e.unit(x.owner).team&&!e.unit(id).dead&&e.distance(e.unit(id),e.unit(x.owner))<=30);if(!targets.length)return;if(e.unit(x.owner).controlled)this.choice(e,x.owner,'vitality',['heal','skip'],{targets});else this.healing(e,x.owner,targets.sort((a,b)=>e.unit(a).hp/e.unit(a).max-e.unit(b).hp/e.unit(b).max)[0],2,6,0,'Аура жизненной силы');}
+  static zoneTruth(e,z){for(const id of e.s.order)if(e.zoneAt(e.unit(id),z)&&e.unit(id).truthZone!==z.effect)e.enqueue(e.saveTask(id,'CHA',e.unit(z.owner).casting.dc,this.task(z.owner,'save',{frame:z.effect,target:id,condition:'zoneTruth',effect:z.effect})));}
+  static startTurn(e,id){this.init(e.s);const expired=e.s.effects.filter(x=>x.until<=e.s.elapsed);for(const x of expired)if(x.kind==='haste')for(const id of x.targets)e.status(id,'incapacitated',{expiresAtEnd:id});this.remove(e,expired.map(x=>x.id));for(const u of Object.values(e.s.units)){if(u.mindSliver?.until<=e.s.elapsed)delete u.mindSliver;u.statuses=u.statuses.filter(z=>!z.effect||e.s.effects.some(x=>x.id===z.effect));}const u=e.unit(id);u.hasteAction=this.effects(e,id,'haste').length?1:0;if(e.incapacitated(id)){u.action=0;u.bonus=0;u.move=0;}for(const x of this.effects(e,id,'heroism'))this.heroTemp(e,id,x);for(const x of e.s.effects.filter(x=>x.kind==='auraVitality'&&x.owner===id))this.vitality(e,x);if(this.effects(e,id,'command').length){u.action=0;u.bonus=0;u.move=0;e.emit('command',id,'Приказ «Стой»: ход пропущен.');}
+    for(const st of u.statuses.filter(z=>z.kind==='burning'))e.enqueue({kind:'roll',actor:st.source,label:'Горение',count:1,sides:4,bonus:0,next:this.task(st.source,'extraDamage',{target:id,damageType:'fire'})});for(const z of e.s.zones)if(e.zoneAt(u,z)){if(z.kind==='web')e.enqueue(e.saveTask(id,'DEX',e.unit(z.owner).casting.dc,this.task(z.owner,'save',{frame:z.effect,target:id,condition:'web',effect:z.effect,dc:e.unit(z.owner).casting.dc})));if(z.kind==='zoneTruth')this.zoneTruth(e,z);}
+  }
+  static endTurn(e,t){if(t.magicEndDone)return false;const jobs=[];for(const x of (e.s.effects||[]).filter(x=>x.targets?.includes(t.actor)&&['slow','holdMonster'].includes(x.kind)))jobs.push(e.saveTask(t.actor,'WIS',x.dc,this.task(x.owner,'repeat',{target:t.actor,effect:x.id})));
+    for(const z of e.s.zones)if(z.kind==='stormSphere'&&e.zoneAt(e.unit(t.actor),z))jobs.push(this.task(z.owner,'stormTick',{target:t.actor,effect:z.effect}));
+    const u=e.unit(t.actor);if(u.stealthAttackTurn===e.s.turnSerial&&(e.s.terrain.cover?.[u.x+','+u.y]||0)<5){u.hidden=false;e.removeStatus(t.actor,'invisible');}for(const x of this.effects(e,t.actor,'command')){x.remaining--;if(x.remaining<=0)this.remove(e,[x.id]);}
+    if(jobs.length){e.enqueue(...jobs,{...t,magicEndDone:true});return true;}return false;
+  }
+  static beforeCommand(e,c,u){if(['policy','endTurn','endConcentration'].includes(c.kind))return;const actionKinds=['attack','attackAt','cast','dash','disengage','dodge','hide','search','check','shove','grapple','ready','helpAttack','healPotion','stabilize','layOnHands','secondWind','hand','stormStrike','leafStep','useItem','abjure','hasteAction'];let kind=c.kind==='move'?'move':(c.kind==='cast'?this.SPELLS[c.spell]?.[2]:['secondWind','leafStep','hand','stormStrike'].includes(c.kind)||c.mode==='bonus'||['dash','disengage','hide'].includes(c.kind)&&c.cost==='bonus'?'bonus':'action');
+    if(c.kind==='useItem'){const k=u.equipment?.consumables?.[c.item];kind=!['acid','alchemistFire'].includes(k)&&(['heroismPotion','speedPotion','growthPotion','climbingPotion','giantStrength','fireResistance'].includes(k)||u.features.thiefHands&&c.cost==='bonus')?'bonus':'action';}
+    if(this.effects(e,c.actor,'command').length)e.require(false,'Приказ «Стой»');
+    if(this.effects(e,c.actor,'slow').length&&actionKinds.includes(c.kind)){if(u.slowChoice&&u.slowChoice!==kind)e.require(false,'Замедление: действие или бонусное действие');if(['action','bonus'].includes(kind))u.slowChoice=kind;if(['attack','attackAt'].includes(c.kind))e.require(u.slowAttacks!==e.s.turnSerial,'Замедление: только одна атака за ход');}
+    if((actionKinds.includes(c.kind)||c.kind==='move')&&this.effects(e,c.actor,'abjure').length&&e.has(c.actor,'frightened')){if(u.abjureChoice&&u.abjureChoice!==kind)e.require(false,'Изгнание: движение, действие или бонусное действие');u.abjureChoice=kind;}
+    if(c.kind==='move'&&e.has(c.actor,'frightened')){const sources=[...this.effects(e,c.actor,'abjure').map(x=>x.owner),...u.statuses.filter(x=>x.kind==='frightened').map(x=>x.source)].filter(Boolean);for(const src of sources)if(e.canSee(c.actor,src))e.require(c.path.every(p=>e.distance(p,e.unit(src))>=e.distance(u,e.unit(src))),'Нельзя приближаться к источнику страха');}
+  }
+  static moved(e,id){for(const z of e.s.zones)if(e.zoneAt(e.unit(id),z)&&z.kind==='web'&&!e.has(id,'restrained'))e.enqueue(e.saveTask(id,'DEX',e.unit(z.owner).casting.dc,this.task(z.owner,'save',{frame:z.effect,target:id,condition:'web',effect:z.effect,dc:e.unit(z.owner).casting.dc})));}
+  static mitigate(e,t,amount){if(t.finalTransfer)return amount;if(t.damageType==='fire'&&this.effects(e,t.target,'fireResistance').length&&!e.unit(t.target).resistances.includes('fire'))amount=Math.floor(amount/2);if(this.effects(e,t.target,'wardingBond').some(x=>e.active(x.owner)&&e.distance(e.unit(x.owner),e.unit(t.target))<=60)&&!e.unit(t.target).resistances.includes(t.damageType))amount=Math.floor(amount/2);return amount;}
+  static split(e,t,amount){if(t.finalTransfer||t.leafResolved||amount<=0)return false;const u=e.unit(t.target),id=u.equipment?.leafPartner;if(id&&e.s.units[id]&&e.active(id)&&!e.incapacitated(id)&&e.distance(u,e.unit(id))<=60&&e.unit(id).equipment?.rootPartner===t.target){e.enqueue({kind:'roll',actor:t.target,label:'Кольца Корня и Листа',count:1,sides:6,bonus:0,next:this.task(t.target,'leafSplit',{recipient:id,damage:{...t,amount,mitigated:true}})});return true;}return false;}
+  static damaged(e,t,amount){if(!amount)return;for(const x of this.effects(e,t.target,'abjure'))x.targets=x.targets.filter(id=>id!==t.target);if(!t.finalTransfer&&!t.bondTransfer)for(const x of this.effects(e,t.target,'wardingBond'))if(e.active(x.owner)&&e.distance(e.unit(x.owner),e.unit(t.target))<=60)e.enqueue({kind:'damage',actor:t.target,target:x.owner,amount,damageType:t.damageType,bondTransfer:true});for(const x of this.effects(e,t.target,'compelledDuel'))if(e.unit(t.actor)?.team===e.unit(x.owner).team&&t.actor!==x.owner)this.remove(e,[x.id]);}
+  // Class and item hooks are defined below, using the same continuation contract.
+  static castShield(e,id,after){const u=e.unit(id),f={id:'spell-'+ ++e.s.sequence,actor:id,spell:'shield',level:1,targets:[id],offered:[],cancelled:false,after};if(u.counters.shield_magic_initiate?.current>0){u.counters.shield_magic_initiate.current--;u.reaction--;}else {f.level=Object.keys(u.slots).map(Number).sort((a,b)=>a-b).find(n=>u.slots[n].current>0);this.pay(e,f,'reaction');}e.s.spellFrames[f.id]=f;e.emit('cast',id,u.name+': Щит.');e.enqueue(this.task(id,'window',{frame:f.id}));}
+  static advancedDecision(e,c,p){if(p.choice!=='shieldMaster')return false;if(c.choice==='yes'){e.require(e.unit(p.actor).reaction>0,'Нет реакции');e.unit(p.actor).reaction--;e.emit('reaction',p.actor,'Мастер щита: урон предотвращён.');}else e.enqueue(p.damage);return true;}
+  static advancedTask(e,t){return false;}
+}
+if(typeof module!=='undefined')module.exports={CombatMagic};
+
+
+"use strict";
+const AdvancedMagic=typeof module!=='undefined'?require('./magic').CombatMagic:CombatMagic;
+class CombatAdvancedFeatures {
+  static OPS=new Set(['strike','cunningSave','shieldBashSave','abjureSave','smiteRoll','smiteDamage','forgeRoll','forgeSave','mantleRoll','poisonRoll','poisonSave','burning','poisonRepeat','extinguish']);
+  static CHOICES=new Set(['strikeExtras','cunning','shieldBash','forge','smite','itemRuling','living']);
+  static job(actor,op,data={}){return {kind:'advancedTask',actor,op,...data};}
+  static count(u,k){return u.counters?.[k]?.current||0;}
+  static command(e,c,u){const M=AdvancedMagic,id=c.actor;
+    if(c.kind==='hasteAction'){e.require(u.hasteAction>0&&M.effects(e,id,'haste').length,'Нет ускоренного действия');e.require(['attack','dash','disengage','hide'].includes(c.action),'Выбери ускоренное действие');if(c.action==='attack'){e.require(!M.effects(e,id,'slow').length||u.slowAttacks!==e.s.turnSerial,'Замедление: одна атака за ход');if(M.effects(e,id,'slow').length)u.slowAttacks=e.s.turnSerial;const spec=e.attackSpec(id,c.weapon);e.validateAttack(id,c.target,spec);e.enqueue({kind:'attackRoll',actor:id,target:c.target,spec,mode:'haste'});}else if(c.action==='dash')u.move+=e.speed(id);else if(c.action==='disengage')u.disengaged=true;else {u.action++;e.command({...c,kind:'hide'},u);}u.hasteAction--;return true;}
+    if(c.kind==='steedPower'){e.require(u.summoner&&u.powerAvailable&&u.bonus>0,'Способность скакуна недоступна');const type=u.creatureType;if(type==='celestial'){e.require(e.distance(u,e.unit(c.target))<=5,'Цель вне касания');M.healing(e,id,c.target,2,8,u.summonLevel,'Исцеляющее касание');}else if(type==='fiend'){e.require(e.distance(u,e.unit(c.target))<=60&&e.canSee(id,c.target),'Нужна видимая цель в 60 фт');e.enqueue(e.saveTask(c.target,'WIS',u.summonDC,this.job(id,'cunningSave',{target:c.target,mode:'fear'})));}else {e.require(c.point&&e.inside(c.point)&&!e.wall(c.point)&&!e.occupied(c.point.x,c.point.y)&&e.distance(u,c.point)<=60,'Нужна свободная клетка в 60 фт');Object.assign(u,c.point);}u.bonus--;u.powerAvailable=false;return true;}
+    if(c.kind==='abjure'){const targets=M.targets(e,c);e.require(u.features.abjureFoes&&this.count(u,'channel_divinity')>0,'Нет Божественного канала');e.require(targets.length>0&&targets.length<=Math.max(1,u.stats.CHA)&&new Set(targets).size===targets.length,'Выбери до '+Math.max(1,u.stats.CHA)+' целей');for(const t of targets)e.require(e.canSee(id,t)&&e.distance(u,e.unit(t))<=60,'Цель должна быть видна в 60 фт');e.spendAction(id,true);u.counters.channel_divinity.current--;e.enqueue(...targets.map(target=>e.saveTask(target,'WIS',u.casting.dc,this.job(id,'abjureSave',{target}))));return true;}
+    if(c.kind==='leafStep'){e.require(this.count(u,'leaf_charges')>0&&u.bonus>0,'Нет Листового шага / бонусного действия');u.bonus--;u.counters.leaf_charges.current--;u.move=Math.min(e.speed(id),u.move+10);u.disengaged=true;e.emit('item',id,'Листовой шаг: +10 фт движения, без атак по возможности.');return true;}
+    if(c.kind==='livingArrow'){e.require(this.count(u,'living_arrow')>0,'Живая стрела потрачена');e.require(!u.livingArmed,'Живая стрела уже подготовлена');u.livingArmed=true;e.emit('item',id,'Следующее попадание из лука применит Живую стрелу.');return true;}
+    if(c.kind==='mantleMissile'){e.require(this.count(u,'mantle_stars')>0,'Нет звёзд мантии');const targets=M.targets(e,c);e.require(targets.length>0&&targets.length<=7,'Выбери до 7 целей');for(const t of targets)e.require(e.canSee(id,t)&&e.distance(u,e.unit(t))<=120,'Цель в 120 фт должна быть видна');e.spendAction(id,true);u.counters.mantle_stars.current--;const f={id:'spell-'+ ++e.s.sequence,actor:id,spell:'magicMissile',level:5,targets,offered:[],item:true};e.s.spellFrames[f.id]=f;e.enqueue(M.task(id,'window',{frame:f.id}));return true;}
+    if(c.kind==='extinguish'){const target=c.target||id;e.require(e.distance(u,e.unit(target))<=5&&e.has(target,'burning'),'Нужно горящее существо в 5 фт');e.spendAction(id);e.enqueue({kind:'roll',actor:id,label:'Погасить пламя',count:1,sides:20,bonus:u.stats.DEX,dc:10,next:this.job(id,'extinguish',{target})});return true;}
+    if(c.kind==='useItem'){const kind=u.equipment?.consumables?.[c.item];e.require(kind&&u.items[c.item]>0,'Нет доступного предмета');if(kind==='smoke'){e.require(c.point&&e.inside(c.point),'Выбери клетку дыма');const cost=u.features.thiefHands&&c.cost==='bonus'?'bonus':'action';e.require(cost==='bonus'?u.bonus>0:u.action>0||u.surgeAction>0,'Нет действия');M.choice(e,id,'itemRuling',['use','skip'],{item:c.item,point:c.point,cost});return true;}const bonus=!['acid','alchemistFire'].includes(kind)&&(['heroismPotion','speedPotion','growthPotion','climbingPotion','giantStrength','fireResistance'].includes(kind)||u.features.thiefHands&&c.cost==='bonus');if(bonus){e.require(u.bonus>0,'Нет бонусного действия');u.bonus--;}else if(['acid','alchemistFire'].includes(kind)){e.require(u.action>0||u.surgeAction>0||u.attacksLeft>0,'Нет атаки');if(u.attacksLeft>0)u.attacksLeft--;else{e.spendAction(id);u.attacksLeft=(u.features.extraAttack||1)-1;}}else e.spendAction(id);u.items[c.item]--;const frame={actor:id,id:'item-'+ ++e.s.sequence,spell:'item',level:0,item:true};
+      if(kind==='heroismPotion'){u.temp=Math.max(u.temp,10);M.add(e,frame,'bless',[id],3600,{concentration:false});}
+      else if(kind==='fireResistance')M.add(e,frame,'fireResistance',[id],3600,{concentration:false});
+      else if(kind==='antitoxin')M.add(e,frame,'antitoxin',[id],3600,{concentration:false});
+      else if(kind==='poison'){u.weaponPoison={dc:14,count:2,die:6};}
+      else if(kind==='acid'||kind==='alchemistFire'){const v=e.unit(c.target);e.require(e.distance(u,v)<=20&&e.canSee(id,c.target),'Цель в 20 фт должна быть видна');e.enqueue(e.saveTask(c.target,'DEX',8+u.stats.DEX+u.proficiency,this.job(id,'poisonSave',{target:c.target,itemKind:kind})));}
+      else if(kind==='speedPotion'){M.add(e,frame,'haste',[id],60,{concentration:false});u.hasteAction=1;}
+      else if(kind==='growthPotion')M.add(e,frame,'enlarge',[id],3600,{concentration:false});
+      else if(kind==='giantStrength')M.add(e,frame,'giantStrength',[id],3600,{concentration:false});
+      else if(kind==='climbingPotion')M.add(e,frame,'climbing',[id],3600,{concentration:false});
+      else throw Error('Предмет требует решения мастера');
+      e.emit('item',id,'Использован расходник.',{item:c.item,handler:kind});return true;
+    }
+    return false;
+  }
+  static prepareAttack(e,c,spec){const u=e.unit(c.actor);if(c.sacred){e.require(u.features.sacredWeapon&&spec.kind==='melee'&&u.attacksLeft===0&&(u.action>0||u.surgeAction>0)&&c.mode!=='bonus'&&this.count(u,'channel_divinity')>0,'Священное оружие применяется при действии Атака');u.counters.channel_divinity.current--;AdvancedMagic.remove(e,(e.s.effects||[]).filter(x=>x.kind==='sacredWeapon'&&x.owner===c.actor).map(x=>x.id));AdvancedMagic.add(e,{actor:c.actor,level:0,spell:'sacredWeapon'},'sacredWeapon',[c.actor],600,{weapon:spec.id,amount:Math.max(1,u.stats.CHA),concentration:false});}
+    const sacred=AdvancedMagic.effects(e,c.actor,'sacredWeapon').find(x=>x.weapon===spec.id);if(sacred){spec.bonus+=sacred.amount;if(c.radiant)spec.damageType='radiant';}
+    if(AdvancedMagic.effects(e,c.actor,'giantStrength').length&&spec.ability==='STR'){const extra=Math.max(0,5-u.stats.STR);spec.bonus+=extra;spec.flat+=extra;}
+  }
+  static beforeWeapon(e,t){const u=e.unit(t.actor);if(t.extrasResolved)return false;const options=[];if(t.sneakCount&&u.features.cunningStrike)options.push('cunning');if(t.spec.id==='leafBow'&&!u.livingArmed&&this.count(u,'living_arrow')>0)options.push('living');if(u.features.shieldMaster&&u.features.shieldEquipped&&t.mode==='action'&&t.spec.kind==='melee'&&e.distance(u,e.unit(t.target))<=5&&u.shieldBashTurn!==e.s.turnSerial)options.push('shieldBash');if(u.features.divineSmite&&['melee','meleeSpell'].includes(t.spec.kind)&&u.bonus>0&&(this.count(u,'smite_free')>0||u.slotTurn!==e.s.turnSerial&&Object.values(u.slots).some(p=>p.current>0)))options.push('smite');if(t.spec.id==='forgeMaul'&&u.equipment?.forgeAttuned&&this.count(u,'forge_resonance')>0)options.push('forge');if(!options.length)return false;
+    if(u.controlled)AdvancedMagic.choice(e,t.actor,'strikeExtras',[...options,'skip'],{attack:t,extras:options});else e.enqueue({...t,extrasResolved:true});return true;
+  }
+  static decision(e,c,p){if(p.kind!=='magicChoice'||!this.CHOICES.has(p.choice))return false;const u=e.unit(p.actor),M=AdvancedMagic;e.require(p.options.includes(c.choice),'Неверный выбор способности');
+    if(p.choice==='itemRuling'){if(c.choice==='use'){e.require(Number.isInteger(c.range)&&c.range>=0&&c.range<=600&&Number.isInteger(c.radius)&&c.radius>=0&&c.radius<=100&&Number.isInteger(c.duration)&&c.duration>0&&c.duration<=86400,'Нужны дальность, радиус и длительность от мастера');e.require(p.point&&e.inside(p.point)&&e.distance(u,p.point)<=c.range&&e.wallLOS(u,p.point),'Точка вне согласованной дальности');e.require(u.items[p.item]>0,'Предмет уже израсходован');if(p.cost==='bonus'){e.require(u.bonus>0,'Нет бонусного действия');u.bonus--;}else e.spendAction(p.actor);u.items[p.item]--;e.s.zones.push({...p.point,id:'smoke-'+ ++e.s.sequence,kind:'smoke',owner:p.actor,radius:c.radius,until:e.s.elapsed+c.duration,concentration:false});e.emit('adjudication',p.actor,'Дымовая бомба: применены параметры мастера.',{range:c.range,radius:c.radius,duration:c.duration,item:p.item});}return true;}
+    if(p.choice==='strikeExtras'){if(c.choice==='skip'){e.enqueue({...p.attack,extrasResolved:true});return true;}const t={...p.attack},remaining=p.extras.filter(x=>x!==c.choice);t.extraOptions=remaining;t.extrasResolved=true;
+      if(c.choice==='living')M.choice(e,p.actor,'living',['yes','skip'],{attack:t});
+      if(c.choice==='cunning'){const opts=['skip','withdraw'];if(u.features.poisonerKit)opts.push('poison');if(e.unit(t.target).size<=3)opts.push('trip');if(t.hiddenBefore&&u.features.stealthAttack)opts.push('stealth');M.choice(e,p.actor,'cunning',opts,{attack:t});}
+      if(c.choice==='shieldBash')M.choice(e,p.actor,'shieldBash',['skip','prone','push'],{attack:t});
+      if(c.choice==='forge')M.choice(e,p.actor,'forge',['skip','push','reactions'],{attack:t});
+      if(c.choice==='smite')M.choice(e,p.actor,'smite',['skip','free',...Object.keys(u.slots).filter(n=>u.slots[n].current>0&&u.slotTurn!==e.s.turnSerial).map(n=>'slot'+n)].filter(x=>x!=='free'||this.count(u,'smite_free')>0),{attack:t});
+      return true;
+    }
+    const t={...p.attack};if(c.choice!=='skip'){
+      if(p.choice==='living'){e.require(this.count(u,'living_arrow')>0,'Живая стрела потрачена');u.counters.living_arrow.current--;t.living=true;}
+      if(p.choice==='cunning'){const factor=t.critical?2:1;t.sneakCount-=factor;e.require(t.sneakCount>=0,'Нет кубов Скрытой атаки');t.cunning=c.choice;if(c.choice==='stealth'){u.hidden=true;u.stealthAttackTurn=e.s.turnSerial;e.status(p.actor,'invisible');}}
+      if(p.choice==='shieldBash'){u.shieldBashTurn=e.s.turnSerial;t.shieldBash=c.choice;}
+      if(p.choice==='forge'){e.require(this.count(u,'forge_resonance')>0,'Нет зарядов');u.counters.forge_resonance.current--;t.forge=c.choice;}
+      if(p.choice==='smite'){e.require(u.bonus>0,'Нет бонусного действия');u.bonus--;let level=1;if(c.choice==='free'){e.require(this.count(u,'smite_free')>0,'Нет бесплатной Кары');u.counters.smite_free.current--;}else {level=Number(c.choice.slice(4));e.require(u.slotTurn!==e.s.turnSerial&&u.slots[level]?.current>0,'Нет ячейки');u.slots[level].current--;u.slotTurn=e.s.turnSerial;}t.smite=level;t.smitePaid=c.choice!=='free';}
+    }
+    // Other optional effects on the same hit remain available, each at most once.
+    if(t.extraOptions?.length){const extras=t.extraOptions;delete t.extraOptions;M.choice(e,p.actor,'strikeExtras',[...extras,'skip'],{attack:t,extras});}else e.enqueue(t);
+    return true;
+  }
+  static afterWeapon(e,t){const u=e.unit(t.actor),f=t.frame,M=AdvancedMagic,jobs=[];if(!e.active(t.target))return;
+    if(f.smite){const sf={id:'spell-'+ ++e.s.sequence,actor:t.actor,spell:'divineSmite',level:f.smite,targets:[t.target],critical:f.critical,offered:[],cancelled:false,paidSlot:Boolean(f.smitePaid)};e.s.spellFrames[sf.id]=sf;jobs.push(M.task(t.actor,'window',{frame:sf.id}));}
+    if(f.forge)jobs.push({kind:'roll',actor:t.actor,label:'Кузнечный резонанс',count:f.critical?2:1,sides:8,bonus:0,next:this.job(t.actor,'forgeRoll',{target:t.target,mode:f.forge})});
+    if(f.shieldBash)jobs.push(e.saveTask(t.target,'STR',8+u.proficiency+u.stats.STR,this.job(t.actor,'shieldBashSave',{target:t.target,mode:f.shieldBash})));
+    if(f.cunning==='poison'||f.cunning==='trip')jobs.push(e.saveTask(t.target,f.cunning==='trip'?'DEX':'CON',u.features.cunningDC||8+u.proficiency+u.stats.DEX,this.job(t.actor,'cunningSave',{target:t.target,mode:f.cunning})));
+    if(f.cunning==='withdraw')jobs.push(this.job(t.actor,'strike',{target:t.target,mode:'withdraw'}));
+    if((f.living||u.livingArmed)&&f.spec.id==='leafBow'){u.livingArmed=false;if(!f.living)u.counters.living_arrow.current--;jobs.push(e.saveTask(t.target,'STR',15,this.job(t.actor,'cunningSave',{target:t.target,mode:'living'})));}
+    if(u.weaponPoison&&['melee','ranged'].includes(f.spec.kind)){delete u.weaponPoison;jobs.push(e.saveTask(t.target,'CON',14,this.job(t.actor,'poisonSave',{target:t.target,itemKind:'poison'})));}
+    if(['melee','ranged'].includes(f.spec.kind)&&M.effects(e,t.actor,'crusaderMantle').length)jobs.push({kind:'roll',actor:t.actor,label:'Мантия крестоносца',count:f.critical?2:1,sides:4,bonus:0,next:this.job(t.actor,'smiteDamage',{target:t.target})});
+    if(['melee','ranged'].includes(f.spec.kind)&&M.effects(e,t.actor,'enlarge').length)jobs.push({kind:'roll',actor:t.actor,label:'Рост',count:f.critical?2:1,sides:4,bonus:0,next:this.job(t.actor,'poisonRoll',{target:t.target,damageType:f.spec.damageType})});
+    e.enqueue(...jobs);
+  }
+  static task(e,t){if(t.kind!=='advancedTask')return false;const u=e.unit(t.actor),M=AdvancedMagic;e.require(this.OPS.has(t.op),'Неизвестный классовый этап');
+    if(t.op==='abjureSave'){if(!t.result.success)M.add(e,{actor:t.actor,spell:'abjure',level:0,dc:u.casting.dc},'abjure',[t.target],60,{concentration:false});}
+    else if(t.op==='shieldBashSave'){if(!t.result.success){if(t.mode==='prone')e.status(t.target,'prone');else M.push(e,t.target,u,5);}}
+    else if(t.op==='cunningSave'){if(!t.result.success){if(t.mode==='fear')e.status(t.target,'frightened',{source:t.actor,expiresOnSourceEnd:t.actor,expiresOnSourceEndTurn:u.turnCount+1});else if(t.mode==='trip')e.status(t.target,'prone');else if(t.mode==='poison'&&!e.unit(t.target).conditionImmunities.includes('poisoned'))e.status(t.target,'poisoned',{source:t.actor,until:e.s.elapsed+60,repeatDC:u.features.cunningDC,repeatStat:'CON'});else if(t.mode==='living')e.status(t.target,'rooted',{source:t.actor,until:e.s.elapsed+6});}}
+    else if(t.op==='strike'){if(t.mode==='withdraw')e.decision('freeMovement',t.actor,{budget:Math.floor(e.speed(t.actor)/2/5)*5,label:'Отход · Хитрый удар',ignoreAll:true});}
+    else if(t.op==='smiteDamage')e.enqueue({kind:'damage',actor:t.actor,target:t.target,amount:t.result.total,damageType:'radiant',strikeId:t.strikeId});
+    else if(t.op==='forgeRoll')e.enqueue({kind:'damage',actor:t.actor,target:t.target,amount:t.result.total,damageType:'thunder'},e.saveTask(t.target,'STR',17,this.job(t.actor,'forgeSave',{target:t.target,mode:t.mode})));
+    else if(t.op==='forgeSave'){if(!t.result.success){if(t.mode==='push')M.push(e,t.target,u,10);else e.status(t.target,'noReactions',{expiresOnSourceStart:t.actor});}}
+    else if(t.op==='poisonSave'){const passed=t.result.success,type=t.itemKind==='poison'?'poison':t.itemKind==='acid'?'acid':'fire';if(t.itemKind==='poison'||!passed)e.enqueue({kind:'roll',actor:t.actor,label:'Расходник',count:t.itemKind==='poison'?2:t.itemKind==='acid'?2:1,sides:['poison','acid'].includes(t.itemKind)?6:4,bonus:0,next:this.job(t.actor,'poisonRoll',{target:t.target,damageType:type,half:passed})});if(!passed&&t.itemKind==='poison')e.status(t.target,'noReactions',{expiresAtStart:t.target});if(!passed&&t.itemKind==='alchemistFire')e.status(t.target,'burning',{source:t.actor});}
+    else if(t.op==='poisonRoll')e.enqueue({kind:'damage',actor:t.actor,target:t.target,amount:t.half?Math.floor(t.result.total/2):t.result.total,damageType:t.damageType});
+    else if(t.op==='extinguish'){if(t.result.success)e.removeStatus(t.target,'burning');}
+    else if(t.op==='poisonRepeat'){if(t.result.success)e.removeStatus(t.target,'poisoned');}
+    return true;
+  }
+  static endTurn(e,t){if(t.advancedEndDone)return false;const jobs=[];for(const z of e.unit(t.actor).statuses.filter(x=>x.kind==='poisoned'&&x.repeatDC))jobs.push(e.saveTask(t.actor,z.repeatStat,z.repeatDC,this.job(z.source,'poisonRepeat',{target:t.actor})));if(jobs.length){e.enqueue(...jobs,{...t,advancedEndDone:true});return true;}return false;}
+}
+if(typeof module!=='undefined')module.exports={CombatAdvancedFeatures};
+
+
 /* D&D 2024 combat domain. No DOM, network, character names or campaign IDs. */
 "use strict";
 const RulesCapabilities =
@@ -2247,6 +2627,8 @@ const RulesMartial =
   typeof module !== "undefined"
     ? require("./martial_features").CombatMartialFeatures
     : CombatMartialFeatures;
+const RulesMagic = typeof module !== "undefined" ? require("./magic").CombatMagic : CombatMagic;
+const RulesAdvanced = typeof module !== "undefined" ? require("./advanced_features").CombatAdvancedFeatures : CombatAdvancedFeatures;
 class CombatRulesEngine {
   static VERSION = RulesCapabilities.ENGINE;
   static RULES = RulesCapabilities.RULES;
@@ -2254,6 +2636,7 @@ class CombatRulesEngine {
   constructor(state) {
     CombatRulesEngine.validate(state);
     this.state = structuredClone(state);
+    RulesMagic.init(this.state);
     this.revision = 0;
   }
   static validate(s) {
@@ -2366,6 +2749,7 @@ class CombatRulesEngine {
           throw Error("Неверная атака: " + id);
       RulesCapabilities.features(u.features);
       RulesClassFeatures.validateUnit(u);
+      RulesMagic.validateCasting(u.casting);
       for (const [key, value] of Object.entries(u.counters || {})) {
         RulesCapabilities.require(
           RulesCapabilities.COUNTERS.includes(key),
@@ -2381,10 +2765,11 @@ class CombatRulesEngine {
         RulesCapabilities.counter(value);
       }
       for (const attack of u.attacks) RulesCapabilities.attack(attack);
-      const statuses = new Set(["prone", "unconscious", "grappled", "dodge", "invisible", "restrained", "blinded", "deafened", "stunned", "paralyzed", "incapacitated", "poisoned", "frightened", "petrified", "frost", "shield", "aim", "bait", "protected", "sap", "slow", "goaded", "charmed", "exhaustion"]);
+      const statuses = new Set(["prone", "unconscious", "grappled", "dodge", "invisible", "restrained", "blinded", "deafened", "stunned", "paralyzed", "incapacitated", "poisoned", "frightened", "petrified", "frost", "shield", "aim", "bait", "protected", "sap", "slow", "goaded", "charmed", "exhaustion", "noReactions", "burning", "rooted"]);
       if (u.statuses.some((z) => !z || !statuses.has(z.kind)))
         throw Error("Неизвестное состояние участника: " + id);
     }
+    RulesMagic.validateState(s);
     this.validateContinuations(s);
     return true;
   }
@@ -2397,8 +2782,11 @@ class CombatRulesEngine {
     require(s.meta.campaignId && Array.isArray(s.zones));
     require(Array.isArray(s.terrain.walls) && Array.isArray(s.terrain.rubble));
     const kinds = new Set(["initiativeSetup", "startTurn", "endTurn", "roll", "attackRoll", "attackResult", "attackEffects", "applyAttackCondition", "damageResult", "sneakResult", "damage", "concentrationResult", "deflectResult", "redirectRollResult", "attackCompleted", "checkResult", "emptyAttackResult", "redirectDamage", "moveStep", "hideResult", "searchResult", "contestResult", "escapeResult", "healingResult", "stabilizeResult", "deathSaveResult", "saveDamage", "secondWindResult", "tacticalMindResult", "baitResult", "martialMiss", "precisionResult", "weaponDamageRoll", "savageFirst", "savageSecond", "weaponDamage", "maneuverDamageResult", "weaponHitEffects", "maneuverEffect"]);
+    kinds.add("magicTask"); kinds.add("advancedTask");
     const visit = (t, depth = 0) => {
       require(t && depth < 80 && kinds.has(t.kind), "Неизвестный или повреждённый шаг боя");
+      if(t.kind === "magicTask") require(RulesMagic.OPS.has(t.op), "Неизвестный магический шаг");
+      if(t.kind === "advancedTask") require(RulesAdvanced.OPS.has(t.op), "Неизвестный классовый шаг");
       for (const k of ["actor", "target", "ally", "recipient"])
         if (t[k] != null) require(Boolean(s.units[t[k]]), "В шаге боя неизвестный участник");
       const fields = {
@@ -2410,6 +2798,7 @@ class CombatRulesEngine {
       if (t.amount != null) require(Number.isFinite(t.amount) && t.amount >= 0);
       if (t.path) require(Array.isArray(t.path) && t.path.every((p) => Number.isInteger(p.x) && Number.isInteger(p.y) && p.x >= 0 && p.y >= 0 && p.x < s.terrain.width && p.y < s.terrain.height));
       if (t.kind === "roll") {
+      if(!t.magicBonusDone) {t={...t,bonus:(t.bonus||0)+RulesMagic.rollBonus(this,t),magicBonusDone:true};}
         require(Number.isInteger(t.count) && t.count > 0 && t.count <= 100 &&
           Number.isInteger(t.sides) && t.sides >= 2 && t.sides <= 100 && t.next);
       }
@@ -2420,6 +2809,7 @@ class CombatRulesEngine {
     const p = s.pending;
     if (!p) return;
     const required = {
+      magicChoice: ["choice", "options"],
       initiativeSwap: ["targets"], metabolism: [], deflect: ["damage"],
       redirect: ["targets", "range"], knockout: ["damage"],
       opportunity: ["attack", "movement"], ready: ["attack"],
@@ -2435,6 +2825,7 @@ class CombatRulesEngine {
     if (p.targets) require(Array.isArray(p.targets) && p.targets.every((id) => s.units[id]));
     if (["roll", "classRoll"].includes(p.kind))
       require(Array.isArray(p.roll.rolls) && p.roll.rolls.length > 0);
+    if(p.kind === "magicChoice") require(RulesAdvanced.CHOICES.has(p.choice) || ["counterspell","missileShield","vitality","shieldMaster"].includes(p.choice));
     if (p.kind === "strikeChoice") require(Array.isArray(p.maneuvers));
     if (p.kind === "freeMovement") require(Number.isFinite(p.budget) && p.budget >= 0);
     if (p.kind === "defensiveReaction") require(["shield", "protection", "cloak", "mark"].includes(p.ability));
@@ -2456,7 +2847,7 @@ class CombatRulesEngine {
   }
   has(id, kind) {
     return (
-      this.unit(id).statuses.some((z) => z.kind === kind) &&
+      (this.unit(id).statuses.some((z) => z.kind === kind) || RulesMagic.has(this,id,kind)) &&
       !RulesDefenses.suppresses(this, id, kind)
     );
   }
@@ -2529,6 +2920,7 @@ class CombatRulesEngine {
     return true;
   }
   zoneAt(p, z) {
+    if(z.shape==="cube")return p.x>=z.x&&p.x<z.x+z.cells&&p.y>=z.y&&p.y<z.y+z.cells;
     return Math.hypot(p.x - z.x, p.y - z.y) * 5 <= z.radius;
   }
   crosses(a, b, z) {
@@ -2583,12 +2975,12 @@ class CombatRulesEngine {
     const p = this.unit(target),
       k = p.x + "," + p.y,
       c = this.s.terrain.cover?.[k] || 0;
-    return [2, 5].includes(c) ? c : 0;
+    return Math.max([2, 5].includes(c) ? c : 0, RulesMagic.cover(this,from,target));
   }
   ac(id, from = null, spec = null) {
     const u = this.unit(id);
     return (
-      u.ac +
+      u.ac + RulesMagic.ac(this,id,from) +
       (from && !(from.features?.sharpshooter && spec?.kind === "ranged")
         ? this.cover(from, id)
         : 0) +
@@ -2609,7 +3001,7 @@ class CombatRulesEngine {
       type,
       actor,
       text,
-      ...structuredClone(data),
+      ...Object.fromEntries(Object.entries(structuredClone(data)).filter(([,value])=>value!==undefined)),
     };
     this.s.events.push(e);
     this.revision++;
@@ -2697,7 +3089,9 @@ class CombatRulesEngine {
         (c.kind === "attack" && c.guessedCell && c.guessedCell.x === target.x && c.guessedCell.y === target.y),
         "Позиция цели неизвестна: выбери клетку для атаки");
     }
+    RulesMagic.beforeCommand(this,c,u);
     if (
+      RulesMagic.command(this,c,u) || RulesAdvanced.command(this,c,u) ||
       RulesClassFeatures.command(this, c, u) ||
       RulesMartial.command(this, c, u)
     )
@@ -2728,7 +3122,7 @@ class CombatRulesEngine {
         u.action > 0 || u.surgeAction > 0 || u.attacksLeft > 0,
         "Нет атаки",
       );
-      this.require(!spec.ammo || u[spec.ammo] > 0, "Нет боеприпасов");
+      this.require(!(spec.ammo||spec.ammoCounter) || this.ammoCount(u,spec) > 0, "Нет боеприпасов");
       this.require(
         !spec.ammoItem || u.items[spec.ammoItem] > 0,
         "Нет метательного оружия",
@@ -2736,13 +3130,9 @@ class CombatRulesEngine {
       if (u.attacksLeft > 0) u.attacksLeft--;
       else {
         this.spendAction(id);
-        u.attacksLeft = (u.features.extraAttack || 1) - 1;
+        u.attacksLeft = RulesMagic.effects(this,id,"slow").length ? 0 : (u.features.extraAttack || 1) - 1;
       }
-      if (spec.ammo) {
-        u[spec.ammo]--;
-        if (spec.ammoInventoryId) u.items[spec.ammoInventoryId]--;
-      }
-      if (spec.ammoItem) u.items[spec.ammoItem]--;
+      this.spendAmmo(u,spec);
       this.removeStatus(id, "invisible");
       u.hidden = false;
       this.enqueue({
@@ -2758,10 +3148,12 @@ class CombatRulesEngine {
       return;
     }
     if (c.kind === "attack") {
+      if(RulesMagic.effects(this,id,"slow").length)u.slowAttacks=this.s.turnSerial;
       const spec = this.attackSpec(id, c.weapon),
         mode = c.mode || "action";
       this.validateAttack(id, c.target, spec);
       RulesMartial.prepareAttack(this, c, spec);
+      RulesAdvanced.prepareAttack(this,c,spec);
       if (mode === "hew") {
         this.require(
           u.features.greatWeaponMaster &&
@@ -2800,7 +3192,7 @@ class CombatRulesEngine {
         if (u.attacksLeft > 0) u.attacksLeft--;
         else {
           this.spendAction(id);
-          u.attacksLeft = (u.features.extraAttack || 1) - 1;
+          u.attacksLeft = RulesMagic.effects(this,id,"slow").length ? 0 : (u.features.extraAttack || 1) - 1;
         }
         if (spec.light) u.lightWeaponUsed = spec.id;
       }
@@ -2974,6 +3366,7 @@ class CombatRulesEngine {
         kind: "roll",
         actor: id,
         label: "Скрытность",
+        mode: u.features.silentShadow ? 1 : 0,
         check: true,
         dc: 15,
         minimum:
@@ -3027,6 +3420,7 @@ class CombatRulesEngine {
         kind: "roll",
         actor: id,
         label: String(c.label || "Проверка").slice(0, 100),
+        stat:c.stat,
         check: true,
         minimum:
           u.features.reliableTalent && u.proficientSkills?.includes(c.skill)
@@ -3066,7 +3460,7 @@ class CombatRulesEngine {
       if (u.attacksLeft > 0) u.attacksLeft--;
       else {
         this.spendAction(id);
-        u.attacksLeft = (u.features.extraAttack || 1) - 1;
+        u.attacksLeft = RulesMagic.effects(this,id,"slow").length ? 0 : (u.features.extraAttack || 1) - 1;
       }
       const dc =
           8 +
@@ -3172,10 +3566,10 @@ class CombatRulesEngine {
         kind: "roll",
         actor: id,
         label: "Лечебное зелье",
-        count: 2,
+        count: u.itemHealing?.[item]?.count || 2,
         sides: 4,
-        bonus: 2,
-        next: { kind: "healingResult", actor: id, target: id },
+        bonus: u.itemHealing?.[item]?.flat || 2,
+        next: { kind: "healingResult", actor: id, target: id,maxHealing:(u.itemHealing?.[item]?.count||2)*4+(u.itemHealing?.[item]?.flat||2) },
       });
       return;
     }
@@ -3307,13 +3701,13 @@ class CombatRulesEngine {
     // These commands mutate only their declared actors and enqueue continuations.
     // Global handlers (notably Bait/releaseGrapples) retain full isolation.
     const local = new Set(["attack", "attackAt", "move", "endTurn", "policy", "flurry", "dash", "disengage", "dodge", "hide", "search", "check", "stand", "grapple", "shove", "escape", "ready", "helpAttack", "healPotion", "stabilize", "flee", "minorIllusion", "secondWind", "actionSurge", "steadyAim", "layOnHands", "knowEnemy", "restoreKnowEnemy"]);
-    if (local.has(command.kind)) {
+    if (local.has(command.kind) && !(command.kind === "attack" && command.sacred)) {
       const units = { ...this.s.units };
       for (const key of new Set([id, ...(command.kind === "layOnHands" ? [command.target] : [])]))
         if (units[key]) units[key] = structuredClone(units[key]);
       preview.state = { ...this.s, units, events: [], queue: [],
         help: structuredClone(this.s.help || []), zones: structuredClone(this.s.zones),
-        random: structuredClone(this.s.random) };
+        random: structuredClone(this.s.random), effects:structuredClone(this.s.effects), spellFrames:structuredClone(this.s.spellFrames),objects:structuredClone(this.s.objects) };
     } else preview.state = structuredClone({ ...this.s, events: [] });
     preview.revision = 0;
     try {
@@ -3326,6 +3720,8 @@ class CombatRulesEngine {
       return { enabled: true, reason: "" };
     } catch (error) { return { enabled: false, reason: error.message }; }
   }
+  ammoCount(u,spec) {return spec.ammoCounter ? u.counters[spec.ammoCounter]?.current||0 : u[spec.ammo]||0;}
+  spendAmmo(u,spec) {if(spec.ammoCounter)u.counters[spec.ammoCounter].current--;else if(spec.ammo)u[spec.ammo]--;if(spec.ammoInventoryId)u.items[spec.ammoInventoryId]--;if(spec.ammoItem)u.items[spec.ammoItem]--;}
   validateAttack(id, target, spec, from = null) {
     const u = from || this.unit(id),
       t = this.unit(target),
@@ -3339,7 +3735,7 @@ class CombatRulesEngine {
       "Цель вне досягаемости или за стеной",
     );
     this.require(
-      !spec.ammo || (this.unit(id)[spec.ammo] || 0) > 0,
+      !(spec.ammo||spec.ammoCounter) || this.ammoCount(this.unit(id),spec) > 0,
       "Боеприпасы закончились",
     );
     this.require(
@@ -3364,6 +3760,9 @@ class CombatRulesEngine {
     const advantage = [],
       disadvantage = [];
     if (this.has(id, "aim")) advantage.push("Точный прицел");
+    if(spec.magicAdvantage)advantage.push("Внутри сферы");
+    if(RulesMagic.effects(this,id,"compelledDuel").some(x=>x.owner!==target))disadvantage.push("Вынужденная дуэль");
+    if(RulesMagic.effects(this,target,"protectionEvil").length && ["aberration","celestial","elemental","fey","fiend","undead"].includes(this.unit(id).creatureType))disadvantage.push("Защита от зла и добра");
     if (vis.adv) advantage.push("цель не видит атакующего");
     if (RulesDefenses.protected(this, target))
       disadvantage.push("Защита союзника");
@@ -3446,7 +3845,7 @@ class CombatRulesEngine {
       auto =
         ["STR", "DEX"].includes(stat) &&
         ["paralyzed", "stunned", "unconscious"].some((k) => this.has(id, k));
-    const adv =
+    const adv = RulesMagic.saveAdv(this,id,stat,next) ||
         stat === "DEX" &&
         this.has(id, "dodge") &&
         this.speed(id) > 0 &&
@@ -3460,7 +3859,7 @@ class CombatRulesEngine {
       sides: 20,
       bonus:
         (u.saves?.[stat] ?? u.stats?.[stat] ?? 0) +
-        RulesDefenses.saveBonus(this, id),
+        RulesDefenses.saveBonus(this, id) + RulesMagic.saveBonus(this,id,stat),
       mode: adv === disadv ? 0 : adv ? 1 : -1,
       autoFail: auto,
       save: true,
@@ -3473,16 +3872,14 @@ class CombatRulesEngine {
     if (u.aimTurn === this.s.turnSerial) return 0;
     return [
       "grappled",
+      "rooted",
       "restrained",
       "paralyzed",
       "unconscious",
       "stunned",
     ].some((k) => this.has(id, k))
       ? 0
-      : Math.max(
-          0,
-          u.speed - (this.has(id, "frost") || this.has(id, "slow") ? 10 : 0),
-        );
+      : RulesMagic.speed(this,id, Math.max(0, u.speed - (this.has(id,"frost") || this.has(id,"slow") ? 10:0)));
   }
   adjustMovementBudget(id, delta) {
     const u = this.unit(id),
@@ -3507,7 +3904,7 @@ class CombatRulesEngine {
         this.canSee(id, other);
     return (
       5 +
-      (this.s.terrain.rubble.includes(p.x + "," + p.y) || creatureDifficult
+      (this.s.terrain.rubble.includes(p.x + "," + p.y) || creatureDifficult || RulesMagic.difficult(this,id,p)
         ? 5
         : 0) +
       (this.has(id, "prone") ? 5 : 0)
@@ -3537,6 +3934,7 @@ class CombatRulesEngine {
     );
   }
   endConcentration(id) {
+    RulesMagic.endConcentration(this,id);
     const old = this.s.zones.filter((z) => z.owner === id && z.concentration);
     this.s.zones = this.s.zones.filter(
       (z) => z.owner !== id || !z.concentration,
@@ -3554,13 +3952,16 @@ class CombatRulesEngine {
       if (++n > 2000) throw Error("Слишком длинная последовательность");
       this.task(this.s.queue.shift());
       RulesDefenses.refresh(this);
+
       this.observeAll();
     }
+    if(!this.s.pending&&!this.s.queue.length){const live=new Set(this.s.effects.map(x=>x.id));for(const id of Object.keys(this.s.spellFrames))if(!live.has(id))delete this.s.spellFrames[id];}
   }
   observeAll() {
     for (const id of this.s.order) {
       const u = this.unit(id);
       if (!u.hidden) continue;
+      if(u.stealthAttackTurn===this.s.turnSerial)continue;
       const cover = this.s.terrain.cover?.[u.x + "," + u.y] || 0,
         concealed =
           cover >= 5 ||
@@ -3611,7 +4012,7 @@ class CombatRulesEngine {
   task(t) {
     const s = this.s,
       u = t.actor ? this.unit(t.actor) : null;
-    if (RulesClassFeatures.task(this, t) || RulesMartial.task(this, t)) return;
+    if (RulesAdvanced.task(this,t) || RulesMagic.taskRun(this,t) || RulesClassFeatures.task(this, t) || RulesMartial.task(this, t)) return;
     if (t.kind === "initiativeSetup") {
       const alert = s.order.find(
         (id) =>
@@ -3657,6 +4058,7 @@ class CombatRulesEngine {
       a.movedThisTurn = 0;
       a.bonus = 1;
       a.reaction = 1;
+      a.slowChoice=null; a.abjureChoice=null; a.shieldBashTurn=null;
       a.move = a.speed;
       a.attacksLeft = 0;
       a.nickUsed = false;
@@ -3665,6 +4067,7 @@ class CombatRulesEngine {
       a.disengaged = false;
       a.jumpMultiplier = 1;
       a.darkMoveWindow = true;
+
       a.ready = null;
       RulesDefenses.refresh(this, id);
       a.statuses = a.statuses.filter(
@@ -3680,6 +4083,7 @@ class CombatRulesEngine {
           if (a.vex[k] < a.turnCount) delete a.vex[k];
       this.releaseGrapples();
       this.emit("turnStarted", id, "Ход: " + a.name + ".");
+      RulesMagic.startTurn(this,id);
       if (a.hp === 0 && !a.dead && !a.stable)
         this.enqueue({
           kind: "roll",
@@ -3690,12 +4094,14 @@ class CombatRulesEngine {
           dc: 10,
           count: 1,
           sides: 20,
+          mode: RulesMagic.effects(this,id,"beaconHope").length ? 1 : 0,
           bonus: RulesDefenses.saveBonus(this, id),
           next: { kind: "deathSaveResult", actor: id },
         });
       return;
     }
     if (t.kind === "endTurn") {
+      if(RulesMagic.endTurn(this,t) || RulesAdvanced.endTurn(this,t)) return;
       if (this.occupied(u.x, u.y, t.actor)) {
         u.involuntarySharedSpace = true;
         this.status(t.actor, "prone");
@@ -3730,6 +4136,7 @@ class CombatRulesEngine {
       return;
     }
     if (t.kind === "roll") {
+      if(!t.magicBonusDone) {t={...t,bonus:(t.bonus||0)+RulesMagic.rollBonus(this,t),magicBonusDone:true};}
       if (t.autoFail) {
         this.emit(
           "automaticFailure",
@@ -3792,13 +4199,10 @@ class CombatRulesEngine {
       this.removeStatus(t.actor, "aim");
       this.removeStatus(t.actor, "sap");
       if (u.vex) delete u.vex[t.target];
+      t.hiddenBefore=!!u.hidden;
       this.removeStatus(t.actor, "invisible");
       u.hidden = false;
-      if (t.spec.ammo) {
-        u[t.spec.ammo]--;
-        if (t.spec.ammoInventoryId) u.items[t.spec.ammoInventoryId]--;
-      }
-      if (t.spec.ammoItem) u.items[t.spec.ammoItem]--;
+      this.spendAmmo(u,t.spec);
       this.enqueue({
         kind: "roll",
         actor: t.actor,
@@ -3806,7 +4210,7 @@ class CombatRulesEngine {
         count: 1,
         sides: 20,
         mode,
-        bonus: t.spec.bonus,
+        bonus: t.spec.bonus, attackRoll:true,
         next: { ...t, kind: "attackResult", modifiers: m },
       });
       return;
@@ -3873,6 +4277,7 @@ class CombatRulesEngine {
         },
       );
       if (!hit) {
+        if(RulesMagic.afterMiss(this,t)) return;
         RulesMartial.afterMiss(this, t);
         return;
       }
@@ -3900,6 +4305,7 @@ class CombatRulesEngine {
           ((m.adv && !m.disadv) || allied),
       );
       if (sneak) u.sneakTurn = s.turnSerial;
+
       const sneakCount = sneak ? u.features.sneakDice * (critical ? 2 : 1) : 0;
       this.enqueue({
         ...t,
@@ -3944,6 +4350,7 @@ class CombatRulesEngine {
       const previousSpeed = this.speed(t.target);
       this.status(t.target, t.effect.condition, {
         source: t.actor,
+        ...(t.effect.duration === "source-next-start" ? {expiresOnSourceStart:t.actor}:{}),
         ...(t.effect.duration === "target-next-start"
           ? { expiresAtStart: t.target }
           : {}),
@@ -3992,12 +4399,12 @@ class CombatRulesEngine {
           t.damageType,
         );
       if (
-        !t.deflectResolved &&
+        !t.finalTransfer && !t.mitigated && !t.deflectResolved &&
         t.attackHit !== false &&
         t.attack &&
         physical &&
         target.features.deflectAttacks &&
-        target.reaction > 0 &&
+        target.reaction > 0 && RulesMagic.canReact(this,t.target) &&
         !this.incapacitated(t.target)
       ) {
         if (target.controlled) {
@@ -4008,7 +4415,7 @@ class CombatRulesEngine {
         return;
       }
       if (
-        !t.armorReduced &&
+        !t.finalTransfer && !t.mitigated && !t.armorReduced &&
         t.attack &&
         ["bludgeoning", "piercing", "slashing"].includes(t.damageType) &&
         target.features.heavyArmor &&
@@ -4020,16 +4427,20 @@ class CombatRulesEngine {
           armorReduced: true,
         };
       }
-      if (RulesClassFeatures.beforeDamage(this, t)) return;
+      if (!t.finalTransfer && !t.mitigated && RulesClassFeatures.beforeDamage(this, t)) return;
       let amount = t.amount;
+      if (!t.mitigated && !t.finalTransfer) {
       if (target.immunities?.includes(t.damageType)) amount = 0;
       else {
         if (target.resistances?.includes(t.damageType))
           amount = Math.floor(amount / 2);
         if (target.vulnerabilities?.includes(t.damageType)) amount *= 2;
       }
+      amount=RulesMagic.mitigate(this,t,amount);
+      }
+      if(RulesMagic.split(this,t,amount))return;
       if (
-        !t.knockoutResolved &&
+        !t.finalTransfer && !t.knockoutResolved &&
         t.attack &&
         ["melee", "meleeSpell"].includes(t.attack.kind) &&
         u?.controlled &&
@@ -4075,6 +4486,7 @@ class CombatRulesEngine {
           strikeId: t.strikeId,
         },
       );
+      RulesMagic.damaged(this,t,amount);
       if (target.hp === 0) {
         this.status(t.target, "unconscious");
         this.status(t.target, "prone");
@@ -4084,7 +4496,7 @@ class CombatRulesEngine {
         this.releaseGrapples();
       } else if (
         amount > 0 &&
-        s.zones.some((z) => z.owner === t.target && z.concentration)
+        RulesMagic.concentrating(this,t.target)
       )
         this.enqueue(
           this.saveTask(
@@ -4102,7 +4514,7 @@ class CombatRulesEngine {
         "concentration",
         t.actor,
         this.name(t.actor) +
-          ": концентрация Тьмы — " +
+          ": концентрация — " +
           t.result.total +
           " против СЛ " +
           t.result.dc +
@@ -4134,7 +4546,7 @@ class CombatRulesEngine {
         if (
           a.team !== u.team &&
           a.ready?.trigger === "attackAlly" &&
-          a.reaction > 0 &&
+          a.reaction > 0 && RulesMagic.canReact(this,id) &&
           this.active(id) &&
           this.unit(t.target).team === a.team
         ) {
@@ -4226,7 +4638,7 @@ class CombatRulesEngine {
           (e) =>
             !t.provoked.includes(e) &&
             !(t.oaExempt || []).includes(e) &&
-            this.unit(e).reaction > 0 &&
+            this.unit(e).reaction > 0 && RulesMagic.canReact(this,e) &&
             !this.incapacitated(e) &&
             this.canSee(e, t.actor) &&
             this.unit(e).attacks.some(
@@ -4297,12 +4709,13 @@ class CombatRulesEngine {
         { from, to: p, cost },
       );
       this.enqueue({ ...t, path: t.path.slice(1), provoked: [] });
+      RulesMagic.moved(this,t.actor);
       for (const id of s.order) {
         const a = this.unit(id);
         if (
           a.team !== u.team &&
           a.ready?.trigger === "approach" &&
-          a.reaction > 0 &&
+          a.reaction > 0 && RulesMagic.canReact(this,id) &&
           this.active(id)
         ) {
           try {
@@ -4361,6 +4774,9 @@ class CombatRulesEngine {
       }
       for (const id of this.enemies(t.actor)) {
         const a = this.unit(id);
+        if(a.hidden&&a.features.silentShadow&&this.wallLOS(u,a)){
+          this.enqueue({kind:"roll",actor:t.actor,label:"Визуальный поиск · Плащ Тихой Тени",count:1,sides:20,mode:-1,check:true,dc:a.hideDC,bonus:u.skills?.perception||0,next:RulesMagic.task(t.actor,"shadowSearch",{target:id})});continue;
+        }
         if (a.hidden && t.result.total >= a.hideDC && this.wallLOS(u, a)) {
           a.hidden = false;
           this.removeStatus(id, "invisible");
@@ -4409,7 +4825,7 @@ class CombatRulesEngine {
       return;
     }
     if (t.kind === "healingResult") {
-      this.heal(t.target, t.result.total);
+      this.heal(t.target, RulesMagic.effects(this,t.target,"beaconHope").length ? t.maxHealing || 10 : t.result.total);
       return;
     }
     if (t.kind === "stabilizeResult") {
@@ -4519,7 +4935,7 @@ class CombatRulesEngine {
       this.enqueue({ ...t, deflectResolved: true });
       return;
     }
-    this.require(u.reaction > 0, "Реакция потрачена");
+    this.require(u.reaction > 0 && RulesMagic.canReact(this,u.id), "Реакция потрачена");
     u.reaction--;
     this.enqueue({
       kind: "roll",
@@ -4594,6 +5010,7 @@ class CombatRulesEngine {
     const u = this.unit(p.actor);
     this.s.pending = null;
     if (
+      RulesAdvanced.decision(this,c,p) || RulesMagic.decision(this,c,p) ||
       RulesClassFeatures.decision(this, c, p) ||
       RulesMartial.decision(this, c, p) ||
       RulesDefenses.decision(this, c, p)
@@ -4686,7 +5103,7 @@ class CombatRulesEngine {
     if (p.kind === "opportunity") {
       this.require(["yes", "no"].includes(c.choice), "Неверный выбор");
       if (c.choice === "yes") {
-        this.require(u.reaction > 0, "Реакция потрачена");
+        this.require(u.reaction > 0 && RulesMagic.canReact(this,u.id), "Реакция потрачена");
         u.reaction--;
         this.enqueue(p.attack, p.movement);
       } else this.enqueue(p.movement);
@@ -4696,7 +5113,7 @@ class CombatRulesEngine {
       this.require(["yes", "no"].includes(c.choice), "Неверный выбор");
       u.ready = null;
       if (c.choice === "yes") {
-        this.require(u.reaction > 0, "Реакция потрачена");
+        this.require(u.reaction > 0 && RulesMagic.canReact(this,u.id), "Реакция потрачена");
         u.reaction--;
         this.enqueue(p.attack);
       }
@@ -4898,9 +5315,12 @@ class CombatTacticalAI {
       queue = [{ x: u.x, y: u.y, cost: 0, path: [] }],
       best = new Map([[u.x + "," + u.y, 0]]),
       out = [];
+    let serial=1;queue[0].serial=0;
+    const cmp=(a,b)=>a.cost-b.cost||a.path.length-b.path.length||a.serial-b.serial;
+    const push=node=>{node.serial=serial++;let i=queue.length;queue.push(node);while(i){const p=(i-1)>>1;if(cmp(queue[p],node)<=0)break;queue[i]=queue[p];i=p;}queue[i]=node;};
+    const pop=()=>{const first=queue[0],last=queue.pop();if(queue.length){let i=0;while(2*i+1<queue.length){let c=2*i+1;if(c+1<queue.length&&cmp(queue[c+1],queue[c])<0)c++;if(cmp(last,queue[c])<=0)break;queue[i]=queue[c];i=c;}queue[i]=last;}return first;};
     while (queue.length) {
-      queue.sort((a, b) => a.cost - b.cost || a.path.length - b.path.length);
-      const p = queue.shift();
+      const p = pop();
       if (p.cost !== best.get(p.x + "," + p.y)) continue;
       const at = e.occupied(p.x, p.y, id),
         knownAt =
@@ -4942,7 +5362,7 @@ class CombatTacticalAI {
           key = q.x + "," + q.y;
         if (cost > budget || (best.get(key) ?? Infinity) <= cost) continue;
         best.set(key, cost);
-        queue.push({ ...q, cost, path: [...p.path, q] });
+        push({ ...q, cost, path: [...p.path, q] });
       }
     }
     return out;
@@ -5420,17 +5840,19 @@ class CombatCampaignAdapter {
       tokenKey: raw.tokenKey || p.tokenKey || null,
       x: raw.x,
       y: raw.y,
-      hp: r.hp?.current ?? p.hp ?? 11,
+      hp: r.hp?.current ?? p.initialHP ?? p.hp ?? 11,
       max: r.hp?.max ?? p.hp ?? 11,
       ac: p.ac ?? 12,
       speed: p.speed ?? 30,
       size: p.size ?? 2,
+      summoner:p.summoner||null,summonLevel:p.summonLevel||null,summonDC:p.summonDC||null,creatureType:p.creatureType||null,powerAvailable:p.powerAvailable??false,
       stats,
       saves,
       skills: { ...skills, ...p.skills },
       proficiency: p.proficiency || 0,
       features: p.features || {},
       senses: p.senses || {},
+      casting: p.casting || null, equipment: p.equipment || {}, reference: p.reference || [],
       attacks: (p.attacks || []).map((a) => ({
         ...a,
         bonus: a.bonus ?? stats[a.ability] + p.proficiency,
@@ -5450,7 +5872,7 @@ class CombatCampaignAdapter {
           { current: v.current, max: v.max },
         ]),
       ),
-      temp: 0,
+      temp: r.temp_hp?.current || 0,
       turnCount: 0,
       action: 0,
       bonus: 0,
@@ -5559,6 +5981,10 @@ class CombatCampaignAdapter {
           .filter((v) => v.combat_available && v.consumable_type)
           .map((v) => [v.id, v.consumable_type]),
       );
+      units[id].temp=runtime.content_pack?.continuity?.temporary_hp?.[id]||0;
+      units[id].tempSource=runtime.content_pack?.continuity?.temp_sources?.[id]||null;
+      units[id].statuses=structuredClone(runtime.content_pack?.continuity?.statuses?.[id]||[]);
+      units[id].itemHealing=Object.fromEntries((c?.inventory||[]).filter(v=>v.consumable_type==="healing").map(v=>[v.id,{count:v.healing_dice||2,flat:v.healing_flat||2}]));
       inventoryBaseline[id] = structuredClone(units[id].items);
       initiative[id] = initiativeFor(r, units[id]);
       baseline[id] = structuredClone(c?.resources || {});
@@ -5646,6 +6072,7 @@ class CombatCampaignAdapter {
             }
           : null,
         sourceRevision: runtime.source_state_revision,
+        sourceClock:runtime.source_clock??runtime.content_pack?.campaign_clock??0,
         sourceHash: runtime.source_state_sha256,
       },
       terrain: {
@@ -5670,20 +6097,22 @@ class CombatCampaignAdapter {
       order,
       initiative,
       baseline,
+      continuityBaseline:structuredClone(runtime.content_pack?.continuity||{effects:[]}),
       inventoryBaseline,
       index: 0,
       round: 1,
       elapsed: 0,
       turnSerial: 0,
-      sequence: 0,
+      sequence: Math.max(0,...(runtime.content_pack?.continuity?.effects||[]).map(x=>Number(/(\d+)$/.exec(x.id)?.[1]||0))),
       phase: "active",
       started: false,
       random: { value: randomValue, draws },
       queue: [],
       pending: null,
       events: [],
-      zones: [],
-      memory: {},
+      zones:structuredClone(runtime.content_pack?.continuity?.zones||[]),
+      memory: {}, effects: structuredClone(runtime.content_pack?.continuity?.effects||[]),
+      spellFrames:Object.fromEntries((runtime.content_pack?.continuity?.effects||[]).map(x=>[x.id,{id:x.id,actor:x.owner,spell:(["abjure","sacredWeapon"].includes(x.kind)||x.kind in (typeof module!=="undefined"?require("./magic").CombatMagic:CombatMagic).SPELLS)?x.kind:"item",level:x.level,targets:x.targets,offered:[]} ])), objects:Object.fromEntries((runtime.content_pack?.continuity?.objects||[]).map(o=>[o.id,{...structuredClone(o),createdTurn:-1}])),
     };
   }
   static outcome(s) {
@@ -5709,7 +6138,7 @@ class CombatCampaignAdapter {
         if (before[resource])
           after[id][resource] = {
             current: u[field],
-            max: before[resource].max,
+            max: field === "hp" ? u.max : before[resource].max,
           };
     }
     return {
@@ -5720,6 +6149,8 @@ class CombatCampaignAdapter {
       battle_id: s.meta.battleId,
       session_kind: s.meta.kind,
       source_revision: s.meta.sourceRevision,
+      source_clock:s.meta.sourceClock||0,
+      continuity_before:s.continuityBaseline||{effects:[]},
       source_state_sha256: s.meta.sourceHash,
       phase: s.phase,
       before: s.baseline,
@@ -5746,6 +6177,15 @@ class CombatCampaignAdapter {
           },
         ]),
       ),
+      continuity: {
+        effects:(s.effects||[]).filter(x=>Object.hasOwn(after,x.owner)&&x.until>s.elapsed+6).map(x=>({...structuredClone(x),targets:x.targets.filter(id=>Object.hasOwn(after,id)),remaining_seconds:x.until-s.elapsed-6})),
+        objects:Object.values(s.objects||{}).filter(o=>Object.hasOwn(after,o.owner)&&s.effects.some(x=>x.id===o.id&&x.until>s.elapsed+6)).map(o=>structuredClone(o)),
+        zones:s.zones.filter(z=>Object.hasOwn(after,z.owner)&&z.until>s.elapsed+6).map(z=>({...structuredClone(z),remaining_seconds:z.until-s.elapsed-6})),
+        units:s.order.filter(id=>s.units[id].summoner&&Object.hasOwn(after,s.units[id].summoner)&&s.units[id].hp>0).map(id=>structuredClone(s.units[id])),
+        temp_sources:Object.fromEntries(Object.keys(after).map(id=>[id,s.units[id].tempSource||null])),
+        temporary_hp:Object.fromEntries(Object.keys(after).map(id=>[id,s.units[id].temp||0])),
+        statuses:Object.fromEntries(Object.keys(after).map(id=>[id,s.units[id].statuses.filter(z=>!["shield","aim","dodge","protected","bait","sap","slow","frost"].includes(z.kind))])),
+      },
       events: s.events,
     };
   }
@@ -5789,7 +6229,7 @@ if (typeof module !== "undefined") module.exports = { CombatCampaignAdapter };
     if (!draftScope) return;
     const values = {};
     for (const el of root.querySelectorAll("select[id],input[id]:not([type=file]),textarea[id]"))
-      values[el.id] = el.type === "checkbox" ? el.checked : el.value;
+      values[el.id] = el.multiple ? [...el.selectedOptions].map(o=>o.value) : el.type === "checkbox" ? el.checked : el.value;
     drafts.set(draftScope, values);
     panelOpen.set(draftScope, [...root.querySelectorAll("aside details")].map((el) => el.open));
   }
@@ -5798,7 +6238,8 @@ if (typeof module !== "undefined") module.exports = { CombatCampaignAdapter };
     for (const [id, value] of Object.entries(values)) {
       const el = $(id);
       if (!el) continue;
-      if (el.type === "checkbox") el.checked = value;
+      if(el.multiple){for(const o of el.options)o.selected=Array.isArray(value)&&value.includes(o.value);}
+      else if (el.type === "checkbox") el.checked = value;
       else if (el.tagName !== "SELECT" || [...el.options].some((o) => o.value === value)) el.value = value;
     }
     const open = panelOpen.get(draftScope);
@@ -5947,6 +6388,7 @@ if (typeof module !== "undefined") module.exports = { CombatCampaignAdapter };
   function act(c) {
     try {
       engine.dispatch(c);
+      if(c.sacred&&$("sacred-weapon")){$("sacred-weapon").checked=false;captureDraft();}
       notice = "";
       error = false;
       path = [];
@@ -6222,8 +6664,17 @@ if (typeof module !== "undefined") module.exports = { CombatCampaignAdapter };
         choice("approve", "Зафиксировать решение") +
         choice("cancel", "Отменить заявку");
     }
+    if(p.kind === "magicChoice"){
+      const labels={counterspell:"Контрзаклинание",missileShield:"Щит против Волшебной стрелы",vitality:"Аура жизненной силы",shieldMaster:"Мастер щита · избежать урона",strikeExtras:"Способности после попадания",cunning:"Хитрый удар · стоимость 1к6",shieldBash:"Удар щитом",forge:"Кузнечный резонанс",smite:"Божественная кара",living:"Живая стрела",itemRuling:"Дымовая бомба · правило мастера"};
+      const choices={yes:"Использовать",no:"Пропустить",skip:"Пропустить",heal:"Лечить",cunning:"Хитрый удар",shieldBash:"Удар щитом",forge:"Резонанс",smite:"Кара",living:"Живая стрела",use:"Применить правило мастера",poison:"Отравить",trip:"Опрокинуть",withdraw:"Отойти",stealth:"Скрытная атака",prone:"Сбить с ног",push:"Оттолкнуть",reactions:"Лишить реакций",free:"Бесплатное применение"};
+      title=(labels[p.choice]||p.choice)+" · "+name;
+      body=p.choice==="cunning"?"Урон Скрытой атаки уменьшается на одну кость (две при критическом попадании).":"Выбери действие.";
+      if(p.targets?.length)body+='<select id="magic-decision-target">'+p.targets.map(k=>'<option value="'+esc(k)+'">'+esc(engine.name(k))+'</option>').join('')+'</select>';
+      if(p.choice==='itemRuling')body='В карточке не заданы параметры дыма. Введи согласованное с мастером правило; до подтверждения предмет не расходуется.<label>Дальность, фт<input id="ruling-range" type="number" min="0" max="600"></label><label>Радиус, фт<input id="ruling-radius" type="number" min="0" max="100"></label><label>Длительность, секунд<input id="ruling-duration" type="number" min="1" max="86400"></label>';
+      buttons=p.options.map(k=>choice(k,choices[k]||(k.startsWith("slot")?"Ячейка "+k.slice(4):k))).join('');
+    }
     $("decision").innerHTML =
-      '<div class="panel decision"><h3>' +
+      '<div class="panel decision"><h3>'  +
       esc(title) +
       "</h3><p>" +
       body +
@@ -6238,10 +6689,47 @@ if (typeof module !== "undefined") module.exports = { CombatCampaignAdapter };
     const board = $("board"), boardTop = board.getBoundingClientRect().top + scroll;
     board.parentElement.style.maxWidth = "min(100%, " + Math.max(260, (innerHeight - boardTop - 90) * engine.s.terrain.width / engine.s.terrain.height) + "px)";
   }
+  function magicCommand(kind) {
+    const id=engine.actorId,spell=$("magic-spell")?.value,targets=[...($("magic-targets")?.selectedOptions||[])].map(o=>o.value);
+    let point;try{point=CombatCampaignAdapter.cell($("magic-point")?.value?.trim().toUpperCase());}catch{}
+    const base={kind,actor:id,spell,targets,target:targets[0]||selected,point,level:Number($("magic-level")?.value||0),sculpt:[...($("magic-sculpt")?.selectedOptions||[])].map(o=>o.value),handMode:$("magic-hand")?.value||"interpose"};
+
+    if(kind==="useItem"){base.item=$("combat-item")?.value;base.cost=$("item-bonus")?.checked?"bonus":"action";}
+    return base;
+  }
+  function magicPanel(id,play) {
+    const u=engine.unit(id),catalogue=CombatMagic.catalogue(u),known=engine.s.order.filter(k=>engine.unit(k).team===u.team||engine.knowsPosition(id,k)&&engine.canSee(id,k));
+    const targets=known.map(k=>'<option value="'+esc(k)+'"'+(k===selected?' selected':'')+'>'+esc(engine.name(k))+'</option>').join('');
+    const options=catalogue.filter(x=>x.id!=="divineSmite").map(x=>'<option value="'+x.id+'">'+esc(x.name)+(x.level?' · '+x.level:' · заговор')+'</option>').join('');
+    const slots='<option value="0">Заговор / предмет</option>'+Object.entries(u.slots).map(([n,p])=>'<option value="'+n+'">'+n+' круг · '+p.current+'/'+p.max+'</option>').join('');
+    const hand=Object.values(engine.s.objects).find(o=>o.owner===id),sphere=engine.s.effects.some(x=>x.owner===id&&x.kind==='stormSphere');
+    let html='';
+    if(options||u.features.abjureFoes||hand||sphere)html='<details class="magic-panel" '+(u.casting?'open':'')+'><summary>Заклинания и эффекты</summary><div class="magic-form">'+(options?'<label>Заклинание<select id="magic-spell">'+options+'</select></label><label>Ячейка<select id="magic-level">'+slots+'</select></label>':'')+'<label>Цели · Ctrl для нескольких<select id="magic-targets" multiple size="3">'+targets+'</select></label><label>Клетка / направление<div class="inline-field"><input id="magic-point" value="'+engine.cell({x:Math.min(u.x+1,engine.s.terrain.width-1),y:u.y})+'" aria-label="Клетка заклинания"><button data-op="magicPoint">Выбрать на поле</button></div></label>'+(u.features.sculptSpells?'<label>Защитить Скульптурой<select id="magic-sculpt" multiple size="2">'+known.filter(k=>k!==id&&engine.unit(k).team===u.team).map(k=>'<option value="'+esc(k)+'">'+esc(engine.name(k))+'</option>').join('')+'</select></label>':'')+'<label>Рука Бигби<select id="magic-hand"><option value="interpose">Преграда · полуукрытие</option><option value="fist">Кулак · атака</option><option value="grasp">Захват</option><option value="crush">Сдавливание</option><option value="push">Толчок</option><option value="move">Перемещение</option></select></label><div class="choices">'+(options?button('cast','Применить заклинание',!play):'')+(hand?button('hand','Управлять рукой · бонусное',!play):'')+(sphere?button('stormStrike','Молния сферы · бонусное',!play):'')+(u.features.abjureFoes?button('abjure','Изгнание врагов',!play):'')+'</div><p id="magic-reason" role="status"></p></div></details>';
+    if(u.hasteAction)html+='<div class="choices">'+[['attack','Ускорение · атака'],['dash','Ускорение · рывок'],['disengage','Ускорение · отход'],['hide','Ускорение · спрятаться']].map(([k,label])=>button('haste-'+k,label,!play)).join('')+'</div>';
+    if(u.summoner&&u.powerAvailable)html+=button('steedPower','Способность скакуна · бонусное',!play);
+    if(engine.has(id,"burning"))html+=button("extinguish","Погасить пламя",!play);
+    const counters=Object.entries(u.counters||{}).filter(([k])=>['storm_thrower_ammo','channel_divinity','guardian_mark','cloak_charges','storm_bracers','storm_daily','vaeltir_focus','leaf_charges','living_arrow','forge_resonance','mantle_stars','smite_free','faithful_steed'].includes(k));
+    const names={storm_thrower_ammo:'Грозовой метатель · боезапас',channel_divinity:'Божественный канал',guardian_mark:'Знак Стража',cloak_charges:'Плащ Ваэльтира',storm_bracers:'Наручи · заряды',storm_daily:'Наручи · дневной лимит',vaeltir_focus:'Фокус Ваэльтира',leaf_charges:'Шаг листвы',living_arrow:'Живая стрела',forge_resonance:'Кузнечный резонанс',mantle_stars:'Звёзды мантии',smite_free:'Бесплатная Кара',faithful_steed:'Бесплатный скакун'};
+    if(counters.length)html+='<p class="item-counters">'+counters.map(([k,p])=>names[k]+': '+p.current+'/'+p.max).join(' · ')+'</p>';
+    html+='<div class="choices">'+(u.counters.leaf_charges?button('leafStep','Шаг листвы',!play):'')+(u.counters.living_arrow?button('livingArrow',u.livingArmed?'Живая стрела подготовлена':'Подготовить Живую стрелу',!play):'')+(u.counters.mantle_stars?button('mantleMissile','Мантия · Волшебная стрела V',!play):'')+((engine.has(id,'grappled')||engine.has(id,'restrained'))?button('escapeMagic','Освободиться от магии',!play):'')+'</div>';
+    const items=Object.entries(u.equipment?.consumables||{}).filter(([iid])=>u.items[iid]>0);
+    if(!options&&!u.features.abjureFoes&&!hand&&!sphere&&(items.length||u.summoner))html+='<label>Клетка для предмета<input id="magic-point" value="'+engine.cell(u)+'"><button data-op="magicPoint">Выбрать на поле</button></label>';
+    if(items.length)html+='<details><summary>Расходники</summary><select id="combat-item">'+items.map(([iid,k])=>'<option value="'+esc(iid)+'">'+esc(runtime.characters[id]?.inventory.find(i=>i.id===iid)?.name||k)+' · '+u.items[iid]+'</option>').join('')+'</select>'+(u.features.thiefHands?'<label><input type="checkbox" id="item-bonus"> Быстрые руки · бонусное действие</label>':'')+button('useItem','Использовать выбранный предмет',!play)+'</details>';
+    if(u.features.sacredWeapon)html+='<label><input id="sacred-weapon" type="checkbox"> Священное оружие при следующем действии Атака · 1 канал</label><label><input id="sacred-radiant" type="checkbox"> Священное оружие · урон излучением</label>';
+    const effects=engine.s.effects.filter(x=>x.targets.includes(id)||x.owner===id);
+    if(effects.length)html+='<details open><summary>Действующие эффекты</summary>'+effects.map(x=>'<p>'+esc(CombatMagic.SPELLS[x.kind]?.[0]||x.kind)+' · '+Math.max(0,x.until-engine.s.elapsed)+' с'+(x.concentration?' · концентрация':'')+'</p>').join('')+'</details>';
+    if(u.reference?.length)html+='<details><summary>Полная карточка и снаряжение</summary>'+u.reference.map(x=>'<p><b>'+esc(x.name)+'</b><br>'+esc(x.text)+(x.status?'<small>'+esc(x.status)+'</small>':'')+'</p>').join('')+'</details>';
+    return html;
+  }
+
   function commandFromButton(b) {
     const op = b.dataset.op, id = engine.actorId, u = engine.unit(id);
     const base = { actor: id, target: selected, weapon };
-    const strike = (mode, key = weapon) => ({ ...base, kind: "attack", mode, weapon: key, mastery: $("mastery")?.value || null });
+    if(["cast","hand","stormStrike","abjure","mantleMissile","useItem"].includes(op))return magicCommand(op);
+    if(op.startsWith("haste-"))return {...base,kind:"hasteAction",action:op.slice(6)};
+    if(op==="steedPower")return {...magicCommand(op),kind:op};
+    if(["leafStep","livingArrow","escapeMagic","extinguish"].includes(op))return {...base,kind:op};
+    const strike = (mode, key = weapon) => ({ ...base, kind: "attack", mode, weapon: key, mastery: $("mastery")?.value || null, sacred:$("sacred-weapon")?.checked||false,radiant:$("sacred-radiant")?.checked||false });
     const moves = { patientFree: ["disengage", false], patientPaid: ["disengage", true], windFree: ["dash", false], windPaid: ["dash", true], cunningHide: ["hide", false], cunningDash: ["dash", false], cunningDisengage: ["disengage", false] };
     if (moves[op]) return { ...base, kind: moves[op][0], cost: "bonus", paid: moves[op][1] };
     if (op === "attack" || op === "hew") return strike(op === "hew" ? "hew" : "action");
@@ -6271,6 +6759,7 @@ if (typeof module !== "undefined") module.exports = { CombatCampaignAdapter };
       const result = availability.get(key);
       b.disabled = !playable || !result.enabled;
       b.title = result.reason;
+      if(b.dataset.op==="cast" && $("magic-reason"))$("magic-reason").textContent=result.reason;
     }
   }
   const renderedPanels = new Map();
@@ -6365,6 +6854,8 @@ if (typeof module !== "undefined") module.exports = { CombatCampaignAdapter };
         (wall ? " wall" : "") +
         (rough ? " rubble" : "") +
         (dark ? " dark" : "") +
+        (s.zones.some(z=>["web","smoke","stormSphere"].includes(z.kind)&&engine.zoneAt(p,z))?" spell-zone":"")+
+        (Object.values(s.objects).some(o=>o.x===x&&o.y===y)?" magic-object":"")+
         (occupant === selected && visible ? " selected" : "") +
         (path.some((q) => q.x === x && q.y === y) ? " path" : "");
       b.style.backgroundImage = wall
@@ -6407,7 +6898,7 @@ if (typeof module !== "undefined") module.exports = { CombatCampaignAdapter };
       (pointMode
         ? pointMode === "attackAt"
           ? "Выбери клетку для атаки вслепую."
-          : "Выбери центр Тьмы на карте."
+          : pointMode==="magicPoint"?"Выбери точку или направление заклинания на поле.":"Выбери центр Тьмы на карте."
         : selected
           ? "Цель: " + engine.name(selected)
           : "Выбери цель на карте.");
@@ -6423,7 +6914,7 @@ if (typeof module !== "undefined") module.exports = { CombatCampaignAdapter };
     const owner = s.order.find(
       (k) =>
         engine.unit(k).controlled &&
-        s.zones.some((z) => z.owner === k && z.concentration),
+        CombatMagic.concentrating(engine,k),
     );
     if (owner)
       panels.route += button(
@@ -6440,7 +6931,7 @@ if (typeof module !== "undefined") module.exports = { CombatCampaignAdapter };
       "/" +
       u.max +
       " · КД " +
-      u.ac +
+      engine.ac(id) +
       "<br>Действие " +
       u.action +
       ((u.surgeAction || 0) > 0 ? " + Всплеск " + u.surgeAction : "") +
@@ -6748,6 +7239,7 @@ if (typeof module !== "undefined") module.exports = { CombatCampaignAdapter };
           .join("") +
         "</details>"
       : "";
+    panels.magic = magicPanel(id,play);
     decision();
     panels.inspector = s.order
       .filter(
@@ -6858,6 +7350,8 @@ if (typeof module !== "undefined") module.exports = { CombatCampaignAdapter };
         maneuver: $("strike-maneuver")?.value || null,
         ally: $("strike-ally")?.value,
         savage: $("strike-savage")?.checked || false,
+        target:$("magic-decision-target")?.value,
+        range:$("ruling-range")?.value?Number($("ruling-range").value):undefined,radius:$("ruling-radius")?.value?Number($("ruling-radius").value):undefined,duration:$("ruling-duration")?.value?Number($("ruling-duration").value):undefined,
       });
       return;
     }
@@ -6896,6 +7390,7 @@ if (typeof module !== "undefined") module.exports = { CombatCampaignAdapter };
               )))
             ? occupant
             : null;
+      if(pointMode==="magicPoint"){$("magic-point").value=engine.cell(point);pointMode=null;notice="Точка выбрана: "+engine.cell(point);captureDraft();updateAvailableCommands();$("notice").textContent=notice;return;}
       if (pointMode) {
         act({ kind: pointMode, actor: id, point, weapon });
         return;
@@ -6962,6 +7457,7 @@ if (typeof module !== "undefined") module.exports = { CombatCampaignAdapter };
       act({ kind: "endConcentration", actor: b.dataset.owner });
       return;
     }
+    if(op==="magicPoint"){pointMode="magicPoint";notice="Выбери точку или направление заклинания на поле.";render();return;}
     if (op === "new") {
       newBattle(defaultScene);
       return;
@@ -7056,6 +7552,8 @@ if (typeof module !== "undefined") module.exports = { CombatCampaignAdapter };
       } catch (err) { notice = err.message; error = true; render(); }
       return;
     }
+    if(e.target.id==="magic-spell"){const level=CombatMagic.SPELLS[e.target.value][1];if($("magic-level"))$("magic-level").value=["stormSphere","drainingWave"].includes(e.target.value)?"0":String(level);}
+    if(e.target.id?.startsWith("magic-")||e.target.id==="combat-item"||e.target.id?.startsWith("sacred-")){captureDraft();availability.clear();updateAvailableCommands();return;}
     if (e.target.id === "weapon") {
       weapon = e.target.value;
       render();

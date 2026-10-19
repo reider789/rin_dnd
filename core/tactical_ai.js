@@ -21,9 +21,12 @@ class CombatTacticalAI {
       queue = [{ x: u.x, y: u.y, cost: 0, path: [] }],
       best = new Map([[u.x + "," + u.y, 0]]),
       out = [];
+    let serial=1;queue[0].serial=0;
+    const cmp=(a,b)=>a.cost-b.cost||a.path.length-b.path.length||a.serial-b.serial;
+    const push=node=>{node.serial=serial++;let i=queue.length;queue.push(node);while(i){const p=(i-1)>>1;if(cmp(queue[p],node)<=0)break;queue[i]=queue[p];i=p;}queue[i]=node;};
+    const pop=()=>{const first=queue[0],last=queue.pop();if(queue.length){let i=0;while(2*i+1<queue.length){let c=2*i+1;if(c+1<queue.length&&cmp(queue[c+1],queue[c])<0)c++;if(cmp(last,queue[c])<=0)break;queue[i]=queue[c];i=c;}queue[i]=last;}return first;};
     while (queue.length) {
-      queue.sort((a, b) => a.cost - b.cost || a.path.length - b.path.length);
-      const p = queue.shift();
+      const p = pop();
       if (p.cost !== best.get(p.x + "," + p.y)) continue;
       const at = e.occupied(p.x, p.y, id),
         knownAt =
@@ -65,7 +68,7 @@ class CombatTacticalAI {
           key = q.x + "," + q.y;
         if (cost > budget || (best.get(key) ?? Infinity) <= cost) continue;
         best.set(key, cost);
-        queue.push({ ...q, cost, path: [...p.path, q] });
+        push({ ...q, cost, path: [...p.path, q] });
       }
     }
     return out;

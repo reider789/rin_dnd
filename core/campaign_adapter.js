@@ -35,17 +35,19 @@ class CombatCampaignAdapter {
       tokenKey: raw.tokenKey || p.tokenKey || null,
       x: raw.x,
       y: raw.y,
-      hp: r.hp?.current ?? p.hp ?? 11,
+      hp: r.hp?.current ?? p.initialHP ?? p.hp ?? 11,
       max: r.hp?.max ?? p.hp ?? 11,
       ac: p.ac ?? 12,
       speed: p.speed ?? 30,
       size: p.size ?? 2,
+      summoner:p.summoner||null,summonLevel:p.summonLevel||null,summonDC:p.summonDC||null,creatureType:p.creatureType||null,powerAvailable:p.powerAvailable??false,
       stats,
       saves,
       skills: { ...skills, ...p.skills },
       proficiency: p.proficiency || 0,
       features: p.features || {},
       senses: p.senses || {},
+      casting: p.casting || null, equipment: p.equipment || {}, reference: p.reference || [],
       attacks: (p.attacks || []).map((a) => ({
         ...a,
         bonus: a.bonus ?? stats[a.ability] + p.proficiency,
@@ -65,7 +67,7 @@ class CombatCampaignAdapter {
           { current: v.current, max: v.max },
         ]),
       ),
-      temp: 0,
+      temp: r.temp_hp?.current || 0,
       turnCount: 0,
       action: 0,
       bonus: 0,
@@ -174,6 +176,10 @@ class CombatCampaignAdapter {
           .filter((v) => v.combat_available && v.consumable_type)
           .map((v) => [v.id, v.consumable_type]),
       );
+      units[id].temp=runtime.content_pack?.continuity?.temporary_hp?.[id]||0;
+      units[id].tempSource=runtime.content_pack?.continuity?.temp_sources?.[id]||null;
+      units[id].statuses=structuredClone(runtime.content_pack?.continuity?.statuses?.[id]||[]);
+      units[id].itemHealing=Object.fromEntries((c?.inventory||[]).filter(v=>v.consumable_type==="healing").map(v=>[v.id,{count:v.healing_dice||2,flat:v.healing_flat||2}]));
       inventoryBaseline[id] = structuredClone(units[id].items);
       initiative[id] = initiativeFor(r, units[id]);
       baseline[id] = structuredClone(c?.resources || {});
@@ -261,6 +267,7 @@ class CombatCampaignAdapter {
             }
           : null,
         sourceRevision: runtime.source_state_revision,
+        sourceClock:runtime.source_clock??runtime.content_pack?.campaign_clock??0,
         sourceHash: runtime.source_state_sha256,
       },
       terrain: {
@@ -285,20 +292,22 @@ class CombatCampaignAdapter {
       order,
       initiative,
       baseline,
+      continuityBaseline:structuredClone(runtime.content_pack?.continuity||{effects:[]}),
       inventoryBaseline,
       index: 0,
       round: 1,
       elapsed: 0,
       turnSerial: 0,
-      sequence: 0,
+      sequence: Math.max(0,...(runtime.content_pack?.continuity?.effects||[]).map(x=>Number(/(\d+)$/.exec(x.id)?.[1]||0))),
       phase: "active",
       started: false,
       random: { value: randomValue, draws },
       queue: [],
       pending: null,
       events: [],
-      zones: [],
-      memory: {},
+      zones:structuredClone(runtime.content_pack?.continuity?.zones||[]),
+      memory: {}, effects: structuredClone(runtime.content_pack?.continuity?.effects||[]),
+      spellFrames:Object.fromEntries((runtime.content_pack?.continuity?.effects||[]).map(x=>[x.id,{id:x.id,actor:x.owner,spell:(["abjure","sacredWeapon"].includes(x.kind)||x.kind in (typeof module!=="undefined"?require("./magic").CombatMagic:CombatMagic).SPELLS)?x.kind:"item",level:x.level,targets:x.targets,offered:[]} ])), objects:Object.fromEntries((runtime.content_pack?.continuity?.objects||[]).map(o=>[o.id,{...structuredClone(o),createdTurn:-1}])),
     };
   }
   static outcome(s) {
@@ -324,7 +333,7 @@ class CombatCampaignAdapter {
         if (before[resource])
           after[id][resource] = {
             current: u[field],
-            max: before[resource].max,
+            max: field === "hp" ? u.max : before[resource].max,
           };
     }
     return {
@@ -335,6 +344,8 @@ class CombatCampaignAdapter {
       battle_id: s.meta.battleId,
       session_kind: s.meta.kind,
       source_revision: s.meta.sourceRevision,
+      source_clock:s.meta.sourceClock||0,
+      continuity_before:s.continuityBaseline||{effects:[]},
       source_state_sha256: s.meta.sourceHash,
       phase: s.phase,
       before: s.baseline,
@@ -361,6 +372,15 @@ class CombatCampaignAdapter {
           },
         ]),
       ),
+      continuity: {
+        effects:(s.effects||[]).filter(x=>Object.hasOwn(after,x.owner)&&x.until>s.elapsed+6).map(x=>({...structuredClone(x),targets:x.targets.filter(id=>Object.hasOwn(after,id)),remaining_seconds:x.until-s.elapsed-6})),
+        objects:Object.values(s.objects||{}).filter(o=>Object.hasOwn(after,o.owner)&&s.effects.some(x=>x.id===o.id&&x.until>s.elapsed+6)).map(o=>structuredClone(o)),
+        zones:s.zones.filter(z=>Object.hasOwn(after,z.owner)&&z.until>s.elapsed+6).map(z=>({...structuredClone(z),remaining_seconds:z.until-s.elapsed-6})),
+        units:s.order.filter(id=>s.units[id].summoner&&Object.hasOwn(after,s.units[id].summoner)&&s.units[id].hp>0).map(id=>structuredClone(s.units[id])),
+        temp_sources:Object.fromEntries(Object.keys(after).map(id=>[id,s.units[id].tempSource||null])),
+        temporary_hp:Object.fromEntries(Object.keys(after).map(id=>[id,s.units[id].temp||0])),
+        statuses:Object.fromEntries(Object.keys(after).map(id=>[id,s.units[id].statuses.filter(z=>!["shield","aim","dodge","protected","bait","sap","slow","frost"].includes(z.kind))])),
+      },
       events: s.events,
     };
   }

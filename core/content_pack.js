@@ -51,7 +51,7 @@ class CombatContentPack {
         "default_encounter",
         "encounters",
         "notes",
-        "source_state_sha256",
+        "source_state_sha256", "continuity", "campaign_clock",
       ],
       "пакет",
     );
@@ -122,10 +122,11 @@ class CombatContentPack {
           "conditionImmunities",
           "tactics",
           "tokenKey",
-          "size",
+          "size", "casting", "equipment", "reference", "summoner", "summonLevel", "summonDC", "creatureType", "powerAvailable", "initialHP",
         ],
         key,
       );
+      C.require(p.initialHP===undefined||(Number.isInteger(p.initialHP)&&p.initialHP>=0&&p.initialHP<=p.hp),"Неверные текущие ПЗ профиля");
       p.features ??= {};
       C.require(
         p.size === undefined ||
@@ -188,13 +189,16 @@ class CombatContentPack {
           }
         }
       }
+      const M = typeof module !== "undefined" ? require("./magic").CombatMagic : CombatMagic;
+      M.validateCasting(p.casting);
+      if(p.equipment) C.require(Object.keys(p.equipment).every(k=>["armor","forgeAttuned","stormBracers","vaeltirFocus","leafPartner","rootPartner","potionIds","consumables","reference"].includes(k)), "Неизвестный предметный обработчик");
       C.features(p.features);
       for (const a of p.attacks) C.attack(a);
       if (p.conditionImmunities)
         C.require(
           Array.isArray(p.conditionImmunities) &&
             p.conditionImmunities.every((x) =>
-              ["poisoned", "prone", "frost"].includes(x),
+              ["poisoned", "prone", "frost", "paralyzed", "stunned", "restrained", "blinded", "deafened", "frightened", "charmed", "unconscious"].includes(x),
             ),
           "Неверный иммунитет к состоянию",
         );
@@ -244,7 +248,7 @@ class CombatContentPack {
           new Set(inventory.map((v) => v.id)).size === inventory.length &&
           inventory.every(
             (v) =>
-              id(v.id) &&
+              typeof v.id === "string" && v.id.length>0 && v.id.length<=200 && !["__proto__","constructor","prototype"].includes(v.id) &&
               Number.isInteger(v.quantity) &&
               v.quantity >= 0 &&
               typeof v.combat_available === "boolean",
