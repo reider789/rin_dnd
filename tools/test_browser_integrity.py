@@ -41,6 +41,12 @@ def run():
         page.evaluate(f'''{API}.set(s=>{{s.effects=[{{id:'effect-998',kind:'haste',owner:'ena',targets:['ena'],level:0,dc:10,until:s.elapsed+60,concentration:false,noLethargy:true}}]}})''')
         assert 'Ускорение' in page.locator('#magic').inner_text()
         assert 'haste ·' not in page.locator('#magic').inner_text()
+        # The archive menu keeps every control inside its frame at desktop sizes.
+        for width, height in [(1366, 768), (1440, 900), (1920, 1080)]:
+            page.set_viewport_size({'width': width, 'height': height})
+            page.locator('.tools').evaluate('(el)=>el.open=true')
+            assert page.locator('.toolbox').evaluate('''el=>{const r=el.getBoundingClientRect();return r.bottom<=innerHeight && [...el.querySelectorAll('button,select')].every(x=>{const b=x.getBoundingClientRect();return b.left>=r.left && b.right<=r.right})}''')
+        page.set_viewport_size({'width': 1440, 'height': 900})
 
         # Export/delete/restore an old battle through real controls.
         page.locator('[data-op="new"]').click()
