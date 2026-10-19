@@ -10,7 +10,7 @@ with tempfile.TemporaryDirectory(prefix='portable-combat-') as tmp:
         z.extractall(target)
     def run(*args):subprocess.run(args,cwd=target,check=True,stdout=subprocess.DEVNULL)
     run('node','sdk/verify.js');run('node','sdk/cli.js','validate','examples/portable/border-watch.json')
-    run('node','--test','tests/test_magic.js','tests/test_content_packs.js','tests/test_class_features.js','tests/test_defenses.js','tests/test_martial_features.js')
+    run('node','--test','tests/test_magic.js','tests/test_correctness_30_5_1.js','tests/test_content_packs.js','tests/test_class_features.js','tests/test_defenses.js','tests/test_martial_features.js')
     run(sys.executable,'tools/build_combat.py','--pack','examples/portable/border-watch.json','--output','dist/battle.html')
     assert (target/'dist/battle.html').is_file()
     f=target/'core/rules_engine.js';f.write_text(f.read_text()+'\n// edited\n')

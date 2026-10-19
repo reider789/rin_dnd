@@ -534,5 +534,20 @@
       }
     }
   },
-  "rules_version": "dnd-2024-2026-10"
+  "rules_version": "dnd-2024-2026-10",
+  "continuity": {
+    "effects": [],
+    "life": {},
+    "statuses": {
+      "rin": []
+    },
+    "temporary_hp": {
+      "rin": 0
+    },
+    "temp_sources": {
+      "rin": null
+    },
+    "objects": [],
+    "zones": []
+  }
 }

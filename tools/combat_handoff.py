@@ -1,8 +1,21 @@
-"""Pure result validation shared by campaign-specific command line adapters."""
-import hashlib,json,re
+"""Shared report validation; the SDK owns the continuation schema."""
+import hashlib,json,re,subprocess
+from pathlib import Path
 from combat_resources import RESOURCES
 
 def digest(value):return hashlib.sha256(json.dumps(value,ensure_ascii=False,sort_keys=True,separators=(",",":")).encode()).hexdigest()
+
+def validate_continuity(report):
+    """Read-only validation using the same domain code as the offline SDK."""
+    cli=Path(__file__).resolve().parents[1]/'sdk/cli.js'
+    try:
+        result=subprocess.run(['node',str(cli),'validate-continuity'],
+            input=json.dumps({'continuity':report['continuity'],'after':report['after']},ensure_ascii=False),
+            text=True,capture_output=True,timeout=20)
+    except (OSError,subprocess.TimeoutExpired) as error:
+        raise ValueError('Не удалось проверить продолжение через SDK') from error
+    if result.returncode:raise ValueError(result.stderr.strip() or 'Неверное продолжение боя')
+    return json.loads(result.stdout)
 
 def prepare_report(report,state,build_result,state_hash):
     if report.get('kind') not in {'rin-combat-result','dnd-combat-result'} or report.get('version')!=30 or report.get('phase')!='ended':raise ValueError('Нужен завершённый отчёт v30')
@@ -18,6 +31,9 @@ def prepare_report(report,state,build_result,state_hash):
     operations=[]
     before,after=report.get('before',{}),report.get('after',{})
     if not after or any(cid not in state['party']['members'] for cid in after):raise ValueError('Неверные участники отчёта')
+    continuity=validate_continuity(report) if report.get('continuity') is not None else None
+    if continuity is None and any(r.get('hp',{}).get('current',0)==0 for r in after.values()):
+        raise ValueError('Для героя с нулём ПЗ нужен отчёт с состоянием жизни')
     for cid,resources in after.items():
         if not isinstance(resources,dict) or set(resources)!=(set(before.get(cid,{}))&RESOURCES):raise ValueError('Неполный набор ресурсов')
         for key,now in resources.items():
@@ -51,17 +67,22 @@ def prepare_report(report,state,build_result,state_hash):
             if catalog[iid].get('name')=='Стрелы' or iid=='arrows':
                 if qty!=after[cid]['arrows']['current']:raise ValueError('Стрелы расходятся между ресурсами и инвентарём')
             elif qty!=inv_before[cid][iid]:operations.append({'type':'adjust_item_quantity','id':cid,'item':iid,'delta':qty-inv_before[cid][iid]})
-    continuity=report.get('continuity')
     if continuity is not None:
-        if not isinstance(continuity,dict) or set(continuity)-{'effects','units','temporary_hp','temp_sources','statuses','objects','zones'}:raise ValueError('Неверное продолжение эффектов')
         clock=report.get('source_clock',0)+seconds
         if not isinstance(clock,int) or clock<seconds:raise ValueError('Неверные часы боя')
         effects=continuity.get('effects',[])
         for effect in effects:
-            if not isinstance(effect,dict) or effect.get('owner') not in after or not isinstance(effect.get('remaining_seconds'),int) or not 0<effect['remaining_seconds']<=86400 or any(t not in after for t in effect.get('targets',[])):raise ValueError('Неверный действующий эффект')
+            if not isinstance(effect.get('remaining_seconds'),int) or not 0<effect['remaining_seconds']<=86400:raise ValueError('Неверный действующий эффект')
         for cid in after:
             selected=[{**effect,'expires_at':clock+effect['remaining_seconds']} for effect in effects if effect['owner']==cid]
             value={'effects':selected,'temporary_hp':continuity.get('temporary_hp',{}).get(cid,0),'temp_source':continuity.get('temp_sources',{}).get(cid),'recorded_at':clock,'summons':[u for u in continuity.get('units',[]) if u.get('summoner')==cid],'objects':[o for o in continuity.get('objects',[]) if o.get('owner')==cid],'zones':[{**z,'expires_at':clock+z['remaining_seconds']} for z in continuity.get('zones',[]) if z.get('owner')==cid], 'statuses':[{**z,**({'expires_at':clock+z['until']-seconds} if 'until' in z else {})} for z in continuity.get('statuses',{}).get(cid,[]) if 'until' not in z or z['until']>seconds]}
+            if cid in continuity.get('life',{}):value['life']=continuity['life'][cid]
+            for summon in value['summons']:
+                sid=summon['id']
+                summon['persistent_statuses']=[{**z,**({'expires_at':clock+z['until']-seconds} if 'until' in z else {})} for z in continuity.get('statuses',{}).get(sid,[]) if 'until' not in z or z['until']>seconds]
+                summon['persistent_temp']=continuity.get('temporary_hp',{}).get(sid,0)
+                summon['persistent_temp_source']=continuity.get('temp_sources',{}).get(sid)
+                if sid in continuity.get('life',{}):summon['persistent_life']=continuity['life'][sid]
             if not isinstance(value['temporary_hp'],int) or not 0<=value['temporary_hp']<=1000:raise ValueError('Неверные временные ПЗ')
             operations.append({'type':'set_character_field','id':cid,'field':'combat_continuity','value':value})
             resources=state['characters'][cid]['resources']

@@ -1,11 +1,21 @@
 #!/usr/bin/env node
 "use strict";
 const fs = require("node:fs");
-const { createBattle, CombatCapabilities } = require("./index");
+const {
+  createBattle,
+  CombatCapabilities,
+  CombatContinuity,
+} = require("./index");
 try {
   const [command, path, encounter] = process.argv.slice(2);
   if (command === "capabilities")
     console.log(JSON.stringify(CombatCapabilities.manifest(), null, 2));
+  else if (command === "validate-continuity")
+    console.log(
+      JSON.stringify(
+        CombatContinuity.validateReport(JSON.parse(fs.readFileSync(0, "utf8"))),
+      ),
+    );
   else {
     if (!["validate", "compile"].includes(command) || !path)
       throw Error(

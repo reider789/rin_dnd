@@ -1,6 +1,12 @@
 "use strict";
 class CombatDefenses {
-  static canReact(e,id){return (typeof module!=="undefined"?require("./magic").CombatMagic:CombatMagic).canReact(e,id);}
+  static canReact(e, id) {
+    return (
+      typeof module !== "undefined"
+        ? require("./magic").CombatMagic
+        : CombatMagic
+    ).canReact(e, id);
+  }
   static inAura(e, owner, target, radius) {
     return (
       !e.incapacitated(owner) &&
@@ -23,7 +29,14 @@ class CombatDefenses {
     return aura + mark;
   }
   static suppresses(e, id, condition) {
-    if(condition==="frightened" && (typeof module!=="undefined"?require("./magic").CombatMagic:CombatMagic).effects(e,id,"heroism").length)return true;
+    if (
+      condition === "frightened" &&
+      (typeof module !== "undefined"
+        ? require("./magic").CombatMagic
+        : CombatMagic
+      ).effects(e, id, "heroism").length
+    )
+      return true;
     const feature = { charmed: "auraDevotion", frightened: "auraCourage" }[
       condition
     ];
@@ -67,7 +80,8 @@ class CombatDefenses {
         considered.includes(id) ||
         !u.features.protection ||
         !u.features.shieldEquipped ||
-        u.reaction <= 0 || !this.canReact(e,id) ||
+        u.reaction <= 0 ||
+        !this.canReact(e, id) ||
         e.incapacitated(id) ||
         u.team !== e.unit(t.target).team ||
         e.distance(u, e.unit(t.target)) > 5 ||
@@ -96,7 +110,8 @@ class CombatDefenses {
     const u = e.unit(id);
     return (
       u.features.shieldSpell &&
-      u.reaction > 0 && this.canReact(e,id) &&
+      u.reaction > 0 &&
+      this.canReact(e, id) &&
       !e.incapacitated(id) &&
       !e.has(id, "shield") &&
       ((u.counters?.shield_magic_initiate?.current || 0) > 0 ||
@@ -106,8 +121,14 @@ class CombatDefenses {
           )))
     );
   }
-  static shield(e, id, after=null) {
-    if(e.unit(id).casting && after){(typeof module!=="undefined"?require("./magic").CombatMagic:CombatMagic).castShield(e,id,after);return;}
+  static shield(e, id, after = null) {
+    if (e.unit(id).casting && after) {
+      (typeof module !== "undefined"
+        ? require("./magic").CombatMagic
+        : CombatMagic
+      ).castShield(e, id, after);
+      return;
+    }
     const u = e.unit(id);
     e.require(this.canShield(e, id), "Щит недоступен");
     u.reaction--;
@@ -126,7 +147,7 @@ class CombatDefenses {
   }
   static beforeResult(e, t) {
     const target = e.unit(t.target),
-      from = e.unit(t.actor),
+      from = e.attackOrigin(t),
       d = t.result.kept,
       ac = e.ac(t.target, from, t.spec) + (t.acBonus || 0),
       hit = d === 20 || (d !== 1 && t.result.total >= ac);
@@ -144,8 +165,8 @@ class CombatDefenses {
         defensesConsidered: [...considered, tag(t.target, "shield")],
       };
       if (target.features.autoShield || !target.controlled) {
-        this.shield(e, t.target,next);
-        if(!target.casting)e.enqueue(next);
+        this.shield(e, t.target, next);
+        if (!target.casting) e.enqueue(next);
       } else
         e.decision("defensiveReaction", t.target, {
           ability: "shield",
@@ -155,7 +176,8 @@ class CombatDefenses {
     }
     if (
       target.features.acReaction &&
-      target.reaction > 0 && this.canReact(e,t.target) &&
+      target.reaction > 0 &&
+      this.canReact(e, t.target) &&
       !e.incapacitated(t.target) &&
       (target.counters?.cloak_charges?.current || 0) > 0 &&
       !considered.includes(tag(t.target, "cloak"))
@@ -191,7 +213,8 @@ class CombatDefenses {
           id === t.target ||
           u.team !== target.team ||
           !u.features.critNegation ||
-          u.reaction <= 0 || !this.canReact(e,id) ||
+          u.reaction <= 0 ||
+          !this.canReact(e, id) ||
           e.incapacitated(id) ||
           !(u.counters?.guardian_mark?.current > 0) ||
           e.distance(u, target) > 30 ||
@@ -224,11 +247,15 @@ class CombatDefenses {
       t = p.attack;
     if (c.choice === "yes") {
       e.require(
-        u.reaction > 0 && this.canReact(e,p.actor) && !e.incapacitated(p.actor),
+        u.reaction > 0 &&
+          this.canReact(e, p.actor) &&
+          !e.incapacitated(p.actor),
         "Реакция недоступна",
       );
-      if (p.ability === "shield") {this.shield(e, p.actor,t);if(u.casting)return true;}
-      else if (p.ability === "protection") {
+      if (p.ability === "shield") {
+        this.shield(e, p.actor, t);
+        if (u.casting) return true;
+      } else if (p.ability === "protection") {
         u.reaction--;
         e.status(t.target, "protected", {
           source: p.actor,

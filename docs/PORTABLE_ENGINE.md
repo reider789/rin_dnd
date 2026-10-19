@@ -1,6 +1,6 @@
 # Переносимый боевой движок D&D 2024
 
-Версия движка 30.5.0, API пакетов 1. Это программный движок с ограниченным списком проверенных механик, а не полный набор правил всех классов. Исходный код одинаков для каждой кампании. Пакеты содержат данные, не JavaScript. Зависимости npm и сеть при сборке не нужны; необходимы Node.js 22+ и Python 3.10+.
+Версия движка 30.5.1, API пакетов 1. Это программный движок с ограниченным списком проверенных механик, а не полный набор правил всех классов. Исходный код одинаков для каждой кампании. Пакеты содержат данные, не JavaScript. Зависимости npm и сеть при сборке не нужны; необходимы Node.js 22+ и Python 3.10+.
 
 После распаковки на другом компьютере или аккаунте:
 
@@ -8,7 +8,7 @@
 node sdk/verify.js
 node sdk/cli.js capabilities
 node sdk/cli.js validate examples/portable/border-watch.json
-node --test tests/test_content_packs.js tests/test_class_features.js tests/test_defenses.js tests/test_martial_features.js
+node --test tests/test_magic.js tests/test_correctness_30_5_1.js tests/test_content_packs.js tests/test_class_features.js tests/test_defenses.js tests/test_martial_features.js
 python tools/build_combat.py --pack examples/portable/border-watch.json --output dist/battle.html
 ```
 
