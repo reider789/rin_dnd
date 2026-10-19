@@ -79,6 +79,9 @@ def prepare_report(report,state,build_result,state_hash):
             if cid in continuity.get('life',{}):value['life']=continuity['life'][cid]
             for summon in value['summons']:
                 sid=summon['id']
+                # Old reports kept summons only in units. Preserve their exact
+                # transaction payload so an existing receipt remains a no-op.
+                if not any(sid in continuity.get(k,{}) for k in ('life','statuses','temporary_hp','temp_sources')):continue
                 summon['persistent_statuses']=[{**z,**({'expires_at':clock+z['until']-seconds} if 'until' in z else {})} for z in continuity.get('statuses',{}).get(sid,[]) if 'until' not in z or z['until']>seconds]
                 summon['persistent_temp']=continuity.get('temporary_hp',{}).get(sid,0)
                 summon['persistent_temp_source']=continuity.get('temp_sources',{}).get(sid)
