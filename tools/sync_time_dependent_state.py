@@ -31,7 +31,7 @@ def _stage_index_for_week(week: int) -> int:
     return 7
 
 
-def synchronize(state: dict[str, Any]) -> bool:
+def synchronize_story_fields(state: dict[str, Any]) -> bool:
     """Synchronize derived time-dependent fields without inventing story events.
 
     This function never confirms a pregnancy, changes symptoms, creates complications,
@@ -131,6 +131,12 @@ def synchronize(state: dict[str, Any]) -> bool:
         changed = True
 
     return changed
+
+
+def synchronize(state: dict[str, Any]) -> bool:
+    from sync_combat_effects import synchronize as synchronize_combat_effects
+    combat_changed = synchronize_combat_effects(state)
+    return synchronize_story_fields(state) or combat_changed
 
 
 def main() -> int:

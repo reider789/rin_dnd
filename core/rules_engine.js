@@ -35,6 +35,9 @@ class CombatRulesEngine {
     this.state = structuredClone(state);
     RulesMagic.init(this.state);
     this.revision = 0;
+    const resume = RulesMartial.restoreLegacyHits(this);
+    this.state.engineVersion = CombatRulesEngine.VERSION;
+    if (resume) this.run();
   }
   static validate(s) {
     if (!s || s.version !== 30 || s.rulesVersion !== this.RULES)
@@ -209,6 +212,7 @@ class CombatRulesEngine {
       "deflectResult",
       "redirectRollResult",
       "attackCompleted",
+      "moveCompleted",
       "checkResult",
       "emptyAttackResult",
       "redirectDamage",
@@ -254,6 +258,8 @@ class CombatRulesEngine {
           damage: ["actor", "target", "amount"],
           weaponDamage: ["actor", "target", "frame", "amount"],
           moveStep: ["actor", "path", "provoked"],
+          moveCompleted: ["actor"],
+          attackCompleted: ["actor", "target"],
         }[t.kind] || [];
       require(fields.every((k) => t[k] != null));
       if (t.amount != null) require(Number.isFinite(t.amount) && t.amount >= 0);
@@ -416,10 +422,20 @@ class CombatRulesEngine {
   }
   has(id, kind) {
     return (
+      !this.conditionImmune(id, kind) &&
       (this.unit(id).statuses.some((z) => z.kind === kind) ||
         RulesMagic.has(this, id, kind)) &&
       !RulesDefenses.suppresses(this, id, kind)
     );
+  }
+  conditionImmune(id, kind) {
+    const u = this.unit(id);
+    return Boolean(u.conditionImmunities?.includes(kind) ||
+      (kind === "poisoned" && u.statuses.some(z => z.kind === "petrified")));
+  }
+  size(id) {
+    return Math.min(5, (this.unit(id).size ?? 2) +
+      (RulesMagic.effects(this, id, "enlarge").length ? 1 : 0));
   }
   incapacitated(id) {
     return (
@@ -460,8 +476,8 @@ class CombatRulesEngine {
     return (
       a.team === b.team ||
       this.incapacitated(other) ||
-      b.size === 0 ||
-      Math.abs((a.size ?? 2) - (b.size ?? 2)) >= 2
+      this.size(other) === 0 ||
+      Math.abs(this.size(id) - this.size(other)) >= 2
     );
   }
   inside(p) {
@@ -801,7 +817,6 @@ class CombatRulesEngine {
       u.darkMoveWindow = false;
       this.enqueue(
         { kind: "attackRoll", actor: id, target: c.target, spec, mode },
-        { kind: "attackCompleted", actor: id, target: c.target },
       );
       return;
     }
@@ -1058,7 +1073,9 @@ class CombatRulesEngine {
           this.wallLOS(u, t),
         "Цель недоступна",
       );
-      this.require((t.size || 2) <= (u.size || 2) + 1, "Цель слишком велика");
+      this.require(this.size(c.target) <= this.size(id) + 1, "Цель слишком велика");
+      this.require(!this.conditionImmune(c.target, c.kind === "grapple" ? "grappled" : c.push ? "" : "prone"),
+        "Цель невосприимчива к этому состоянию");
       if (u.attacksLeft > 0) u.attacksLeft--;
       else {
         this.spendAction(id);
@@ -1491,6 +1508,7 @@ class CombatRulesEngine {
       this.has(target, "restrained") ||
       this.has(target, "stunned") ||
       this.has(target, "paralyzed") ||
+      this.has(target, "petrified") ||
       this.has(target, "unconscious")
     )
       advantage.push("состояние цели");
@@ -1561,7 +1579,7 @@ class CombatRulesEngine {
     const u = this.unit(id),
       auto =
         ["STR", "DEX"].includes(stat) &&
-        ["paralyzed", "stunned", "unconscious"].some((k) => this.has(id, k));
+        ["paralyzed", "stunned", "unconscious", "petrified"].some((k) => this.has(id, k));
     const adv =
         RulesMagic.saveAdv(this, id, stat, next) ||
         (stat === "DEX" &&
@@ -1600,6 +1618,7 @@ class CombatRulesEngine {
       "paralyzed",
       "unconscious",
       "stunned",
+      "petrified",
     ].some((k) => this.has(id, k))
       ? 0
       : RulesMagic.speed(
@@ -1629,7 +1648,7 @@ class CombatRulesEngine {
       creatureDifficult =
         other &&
         this.unit(other).team !== this.unit(id).team &&
-        this.unit(other).size !== 0 &&
+        this.size(other) !== 0 &&
         !this.unit(other).hidden &&
         this.canSee(id, other);
     return (
@@ -1643,6 +1662,7 @@ class CombatRulesEngine {
     );
   }
   status(id, kind, extra = {}) {
+    if (this.conditionImmune(id, kind)) return false;
     const u = this.unit(id),
       previous = this.speed(id);
     u.statuses = u.statuses.filter(
@@ -1941,6 +1961,14 @@ class CombatRulesEngine {
     }
     if (t.kind === "attackRoll") {
       if (!this.active(t.actor) || !this.active(t.target)) return;
+      if (!t.completionQueued) {
+        // Every attack path, including spells and reactions, has one trigger
+        // continuation. The flag survives Shield/Protection/reload retries.
+        t = {...t, completionQueued:true};
+        if (!s.queue.some(next => next.kind === "attackCompleted" &&
+            next.actor === t.actor && next.target === t.target && !next.considered))
+          this.enqueue({kind:"attackCompleted",actor:t.actor,target:t.target});
+      }
       if (!t.weaponPrepared) {
         const legacy =
           ["30.5.1", "30.5.0"].includes(s.engineVersion) &&
@@ -2230,15 +2258,11 @@ class CombatRulesEngine {
       if (!t.mitigated && !t.finalTransfer) {
         const components = this.damageParts(t).map((p) => {
           let n = target.immunities?.includes(p.damageType) ? 0 : p.amount;
-          if (target.resistances?.includes(p.damageType)) n = Math.floor(n / 2);
+          n = RulesMagic.mitigate(this, {...t,damageType:p.damageType}, n);
           if (target.vulnerabilities?.includes(p.damageType)) n *= 2;
           return {
             ...p,
-            amount: RulesMagic.mitigate(
-              this,
-              { ...t, damageType: p.damageType },
-              n,
-            ),
+            amount: n,
           };
         });
         amount = components.reduce((n, p) => n + p.amount, 0);
@@ -2345,18 +2369,19 @@ class CombatRulesEngine {
       );
       return;
     }
-    if (t.kind === "attackCompleted") {
+    if (t.kind === "attackCompleted" || t.kind === "moveCompleted") {
       for (const id of s.order) {
         const a = this.unit(id);
         if (
           !t.considered?.includes(id) &&
           a.team !== u.team &&
           this.active(t.actor) &&
-          a.ready?.trigger === "attackAlly" &&
+          a.ready?.trigger === (t.kind === "moveCompleted" ? "approach" : "attackAlly") &&
           a.reaction > 0 &&
           RulesMagic.canReact(this, id) &&
           this.active(id) &&
-          this.unit(t.target).team === a.team
+          !this.incapacitated(id) &&
+          (t.kind === "moveCompleted" || this.unit(t.target).team === a.team)
         ) {
           try {
             this.validateAttack(id, t.actor, a.ready.spec);
@@ -2426,6 +2451,13 @@ class CombatRulesEngine {
       }
       const p = t.path[0],
         occupant = this.occupied(p.x, p.y, t.actor);
+      if (this.distance(u,p) !== 5 ||
+          (!t.forced && !RulesMagic.canApproach(this,t.actor,u,p))) {
+        this.markSharedSpace(t.actor);
+        this.emit("movementBlocked",t.actor,
+          "Маршрут изменился после реакции: выбери путь заново.");
+        return;
+      }
       if (
         occupant &&
         (t.forced || !this.canPass(t.actor, occupant) || t.path.length === 1)
@@ -2495,7 +2527,6 @@ class CombatRulesEngine {
               spec,
               mode: "reaction",
             },
-            { kind: "attackCompleted", actor: enemy, target: t.actor },
             t,
           );
           return;
@@ -2524,44 +2555,9 @@ class CombatRulesEngine {
           " фт).",
         { from, to: p, cost },
       );
-      this.enqueue({ ...t, path: t.path.slice(1), provoked: [] });
+      this.enqueue({kind:"moveCompleted",actor:t.actor},
+        { ...t, path: t.path.slice(1), provoked: [] });
       RulesMagic.moved(this, t.actor);
-      for (const id of s.order) {
-        const a = this.unit(id);
-        if (
-          a.team !== u.team &&
-          a.ready?.trigger === "approach" &&
-          a.reaction > 0 &&
-          RulesMagic.canReact(this, id) &&
-          this.active(id)
-        ) {
-          try {
-            this.validateAttack(id, t.actor, a.ready.spec);
-            const spec = a.ready.spec;
-            if (a.controlled) {
-              this.decision("ready", id, {
-                attack: {
-                  kind: "attackRoll",
-                  actor: id,
-                  target: t.actor,
-                  spec,
-                  mode: "reaction",
-                },
-              });
-              return;
-            }
-            a.ready = null;
-            a.reaction--;
-            this.enqueue({
-              kind: "attackRoll",
-              actor: id,
-              target: t.actor,
-              spec,
-              mode: "reaction",
-            });
-          } catch {}
-        }
-      }
       return;
     }
     if (t.kind === "hideResult") {

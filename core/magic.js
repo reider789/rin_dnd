@@ -419,20 +419,33 @@ class CombatMagic {
     });
     return x;
   }
-  static remove(e, ids) {
+  static remove(e, ids, options = {}) {
     if (!ids.length) return;
     const speeds = Object.fromEntries(e.s.order.map((id) => [id, e.speed(id)]));
-    this.removeState(e.s, ids);
+    this.removeState(e.s, ids, options);
     for (const id of e.s.order) e.adjustMovementForSpeed(id, speeds[id]);
   }
-  static removeState(s, ids) {
-    for (const x of s.effects || [])
-      if (ids.includes(x.id)) {
-        if (x.kind === "aid")
+  static removeState(s, ids, { keepAid = false } = {}) {
+    const removed = (s.effects || []).filter(x => ids.includes(x.id));
+    // Remove first: a collapse can recursively end concentration without
+    // subtracting this same Aid twice.
+    s.effects = (s.effects || []).filter(x => !ids.includes(x.id));
+    const collapsed = new Set();
+    for (const x of removed) {
+        if (x.kind === "aid" && !keepAid)
           for (const id of x.targets) {
             const u = s.units[id];
+            const before = u.hp;
             u.max -= x.amount;
-            u.hp = Math.min(u.hp, u.max);
+            u.hp = Math.max(0, Math.min(u.hp - x.amount, u.max));
+            if (before > 0 && u.hp === 0) {
+              u.stable = false;
+              u.reaction = 0;
+              if (!u.deathSaves) u.dead = true;
+              for (const kind of ["unconscious","prone"])
+                if (!u.statuses.some(z => z.kind === kind)) u.statuses.push({kind});
+              collapsed.add(id);
+            }
           }
         if (x.kind === "heroism")
           for (const id of x.targets)
@@ -445,7 +458,13 @@ class CombatMagic {
       }
     for (const u of Object.values(s.units))
       u.statuses = u.statuses.filter((x) => !ids.includes(x.effect));
-    s.effects = (s.effects || []).filter((x) => !ids.includes(x.id));
+    const concentration = s.effects.filter(x => x.concentration && collapsed.has(x.owner));
+    if (concentration.length) this.removeState(s, concentration.map(x => x.id));
+    if (collapsed.size) {
+      s.zones = s.zones.filter(z => !z.concentration || !collapsed.has(z.owner));
+      for (const u of Object.values(s.units)) u.statuses = u.statuses.filter(z =>
+        z.kind !== "grappled" || !collapsed.has(z.source));
+    }
   }
   static expireState(s, at) {
     const expired = s.effects.filter((x) => x.until <= at);
@@ -752,7 +771,7 @@ class CombatMagic {
       e.require(
         v.team === u.team &&
           e.distance(u, v) <= 5 &&
-          v.size <= u.size &&
+          e.size(c.passenger) <= e.size(id) &&
           !e.incapacitated(c.passenger) &&
           p &&
           e.inside(p) &&
@@ -1801,10 +1820,11 @@ class CombatMagic {
         for (const id of targets) {
           const existing = this.effects(e, id, "aid")[0];
           if (existing && existing.amount >= amount) continue;
-          if (existing) this.remove(e, [existing.id]);
+          if (existing) this.remove(e, [existing.id], {keepAid:true});
           const v = e.unit(id);
-          v.max += amount;
-          e.heal(id, amount);
+          const increase = amount - (existing?.amount || 0);
+          v.max += increase;
+          e.heal(id, increase);
           this.add(e, f, "aid", [id], 28800, { amount });
         }
         break;
@@ -2127,7 +2147,7 @@ class CombatMagic {
       if (mode === "crush")
         e.require(o.grappled === c.target, "Рука должна удерживать эту цель");
       if (["push", "grasp"].includes(mode))
-        e.require(v.size <= 4, "Цель Огромного размера или меньше");
+        e.require(e.size(c.target) <= 4, "Цель Огромного размера или меньше");
     }
   }
   static restorationOptions(e, id) {
@@ -2469,22 +2489,21 @@ class CombatMagic {
         e.require(false, "Изгнание: движение, действие или бонусное действие");
       u.abjureChoice = kind;
     }
-    if (c.kind === "move" && e.has(c.actor, "frightened")) {
-      const sources = [
-        ...this.effects(e, c.actor, "abjure").map((x) => x.owner),
-        ...u.statuses
-          .filter((x) => x.kind === "frightened")
-          .map((x) => x.source),
-      ].filter(Boolean);
-      for (const src of sources.filter((id) => e.s.units[id]))
-        if (e.canSee(c.actor, src))
-          e.require(
-            c.path.every(
-              (p) => e.distance(p, e.unit(src)) >= e.distance(u, e.unit(src)),
-            ),
-            "Нельзя приближаться к источнику страха",
-          );
+    if (c.kind === "move" && e.has(c.actor,"frightened")) {
+      e.require(Array.isArray(c.path),"Задай маршрут движения");
+      let from = u;
+      e.require(c.path.every(p => {
+        const allowed = this.canApproach(e,c.actor,from,p);
+        from=p;return allowed;
+      }), "Нельзя приближаться к источнику страха");
     }
+  }
+  static canApproach(e,id,from,to) {
+    if (!e.has(id,"frightened")) return true;
+    const sources = [...this.effects(e,id,"abjure").map(x=>x.owner),
+      ...e.unit(id).statuses.filter(z=>z.kind==='frightened').map(z=>z.source)];
+    return sources.filter(src=>e.s.units[src]).every(src=>
+      e.distance(to,e.unit(src))>=e.distance(from,e.unit(src)));
   }
   static moved(e, id) {
     for (const z of e.s.zones)
@@ -2510,22 +2529,15 @@ class CombatMagic {
   }
   static mitigate(e, t, amount) {
     if (t.finalTransfer) return amount;
-    if (
-      t.damageType === "fire" &&
-      this.effects(e, t.target, "fireResistance").length &&
-      !e.unit(t.target).resistances.includes("fire")
-    )
-      amount = Math.floor(amount / 2);
-    if (
+    const resistant = e.unit(t.target).resistances?.includes(t.damageType) ||
+      e.has(t.target, "petrified") ||
+      (t.damageType === "fire" && this.effects(e, t.target, "fireResistance").length) ||
       this.effects(e, t.target, "wardingBond").some(
         (x) =>
           e.active(x.owner) &&
           e.distance(e.unit(x.owner), e.unit(t.target)) <= 60,
-      ) &&
-      !e.unit(t.target).resistances.includes(t.damageType)
-    )
-      amount = Math.floor(amount / 2);
-    return amount;
+      );
+    return resistant ? Math.floor(amount / 2) : amount;
   }
   static split(e, t, amount) {
     if (t.finalTransfer || t.leafResolved || amount <= 0) return false;

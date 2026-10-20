@@ -19,6 +19,7 @@
     removeItem: (k) => localStorage.removeItem(k),
   });
   let exportedArchive = new Map();
+  let currentExport = null;
   let importedArchive = [];
   const battleKey = (s) =>
     "dnd-combat-session:" +
@@ -240,16 +241,22 @@
       CombatCampaignAdapter.create(nextRuntime, scene, seed()),
     );
     next.initialize();
+    if (engine && battleKey(next.s) === KEY)
+      throw Error("Этот сюжетный бой уже открыт. Для нового боя загрузи новый сценарий или начни учебный бой");
     let released;
     if (exportCurrent && engine) {
+      if (!currentExport || currentExport.key !== KEY ||
+          currentExport.engine !== engine || currentExport.revision !== engine.revision ||
+          currentExport.raw !== readLocal(KEY))
+        throw Error("Сначала скачай актуальное сохранение и проверь файл на диске");
       sessionStore.allowSwitch(battleKey(next.s), KEY);
-      const value = sessionValue();
-      download(
-        runtime.campaign_id + "-battle-" + engine.s.meta.battleId + ".json",
-        value,
-      );
       released = KEY;
-      // This separate control explicitly exports and removes this local copy.
+      // Download completion is acknowledged by a separate cleanup control.
+      // Keep the old battle if a replacement cannot be safely written.
+      sessionStore.write(battleKey(next.s), JSON.stringify({
+        ...next.export({clone:false}),
+        ...(nextRuntime.content_pack ? {contentPack:nextRuntime.content_pack} : {}),
+      }));
       sessionStore.remove(KEY, null);
       const index = JSON.parse(readLocal(INDEX_SLOT) || "{}");
       delete index[KEY];
@@ -265,6 +272,7 @@
     if (runtime.content_pack)
       defaultScene = CombatContentPack.encounter(runtime);
     engine = next;
+    currentExport = null;
     preserveSlot(KEY);
     drafts.clear();
     draftScope = "";
@@ -1918,6 +1926,7 @@
         archived
           .map(([key, raw]) => {
             let name = key;
+            if (key.endsWith("-unreadable")) name = "Повреждённая копия сохранения";
             try {
               const s = JSON.parse(raw).session;
               name = s.meta.name + " · " + s.meta.battleId;
@@ -1931,6 +1940,9 @@
       $("archive-delete").disabled =
         !chosenArchive ||
         exportedArchive.get(chosenArchive) !== readLocal(chosenArchive);
+      $("current-new-confirm").disabled = !currentExport ||
+        currentExport.key !== KEY || currentExport.engine !== engine ||
+        currentExport.revision !== engine.revision || currentExport.raw !== readLocal(KEY);
     } catch {
       recovery.innerHTML = '<option value="">Хранилище недоступно</option>';
     }
@@ -2113,7 +2125,7 @@
     }
     if (op === "new") {
       try {
-        newBattle(defaultScene);
+        newBattle({...defaultScene,kind:"training"});
       } catch (e) {
         notice = e.message;
         error = true;
@@ -2123,12 +2135,22 @@
     }
     if (op === "export-current-new") {
       try {
-        newBattle(defaultScene, runtime, true);
+        save();
+        download(runtime.campaign_id + "-battle-" + engine.s.meta.battleId + ".json", sessionValue());
+        currentExport = {key:KEY,engine,revision:engine.revision,raw:readLocal(KEY)};
+        notice = "Скачивание запрошено. Бой остаётся в браузере. После проверки файла можно отдельно удалить эту копию и начать новый бой.";
+        error = false;
+        render();
       } catch (e) {
         notice = e.message;
         error = true;
         render();
       }
+      return;
+    }
+    if (op === "current-new-confirm") {
+      try { newBattle({...defaultScene,kind:"training"}, runtime, true); }
+      catch (e) { notice=e.message;error=true;render(); }
       return;
     }
     if (op === "save") {
@@ -2140,16 +2162,16 @@
         const entries = sessionStore.archive(KEY);
         const archive = {
           kind: "dnd-combat-archive",
-          version: 1,
-          sessions: entries.map(([key, raw]) => ({
-            key,
-            value: JSON.parse(raw),
-          })),
+          version: 2,
+          sessions: entries.map(([key, raw]) => {
+            try { JSON.parse(raw); return {key,raw}; }
+            catch { return {key,raw,unreadable:true}; }
+          }),
         };
         download("combat-archive.json", archive);
         exportedArchive = new Map(entries);
         notice =
-          "Архив выгружен. Теперь можно удалить выбранные старые бои; текущий бой защищён.";
+          "Скачивание архива запрошено. Проверь файл на диске перед удалением старых боёв. Повреждённые записи включены в исходном виде.";
         render();
       } catch (e) {
         notice = e.message;
@@ -2336,17 +2358,21 @@
         const value = JSON.parse(await e.target.files[0].text());
         if (value.kind === "dnd-combat-archive") {
           if (
-            value.version !== 1 ||
+            ![1,2].includes(value.version) ||
             !Array.isArray(value.sessions) ||
             !value.sessions.length
           )
             throw Error("Пустой или повреждённый архив");
+          importedArchive = [];
+          let damaged = 0;
           for (const entry of value.sessions) {
-            if (entry.value?.contentPack)
-              CombatContentPack.compile(entry.value.contentPack);
-            new CombatRulesEngine(entry.value?.session);
+            try {
+              const saved = typeof entry.raw === "string" ? JSON.parse(entry.raw) : entry.value;
+              if (saved?.contentPack) CombatContentPack.compile(saved.contentPack);
+              new CombatRulesEngine(saved?.session);
+              importedArchive.push({...entry,value:saved});
+            } catch { damaged++; }
           }
-          importedArchive = value.sessions;
           $("archive-imported").innerHTML = importedArchive
             .map(
               (x, i) =>
@@ -2361,9 +2387,9 @@
                 "</option>",
             )
             .join("");
-          $("archive-restore").disabled = false;
+          $("archive-restore").disabled = !importedArchive.length;
           notice =
-            "Архив проверен. Выбери нужный бой в «Бои и настройки» и нажми «Восстановить из архива».";
+            "Проверено боёв: " + importedArchive.length + ". Повреждённых или несовместимых записей: " + damaged + ". Они сохранены в исходном файле архива.";
           render();
         } else load(value);
       }

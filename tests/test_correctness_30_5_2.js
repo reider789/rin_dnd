@@ -197,7 +197,7 @@ for (const duration of [0, 1, 5, 6, 7])
     assert.equal(r.after.tal.hp.max, original + (duration > 6 ? 5 : 0));
     assert.equal(
       r.after.tal.hp.current,
-      Math.min(original + 2, r.after.tal.hp.max),
+      original + 2 - (duration <= 6 ? 5 : 0),
     );
     assert.equal(r.continuity.temporary_hp.tal, duration > 6 ? 3 : 0);
     assert.equal(r.continuity.effects.length, duration > 6 ? 2 : 0);
@@ -216,7 +216,7 @@ test("B02: expiry preserves unrelated temporary HP and the prebattle Aid baselin
   u.tempSource = "another-source";
   const r = outcome(e);
   assert.equal(r.before.ena.hp.max, 105);
-  assert.deepEqual(r.after.ena.hp, { current: 50, max: 100 });
+  assert.deepEqual(r.after.ena.hp, { current: 45, max: 100 });
   assert.equal(r.continuity.temporary_hp.ena, 7);
   assert.equal(r.continuity.temp_sources.ena, "another-source");
 });

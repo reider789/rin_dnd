@@ -38,6 +38,17 @@ def snapshot(project=ROOT):
         chars[cid]={'name':char['name'],'class_and_level':sheet['class_and_level'],'ac_description':sheet['armor_class'],'speed':sheet['speed'],
             'resources':copy.deepcopy(char['resources']),'inventory':inv,'consumables':{},'combat_profile':profile,
             'skills_attacks_spells':[{'name':r['cells'][0],'description':' · '.join(str(c) for c in r['cells'][1:])} for r in sheet.get('combat_reference',[]) if r.get('cells')]}
+    live={x['id'] for x in continuity['effects']}
+    continuity['objects']=[o for o in continuity['objects'] if o['id'] in live and o.get('hp',0)>0]
+    continuity['zones']=[z for z in continuity['zones'] if not z.get('effect') or z['effect'] in live]
+    spatial=[state['characters'][cid].get('combat_continuity',{}) for cid in chars
+             if any(o['id'] in live and o.get('hp',0)>0 for o in state['characters'][cid].get('combat_continuity',{}).get('objects',[]))
+             or any(z.get('expires_at',0)>clock and (not z.get('effect') or z['effect'] in live) for z in state['characters'][cid].get('combat_continuity',{}).get('zones',[]))]
+    scenes=[c['scene'] for c in spatial if c.get('scene')]
+    if scenes:
+        if any(any(s[k]!=scenes[0][k] for k in ('id','width','height','walls','rubble','cover')) for s in scenes):
+            raise ValueError('Продолжение содержит разные поля боя')
+        continuity['scene']=copy.deepcopy(scenes[-1])
     return {'schema_version':2,'combat_schema_version':30,'campaign_id':state['campaign']['id'],'title':state['campaign'].get('title',state['campaign']['id']),'source':'state/_campaign-state.json',
         'source_state_revision':state['state_revision'],'source_clock':state.get('world',{}).get('timekeeping',{}).get('elapsed_seconds_from_anchor',0),'source_state_sha256':state_hash(state),'is_canonical':False,'characters':chars,
         'npc_profiles':profiles['npc_profiles'],'rules_version':'dnd-2024-2026-10','continuity':continuity}

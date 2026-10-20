@@ -2,7 +2,7 @@
 // The only registration point for supported data-level mechanics. No code from packs is executed.
 class CombatCapabilities {
   static API = 1;
-  static ENGINE = "30.5.2";
+  static ENGINE = "30.5.3";
   static STATUSES = new Set([
     "prone",
     "unconscious",

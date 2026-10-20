@@ -60,7 +60,10 @@ class CombatAdvancedFeatures {
           spec,
           mode: "haste",
         });
-      } else if (c.action === "dash") u.move += e.speed(id);
+      } else if (c.action === "dash") {
+        u.move += e.speed(id);
+        u.dashCount = (u.dashCount || 0) + 1;
+      }
       else if (c.action === "disengage") u.disengaged = true;
       else {
         u.action++;
@@ -144,7 +147,7 @@ class CombatAdvancedFeatures {
       );
       u.bonus--;
       u.counters.leaf_charges.current--;
-      u.move = Math.min(e.speed(id), u.move + 10);
+      if (e.speed(id) > 0) e.adjustMovementBudget(id, 10);
       u.disengaged = true;
       e.emit(
         "item",
@@ -284,7 +287,7 @@ class CombatAdvancedFeatures {
         });
         u.hasteAction = 1;
       } else if (kind === "growthPotion")
-        M.add(e, frame, "enlarge", [id], 3600, { concentration: false });
+        M.add(e, frame, "enlarge", [id], 600, { concentration: false });
       else if (kind === "giantStrength")
         M.add(e, frame, "giantStrength", [id], 3600, { concentration: false });
       else if (kind === "climbingPotion")
@@ -466,7 +469,7 @@ class CombatAdvancedFeatures {
       if (c.choice === "cunning") {
         const opts = ["skip", "withdraw"];
         if (u.features.poisonerKit) opts.push("poison");
-        if (e.unit(t.target).size <= 3) opts.push("trip");
+        if (e.size(t.target) <= 3) opts.push("trip");
         if (t.hiddenBefore && u.features.stealthAttack) opts.push("stealth");
         M.choice(e, p.actor, "cunning", opts, { attack: t });
       }
@@ -575,7 +578,11 @@ class CombatAdvancedFeatures {
       e.s.spellFrames[sf.id] = sf;
       jobs.push(M.task(t.actor, "window", { frame: sf.id }));
     }
-    if (f.forge)
+    if (f.legacyRiders && f.forge)
+      jobs.push({kind:"roll",actor:t.actor,label:"Кузнечный резонанс",
+        count:f.critical ? 2 : 1,sides:8,bonus:0,
+        next:this.job(t.actor,"forgeRoll",{target:t.target,mode:f.forge})});
+    else if (f.forge)
       jobs.push(
         e.saveTask(
           t.target,
@@ -640,6 +647,13 @@ class CombatAdvancedFeatures {
           }),
         ),
       );
+    }
+    if (f.legacyRiders && ["melee","ranged"].includes(f.spec.kind)) {
+      for (const [effect,label,type] of [["crusaderMantle","Мантия крестоносца","radiant"],
+          ["enlarge","Рост",f.spec.damageType]])
+        if (M.effects(e,t.actor,effect).length)
+          jobs.push({kind:"roll",actor:t.actor,label,count:f.critical ? 2 : 1,sides:4,bonus:0,
+            next:this.job(t.actor,"poisonRoll",{target:t.target,damageType:type})});
     }
     e.enqueue(...jobs);
   }

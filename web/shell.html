@@ -35,15 +35,18 @@
             <p id="storage-usage"></p>
             <button data-op="archive-export">Выгрузить архив</button>
             <button data-op="export-current-new">
-              Скачать текущий, удалить его из браузера и начать новый
+              Скачать текущий бой перед очисткой
+            </button>
+            <button data-op="current-new-confirm" id="current-new-confirm" disabled>
+              Файл сохранён: удалить текущую копию и начать новый бой
             </button>
             <label
-              >Удаление старого боя после выгрузки<select
+              >Очистка после сохранения файла архива<select
                 id="archive-session"
               ></select
             ></label>
             <button data-op="archive-delete" id="archive-delete" disabled>
-              Удалить выбранный старый бой
+              Файл сохранён: удалить выбранный старый бой
             </button>
             <label
               >Бой из загруженного архива<select id="archive-imported"></select

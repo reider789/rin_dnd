@@ -46,7 +46,11 @@ prior_tx=copy.deepcopy(legacy_tx)
 op=next(x for x in prior_tx['operations'] if x.get('field')=='combat_continuity')
 op['value']=prior_value
 prior_state=build_result(state,prior_tx)
+report_snapshot=copy.deepcopy(legacy)
+transaction_snapshot=copy.deepcopy(prior_tx)
 assert prepare(legacy,prior_state)==prior_tx
 assert build_result(prior_state,prepare(legacy,prior_state))==prior_state
+assert legacy==report_snapshot
+assert prior_tx==transaction_snapshot
 assert json.dumps(state,sort_keys=True)==original
 print('COMBAT BRIDGE OK: snapshot, ownership, bounds, conflict, exact replay, changed replay, arrows catalog; live canon unchanged')
