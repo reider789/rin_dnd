@@ -64,12 +64,14 @@
     const values = {};
     for (const el of root.querySelectorAll(
       "select[id],input[id]:not([type=file]),textarea[id]",
-    ))
+    )) {
+      if (el.closest(".combat-fx-settings")) continue;
       values[el.id] = el.multiple
         ? [...el.selectedOptions].map((o) => o.value)
         : el.type === "checkbox"
           ? el.checked
           : el.value;
+    }
     drafts.set(draftScope, values);
     panelOpen.set(
       draftScope,
@@ -112,6 +114,7 @@
     timer = null,
     notice = "",
     error = false;
+  const visualFX = new CombatVisualFX(root);
   const esc = (x) =>
     String(x ?? "").replace(
       /[&<>"']/g,
@@ -1418,7 +1421,7 @@
             (a.team === "enemies" ? "enemy " : "") +
             (occupant === id ? "current " : "") +
             (engine.incapacitated(occupant) ? "down" : "") +
-            '" style="background-image:url(\'' +
+            '" data-unit="' + esc(occupant) + '" style="background-image:url(\'' +
             asset(key) +
             "')\"><b>" +
             esc(a.name.split(" ")[0]) +
@@ -1434,7 +1437,12 @@
               objects[0].max +
               " ПЗ</span>"
             : "");
-      if (b.innerHTML !== html) b.innerHTML = html;
+      // FX may attach status badges/temporary attributes. Compare source markup,
+      // not the decorated DOM, so unrelated renders preserve both DOM and focus.
+      if (b._combatMarkup !== html) {
+        b.innerHTML = html;
+        b._combatMarkup = html;
+      }
     }
     $("notice").textContent =
       notice ||
@@ -1951,6 +1959,15 @@
       root.querySelector("aside").scrollTop = 0;
     visibleActor = id;
     visiblePending = s.pending?.id;
+    try {
+      visualFX.render(engine);
+    } catch (e) {
+      // A visual failure cannot prevent saving, reactions or the next command.
+      visualFX.clear();
+      visualFX.failure = String(e.message);
+      if ($("combat-fx-hint")) $("combat-fx-hint").textContent =
+        "Эффекты временно отключены; бой и сохранения продолжают работать.";
+    }
   }
   root.addEventListener("click", (e) => {
     const b = e.target.closest("button");
@@ -2496,6 +2513,9 @@
       load,
       create: newBattle,
       stop: () => clearTimeout(timer),
+      visuals: () => ({...structuredClone(visualFX.stats), active:visualFX.active.size,
+        mode:visualFX.mode,speed:visualFX.speed,failure:visualFX.failure || null}),
+      clearVisuals: () => visualFX.clear(),
       outcome: () => CombatCampaignAdapter.outcome(engine.s),
     };
 })();

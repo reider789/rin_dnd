@@ -134,6 +134,7 @@ aside {
   opacity: 0.4;
 }
 .board-frame {
+  position: relative;
   border: 3px solid #8a7754;
   border-radius: 6px;
   overflow: hidden;
@@ -206,6 +207,108 @@ aside {
 .token.down {
   filter: grayscale(1);
   opacity: 0.55;
+}
+/* Short-lived, compositor-driven effects. There is no idle animation loop. */
+.combat-fx-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  overflow: hidden;
+  contain: layout style paint;
+}
+.combat-fx-layer * { pointer-events: none !important; }
+.combat-fx {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  color: var(--fx-color, #c8b8e5);
+  font: 700 16px/1 system-ui, sans-serif;
+  white-space: nowrap;
+  will-change: transform, opacity;
+}
+.fx-steel { --fx-color: #f0d5a2; }
+.fx-fire { --fx-color: #ed965b; }
+.fx-ice, .fx-shield { --fx-color: #a2dbf5; }
+.fx-storm { --fx-color: #cfbdff; }
+.fx-mind { --fx-color: #d49bd1; }
+.fx-holy { --fx-color: #c5deb3; }
+.fx-shadow { --fx-color: #a89dcb; }
+.fx-mist, .fx-stone { --fx-color: #b7cdd3; }
+.fx-web { --fx-color: #d3dac2; }
+.fx-poison { --fx-color: #b4c487; }
+.combat-fx svg { width: 100%; height: 100%; overflow: visible; }
+.combat-fx-number, .combat-fx-critical, .combat-fx-miss {
+  text-shadow: 0 1px 3px #071016, 1px 0 2px #071016, -1px 0 2px #071016;
+  z-index: 4;
+}
+.combat-fx-number { font-size: clamp(15px, 1.5vw, 23px); }
+.combat-fx-miss { font-size: 12px; border: 1px dashed currentColor; border-radius: 50%; }
+.combat-fx-critical { font-size: 14px; align-items: start; }
+.combat-fx-rune, .combat-fx-portal, .combat-fx-status, .combat-fx-down {
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  box-shadow: inset 0 0 12px #bac4ed20, 0 0 10px #bac4ed18;
+}
+.combat-fx-rune::before {
+  content: ""; position: absolute; inset: 12%;
+  border: 1px dashed currentColor; transform: rotate(35deg);
+}
+.combat-fx-portal { border-width: 3px; box-shadow: inset 0 0 14px #a2cfeb60; }
+.combat-fx-shield {
+  border: 3px solid currentColor;
+  border-radius: 30% 30% 48% 48%;
+  box-shadow: inset 0 0 16px #a2cfeb55;
+}
+.combat-fx-impact::before, .combat-fx-spark::before {
+  content: ""; position: absolute; inset: 12%; background: currentColor;
+  clip-path: polygon(50% 0,60% 35%,95% 15%,65% 45%,100% 55%,63% 63%,75% 95%,50% 70%,25% 100%,35% 62%,0 50%,35% 40%);
+  rotate: var(--fx-angle, 0deg);
+}
+.combat-fx-slash { border-top: 3px solid currentColor; border-radius: 50%; rotate: -35deg; }
+.combat-fx-projectile { border-radius: 50%; background: currentColor; box-shadow: 0 0 12px currentColor; }
+.combat-fx-projectile.fx-ice { border-radius: 2px; }
+.combat-fx-arrow svg, .combat-fx-thrown svg { height: 40%; }
+.combat-fx-strike { border: 3px solid currentColor; border-radius: 50%; }
+.combat-fx-area {
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, transparent 25%, currentColor 95%, transparent);
+}
+.combat-fx-web {
+  border: 1px solid currentColor;
+  background: repeating-linear-gradient(45deg, transparent 0 17px, currentColor 18px 19px, transparent 20px 35px),
+    repeating-linear-gradient(-45deg, transparent 0 17px, currentColor 18px 19px, transparent 20px 35px);
+}
+.combat-fx-cone, .combat-fx-lightning { inset: 0; width: 100%; height: 100%; transform: none; }
+.combat-fx-cone { will-change: opacity; }
+.combat-fx-lightning { will-change: opacity; }
+.combat-fx-heal { border: 2px solid currentColor; border-radius: 50%; font-size: 28px; }
+.combat-fx-hand svg { fill-opacity: .2; }
+.combat-fx-counter { font-size: 36px; border: 2px dashed currentColor; border-radius: 50%; }
+.combat-fx-down { border-style: dashed; }
+.combat-fx-ghost { z-index: 2; opacity: 1; }
+.combat-fx-ghost > .token { display: block; }
+.token[data-fx-moving] { opacity: 0; }
+.token[data-fx-state~="web"] { box-shadow: inset 0 0 0 3px #d3dac26b, 0 2px 7px #0009; }
+.token[data-fx-state~="shield"] { box-shadow: inset 0 0 0 3px #a2dbf570, 0 2px 7px #0009; }
+.token[data-fx-state~="fire"] { box-shadow: inset 0 -6px 9px #ed965b77, 0 2px 7px #0009; }
+.token > .combat-fx-status {
+  position: absolute; top: -5px; right: -4px; z-index: 2;
+  border: 1px solid #9f957e; border-radius: 4px;
+  background: #15232bec; color: #eadbbd; padding: 1px 3px;
+  font: 700 11px/1.2 system-ui, sans-serif;
+  /* A static badge, not a transient .combat-fx element. */
+  opacity: 1; transform: none; box-shadow: none;
+}
+.combat-fx-settings { border: 1px solid #6b786e; border-radius: 5px; margin: 0; }
+.combat-fx-settings legend { color: #ecd1a0; padding: 0 5px; }
+.combat-fx-settings small { display: block; max-width: 32em; margin-top: 5px; }
+@media (prefers-reduced-motion: reduce) {
+  .combat-fx-layer { display: none; }
+  .token[data-fx-moving] { opacity: 1; }
 }
 .token b {
   position: absolute;

@@ -758,7 +758,7 @@ class CombatRulesEngine {
         sides: 20,
         mode: -1,
         bonus: spec.bonus,
-        next: { kind: "emptyAttackResult", actor: id, point: p },
+        next: { kind: "emptyAttackResult", actor: id, point: p, spec },
       });
       return;
     }
@@ -2083,6 +2083,14 @@ class CombatRulesEngine {
           target: t.target,
           hit,
           critical,
+          attackKind: t.spec.kind,
+          object: t.magicObject,
+          weapon: t.spec.id,
+          unarmed: Boolean(t.spec.unarmed),
+          projectile: t.spec.ammoItem ? "thrown" : t.spec.kind === "rangedSpell" ? "spell" : "arrow",
+          damageType: t.spec.damageType,
+          origin: { x: origin.x, y: origin.y },
+          point: { x: this.unit(t.target).x, y: this.unit(t.target).y },
           rolls: t.result.rolls,
           modifiers: m,
         },
@@ -2429,6 +2437,9 @@ class CombatRulesEngine {
         "attackMissed",
         t.actor,
         u.name + ": атака клетки " + this.cell(t.point) + " — промах.",
+        { point: t.point, origin: {x:u.x,y:u.y}, attackKind:t.spec?.kind,
+          weapon:t.spec?.id, unarmed:Boolean(t.spec?.unarmed),
+          projectile:t.spec?.ammoItem ? "thrown" : "arrow" },
       );
       return;
     }
@@ -3078,7 +3089,9 @@ class CombatRulesEngine {
       u.deathSuccesses = 0;
       this.removeStatus(id, "unconscious");
     }
-    this.emit("heal", id, u.name + ": восстановлено " + real + " ПЗ.");
+    this.emit("heal", id, u.name + ": восстановлено " + real + " ПЗ.", {
+      amount: real,
+    });
   }
   releaseGrapples() {
     for (const id of this.s.order) {

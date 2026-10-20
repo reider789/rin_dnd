@@ -143,7 +143,9 @@ class CombatDefenses {
       u.slotTurn = e.s.turnSerial;
     }
     e.status(id, "shield", { expiresAtStart: id });
-    e.emit("cast", id, u.name + ": Щит, +5 КД до начала следующего хода.");
+    e.emit("cast", id, u.name + ": Щит, +5 КД до начала следующего хода.", {
+      spell: "shield", targets: [id], resolved: true,
+    });
   }
   static beforeResult(e, t) {
     const target = e.unit(t.target),
@@ -284,6 +286,7 @@ class CombatDefenses {
             mark: "Отмена критического попадания",
           }[p.ability] +
           ".",
+        { ability: p.ability, target: t.target },
       );
     }
     e.enqueue(t);

@@ -914,6 +914,7 @@ class CombatMagic {
         spell: f.spell,
         level: f.level,
         targets: f.targets,
+        point: f.point,
       });
       e.enqueue(this.task(c.actor, "window", { frame: f.id }));
       return true;
@@ -1306,14 +1307,14 @@ class CombatMagic {
           "counterspell",
           t.actor,
           "Заклинание прервано; исходная ячейка сохранена.",
-          { targetFrame: parent.id },
+          { targetFrame: parent.id, target: parent.actor, cancelled: true },
         );
       } else
         e.emit(
           "counterspell",
           t.actor,
           "Заклинание выдержало Контрзаклинание.",
-          { targetFrame: parent.id },
+          { targetFrame: parent.id, target: parent.actor, cancelled: false },
         );
     } else if (t.op === "resolve") {
       const f = this.frame(e, t.frame);
@@ -1615,6 +1616,16 @@ class CombatMagic {
       t = targets[0],
       p = f.point;
     this.init(e.s);
+    // Resolution is distinct from starting a cast: cancelled spells never
+    // produce this event. Presentation consumes IDs/data, never journal text.
+    e.emit("spellResolved", f.actor, this.SPELLS[f.spell][0] + ": заклинание срабатывает.", {
+      spell: f.spell,
+      level: f.level,
+      targets,
+      point: p,
+      origin: { x: u.x, y: u.y },
+      target: f.target,
+    });
     if (f.spell === "counterspell") {
       const parent = this.frame(e, f.targetFrame);
       if (!parent.cancelled)
@@ -1779,7 +1790,9 @@ class CombatMagic {
         this.add(e, f, "mageArmor", targets, 28800);
         break;
       case "mistyStep":
-      case "dimensionDoor":
+      case "dimensionDoor": {
+        const from = { x: u.x, y: u.y },
+          passengerFrom = f.passenger && { x: e.unit(f.passenger).x, y: e.unit(f.passenger).y };
         Object.assign(u, p);
         if (f.passenger) Object.assign(e.unit(f.passenger), f.passengerPoint);
         u.hidden = false;
@@ -1789,8 +1802,11 @@ class CombatMagic {
           "teleport",
           f.actor,
           u.name + " перемещается в " + e.cell(p) + ".",
+          { from, to: p, passenger: f.passenger,
+            passengerFrom, passengerTo: f.passengerPoint },
         );
         break;
+      }
       case "greaterInvisibility":
       case "shieldFaith":
       case "beaconHope":
@@ -2219,6 +2235,7 @@ class CombatMagic {
     }
     e.emit("hand", t.actor, "Рука Бигби: " + mode + ".", {
       object: o.id,
+      mode,
       target: t.target,
       point: { x: o.x, y: o.y },
     });
@@ -2247,6 +2264,7 @@ class CombatMagic {
   }
   static push(e, id, from, feet) {
     const u = e.unit(id),
+      start = { x: u.x, y: u.y },
       dx = Math.sign(u.x - from.x),
       dy = Math.sign(u.y - from.y);
     if (!dx && !dy) return;
@@ -2256,7 +2274,9 @@ class CombatMagic {
       Object.assign(u, p);
     }
     e.releaseGrapples();
-    e.emit("forcedMove", id, e.name(id) + " оттеснён в " + e.cell(u) + ".");
+    e.emit("forcedMove", id, e.name(id) + " оттеснён в " + e.cell(u) + ".", {
+      from: start, to: { x: u.x, y: u.y },
+    });
   }
   static heroTemp(e, id, x) {
     const u = e.unit(id);
@@ -2616,7 +2636,7 @@ class CombatMagic {
       this.pay(e, f, "reaction");
     }
     e.s.spellFrames[f.id] = f;
-    e.emit("cast", id, u.name + ": Щит.");
+    e.emit("cast", id, u.name + ": Щит.", { spell: "shield", targets: [id] });
     e.enqueue(this.task(id, "window", { frame: f.id }));
   }
   static advancedDecision(e, c, p) {

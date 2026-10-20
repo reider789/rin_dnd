@@ -1,7 +1,7 @@
 {
   "schema_version": 3,
   "engine": "rin-combat-v30",
-  "engine_version": "30.5.3",
+  "engine_version": "30.6.0",
   "desktop_only": true,
   "main_ui_path": "index.html",
   "source_engine": "web/shell.html",
@@ -19,6 +19,7 @@
     "core/tactical_ai.js",
     "core/campaign_adapter.js",
     "web/session_store.js",
+    "core/visual_fx.js",
     "web/combat_app.js"
   ],
   "runtime": "config/rin_runtime.json",
