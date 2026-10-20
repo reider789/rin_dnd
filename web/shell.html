@@ -28,6 +28,20 @@
         <details class="tools">
           <summary>Бои и настройки</summary>
           <div class="toolbox">
+            <fieldset class="combat-fx-settings">
+              <legend>Анимации боя</legend>
+              <label>Эффекты<select id="combat-fx-mode" aria-describedby="combat-fx-hint">
+                <option value="off">Выключены</option>
+                <option value="standard" selected>Обычные</option>
+                <option value="rich">Насыщенные</option>
+              </select></label>
+              <label>Скорость<select id="combat-fx-speed">
+                <option value="1">Обычная</option>
+                <option value="1.5">Быстрая · ×1,5</option>
+                <option value="2">Очень быстрая · ×2</option>
+              </select></label>
+              <small id="combat-fx-hint"></small>
+            </fieldset>
             <button data-op="scenario">Загрузить сценарий</button>
             <button data-op="pack">Загрузить пакет кампании</button>
             <select id="recovery" aria-label="Открыть сохранённый бой"></select>

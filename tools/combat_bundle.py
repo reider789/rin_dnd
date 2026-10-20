@@ -2,7 +2,7 @@
 from pathlib import Path
 import hashlib,json,re
 ROOT=Path(__file__).resolve().parents[1]
-MODULES=['core/battlefield.js','core/capabilities.js','core/content_pack.js','core/class_features.js','core/defenses.js','core/martial_features.js','core/magic.js','core/advanced_features.js','core/continuity.js','core/rules_engine.js','core/tactical_ai.js','core/campaign_adapter.js','web/session_store.js','web/combat_app.js']
+MODULES=['core/battlefield.js','core/capabilities.js','core/content_pack.js','core/class_features.js','core/defenses.js','core/martial_features.js','core/magic.js','core/advanced_features.js','core/continuity.js','core/rules_engine.js','core/tactical_ai.js','core/campaign_adapter.js','web/session_store.js','core/visual_fx.js','web/combat_app.js']
 def encoded(value):return json.dumps(value,ensure_ascii=False,separators=(',',':')).replace('<','\\u003c')
 def engine_version(root=ROOT):return re.search(r'static ENGINE = "([^"]+)"',(root/'core/capabilities.js').read_text()).group(1)
 def scene_art(runtime,scene,art):
