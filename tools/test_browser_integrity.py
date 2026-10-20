@@ -1,6 +1,6 @@
 """30.5.2 regressions through the real desktop controls and browser storage."""
 from pathlib import Path
-import json
+import json,tempfile
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -77,6 +77,20 @@ def run():
         page.evaluate(f'{API}.stop()')
         assert page.evaluate(f'{API}.snapshot().meta.battleId') == target
 
+        # v1 imports use an asynchronous File.text() handler. Wait for the
+        # newly parsed entry, not stale controls left from the previous import.
+        legacy_value = json.loads(archive['sessions'][chosen]['raw'])
+        legacy_value['session']['meta']['name'] = 'Проверка старого архива'
+        with tempfile.TemporaryDirectory() as directory:
+            legacy_path = Path(directory)/'legacy-v1.json'
+            legacy_path.write_text(json.dumps({'kind':'dnd-combat-archive','version':1,
+                'sessions':[{'key':key,'value':legacy_value}]}),encoding='utf-8')
+            page.locator('#import-file').set_input_files(str(legacy_path))
+            page.wait_for_function("document.getElementById('archive-imported').textContent.includes('Проверка старого архива')")
+            page.locator('#archive-restore').click()
+            page.evaluate(f'{API}.stop()')
+            assert page.evaluate(f'{API}.snapshot().meta.name') == 'Проверка старого архива'
+
         # Long active sessions keep saving; starting another never silently evicts history.
         for n in range(3):
             page.evaluate(f'''{API}.set(s=>{{s.events=Array.from({{length:8000}},(_,i)=>({{
@@ -124,6 +138,7 @@ def run():
         page.locator('#archive-delete').click()
         assert page.evaluate('(k)=>localStorage.getItem(k)', bad) is None
         page.locator('#import-file').set_input_files(str(broken_path))
+        page.wait_for_function("document.getElementById('notice').textContent.includes('Повреждённых или несовместимых записей: 1')")
         assert 'Повреждённых или несовместимых записей: 1' in page.locator('#notice').inner_text()
         assert page.evaluate(f'{API}.snapshot().meta.battleId') == current
         page.locator('[data-op="new"]').click()
