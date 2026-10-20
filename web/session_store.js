@@ -17,7 +17,7 @@ class CombatSessionStore {
     return result;
   }
   isBattle(key) {
-    return !key.endsWith(":previous") && !key.endsWith("-unreadable");
+    return !key.endsWith(":previous");
   }
   stats(current) {
     const entries = this.entries(),

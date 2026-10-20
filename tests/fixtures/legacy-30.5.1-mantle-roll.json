@@ -1,0 +1,777 @@
+{
+  "kind": "dnd-combat-session",
+  "version": 32,
+  "session": {
+    "version": 30,
+    "rulesVersion": "dnd-2024-2026-10",
+    "engineVersion": "30.5.1",
+    "meta": {
+      "campaignId": "border-watch",
+      "battleId": "portable-marsh-road",
+      "kind": "training",
+      "name": "Дозор на болотной дороге — учебный бой",
+      "sceneId": "portable-marsh-road",
+      "theme": "forest",
+      "resultKind": "dnd-combat-result",
+      "contentPack": {
+        "id": "border-watch",
+        "revision": 1
+      },
+      "sourceRevision": 1,
+      "sourceClock": 0,
+      "sourceHash": "content-pack:border-watch:1"
+    },
+    "terrain": {
+      "width": 11,
+      "height": 8,
+      "walls": [],
+      "rubble": [
+        "5,2",
+        "5,3"
+      ],
+      "cover": {}
+    },
+    "units": {
+      "ena": {
+        "id": "ena",
+        "name": "Audit caster",
+        "team": "party",
+        "controlled": true,
+        "tokenKey": null,
+        "x": 2,
+        "y": 3,
+        "hp": 100,
+        "max": 100,
+        "ac": 12,
+        "speed": 30,
+        "size": 2,
+        "summoner": null,
+        "summonLevel": null,
+        "summonDC": null,
+        "creatureType": null,
+        "powerAvailable": false,
+        "stats": {
+          "STR": 0,
+          "DEX": 2,
+          "CON": 2,
+          "INT": 5,
+          "WIS": 2,
+          "CHA": 2
+        },
+        "saves": {
+          "STR": 0,
+          "DEX": 2,
+          "CON": 2,
+          "INT": 5,
+          "WIS": 2,
+          "CHA": 2
+        },
+        "skills": {},
+        "proficiency": 4,
+        "features": {},
+        "senses": {},
+        "casting": {
+          "ability": "INT",
+          "attack": 11,
+          "dc": 19,
+          "level": 10,
+          "prepared": [
+            "greaterInvisibility",
+            "slow",
+            "counterspell",
+            "bigbyHand",
+            "shield",
+            "dispelMagic",
+            "bless",
+            "holdMonster",
+            "findSteed",
+            "lesserRestoration",
+            "zoneTruth"
+          ],
+          "cantrips": [
+            "fireBolt",
+            "rayFrost"
+          ],
+          "components": {}
+        },
+        "equipment": {},
+        "reference": [],
+        "attacks": [
+          {
+            "id": "staff",
+            "name": "Staff",
+            "kind": "melee",
+            "range": 5,
+            "bonus": 5,
+            "flat": 1,
+            "count": 1,
+            "die": 6,
+            "damageType": "bludgeoning"
+          }
+        ],
+        "statuses": [],
+        "items": {},
+        "proficientSkills": [],
+        "counters": {},
+        "slots": {
+          "1": {
+            "current": 5,
+            "max": 5
+          },
+          "2": {
+            "current": 5,
+            "max": 5
+          },
+          "3": {
+            "current": 5,
+            "max": 5
+          },
+          "4": {
+            "current": 5,
+            "max": 5
+          },
+          "5": {
+            "current": 5,
+            "max": 5
+          }
+        },
+        "temp": 0,
+        "turnCount": 2,
+        "action": 0,
+        "bonus": 1,
+        "reaction": 1,
+        "move": 30,
+        "attacksLeft": 0,
+        "focus": 0,
+        "focusMax": 0,
+        "luck": 0,
+        "heroic": 1,
+        "arrows": 0,
+        "metabolism": 0,
+        "policies": {
+          "heroic": true,
+          "luck": false,
+          "defenseLuck": false,
+          "sneak": true
+        },
+        "deathSaves": true,
+        "resistances": [],
+        "immunities": [],
+        "vulnerabilities": [],
+        "conditionImmunities": [],
+        "tactics": {
+          "role": "skirmisher",
+          "canFlee": false
+        },
+        "itemTypes": {},
+        "tempSource": null,
+        "itemHealing": {},
+        "movementDebt": 0,
+        "dashCount": 0,
+        "surgeAction": 0,
+        "movedThisTurn": 0,
+        "slowChoice": null,
+        "abjureChoice": null,
+        "shieldBashTurn": null,
+        "nickUsed": false,
+        "lightWeaponUsed": null,
+        "flurryLeft": 0,
+        "disengaged": false,
+        "jumpMultiplier": 1,
+        "darkMoveWindow": false,
+        "ready": null,
+        "hasteAction": 0,
+        "hidden": false
+      },
+      "tal": {
+        "id": "tal",
+        "name": "Таль, разведчик",
+        "team": "party",
+        "controlled": false,
+        "tokenKey": null,
+        "x": 2,
+        "y": 4,
+        "hp": 27,
+        "max": 27,
+        "ac": 14,
+        "speed": 30,
+        "size": 2,
+        "summoner": null,
+        "summonLevel": null,
+        "summonDC": null,
+        "creatureType": null,
+        "powerAvailable": false,
+        "stats": {
+          "STR": 2,
+          "DEX": 2,
+          "CON": 2,
+          "INT": 0,
+          "WIS": 1,
+          "CHA": 0
+        },
+        "saves": {
+          "STR": 2,
+          "DEX": 2,
+          "CON": 2,
+          "INT": 0,
+          "WIS": 1,
+          "CHA": 0
+        },
+        "skills": {},
+        "proficiency": 2,
+        "features": {
+          "sneakDice": 2,
+          "cunningAction": true
+        },
+        "senses": {},
+        "casting": null,
+        "equipment": {},
+        "reference": [],
+        "attacks": [
+          {
+            "id": "blade",
+            "name": "Клинок разведчика",
+            "kind": "melee",
+            "ability": "STR",
+            "count": 1,
+            "die": 6,
+            "range": 5,
+            "damageType": "slashing",
+            "sneakEligible": true,
+            "bonus": 4,
+            "flat": 2
+          }
+        ],
+        "statuses": [],
+        "items": {},
+        "proficientSkills": [],
+        "counters": {},
+        "slots": {},
+        "temp": 0,
+        "turnCount": 0,
+        "action": 0,
+        "bonus": 0,
+        "reaction": 1,
+        "move": 0,
+        "attacksLeft": 0,
+        "focus": 0,
+        "focusMax": 0,
+        "luck": 0,
+        "heroic": 0,
+        "arrows": 0,
+        "metabolism": 0,
+        "policies": {
+          "heroic": false,
+          "luck": false,
+          "defenseLuck": false,
+          "sneak": true
+        },
+        "deathSaves": true,
+        "resistances": [],
+        "immunities": [],
+        "vulnerabilities": [],
+        "conditionImmunities": [],
+        "tactics": {
+          "role": "skirmisher",
+          "canFlee": false
+        },
+        "itemTypes": {},
+        "tempSource": null,
+        "itemHealing": {},
+        "movementDebt": 0
+      },
+      "hunter_a": {
+        "id": "hunter_a",
+        "name": "Болотный ловчий",
+        "team": "enemies",
+        "controlled": true,
+        "tokenKey": null,
+        "x": 3,
+        "y": 3,
+        "hp": 194,
+        "max": 200,
+        "ac": 13,
+        "speed": 30,
+        "size": 2,
+        "summoner": null,
+        "summonLevel": null,
+        "summonDC": null,
+        "creatureType": null,
+        "powerAvailable": false,
+        "stats": {
+          "STR": 2,
+          "DEX": 2,
+          "CON": 2,
+          "INT": 0,
+          "WIS": 1,
+          "CHA": 0
+        },
+        "saves": {
+          "STR": 2,
+          "DEX": 2,
+          "CON": 2,
+          "INT": 0,
+          "WIS": 1,
+          "CHA": 0
+        },
+        "skills": {},
+        "proficiency": 2,
+        "features": {
+          "uncannyDodge": true
+        },
+        "senses": {},
+        "casting": null,
+        "equipment": {},
+        "reference": [],
+        "attacks": [
+          {
+            "id": "claws",
+            "name": "Когти ловчего",
+            "kind": "melee",
+            "ability": "STR",
+            "count": 1,
+            "die": 6,
+            "range": 5,
+            "damageType": "slashing",
+            "effects": [
+              {
+                "handler": "onHitCondition",
+                "name": "Ядовитые когти",
+                "condition": "poisoned",
+                "save": {
+                  "stat": "CON",
+                  "dc": 12
+                },
+                "duration": "target-next-start"
+              }
+            ],
+            "bonus": 4,
+            "flat": 2
+          }
+        ],
+        "statuses": [],
+        "items": {},
+        "proficientSkills": [],
+        "counters": {},
+        "slots": {},
+        "temp": 0,
+        "turnCount": 0,
+        "action": 0,
+        "bonus": 0,
+        "reaction": 1,
+        "move": 0,
+        "attacksLeft": 0,
+        "focus": 0,
+        "focusMax": 0,
+        "luck": 0,
+        "heroic": 0,
+        "arrows": 0,
+        "metabolism": 0,
+        "policies": {
+          "heroic": false,
+          "luck": false,
+          "defenseLuck": false,
+          "sneak": true
+        },
+        "deathSaves": false,
+        "resistances": [],
+        "immunities": [],
+        "vulnerabilities": [],
+        "conditionImmunities": [],
+        "tactics": {
+          "role": "pack",
+          "canFlee": true,
+          "morale": 0.15
+        },
+        "movementDebt": 0
+      },
+      "hunter_b": {
+        "id": "hunter_b",
+        "name": "Болотный ловчий",
+        "team": "enemies",
+        "controlled": false,
+        "tokenKey": null,
+        "x": 7,
+        "y": 5,
+        "hp": 200,
+        "max": 200,
+        "ac": 13,
+        "speed": 30,
+        "size": 2,
+        "summoner": null,
+        "summonLevel": null,
+        "summonDC": null,
+        "creatureType": null,
+        "powerAvailable": false,
+        "stats": {
+          "STR": 2,
+          "DEX": 2,
+          "CON": 2,
+          "INT": 0,
+          "WIS": 1,
+          "CHA": 0
+        },
+        "saves": {
+          "STR": 2,
+          "DEX": 2,
+          "CON": 2,
+          "INT": 0,
+          "WIS": 1,
+          "CHA": 0
+        },
+        "skills": {},
+        "proficiency": 2,
+        "features": {
+          "packTactics": true
+        },
+        "senses": {},
+        "casting": null,
+        "equipment": {},
+        "reference": [],
+        "attacks": [
+          {
+            "id": "claws",
+            "name": "Когти ловчего",
+            "kind": "melee",
+            "ability": "STR",
+            "count": 1,
+            "die": 6,
+            "range": 5,
+            "damageType": "slashing",
+            "effects": [
+              {
+                "handler": "onHitCondition",
+                "name": "Ядовитые когти",
+                "condition": "poisoned",
+                "save": {
+                  "stat": "CON",
+                  "dc": 12
+                },
+                "duration": "target-next-start"
+              }
+            ],
+            "bonus": 4,
+            "flat": 2
+          }
+        ],
+        "statuses": [],
+        "items": {},
+        "proficientSkills": [],
+        "counters": {},
+        "slots": {},
+        "temp": 0,
+        "turnCount": 0,
+        "action": 0,
+        "bonus": 0,
+        "reaction": 1,
+        "move": 0,
+        "attacksLeft": 0,
+        "focus": 0,
+        "focusMax": 0,
+        "luck": 0,
+        "heroic": 0,
+        "arrows": 0,
+        "metabolism": 0,
+        "policies": {
+          "heroic": false,
+          "luck": false,
+          "defenseLuck": false,
+          "sneak": true
+        },
+        "deathSaves": false,
+        "resistances": [],
+        "immunities": [],
+        "vulnerabilities": [],
+        "conditionImmunities": [],
+        "tactics": {
+          "role": "pack",
+          "canFlee": true,
+          "morale": 0.15
+        },
+        "movementDebt": 0
+      }
+    },
+    "order": [
+      "ena",
+      "tal",
+      "hunter_a",
+      "hunter_b"
+    ],
+    "initiative": {
+      "ena": 20,
+      "tal": 18,
+      "hunter_a": 12,
+      "hunter_b": 10
+    },
+    "baseline": {
+      "ena": {
+        "hp": {
+          "current": 100,
+          "max": 100
+        },
+        "spell_slots": {
+          "1": {
+            "current": 5,
+            "max": 5
+          },
+          "2": {
+            "current": 5,
+            "max": 5
+          },
+          "3": {
+            "current": 5,
+            "max": 5
+          },
+          "4": {
+            "current": 5,
+            "max": 5
+          },
+          "5": {
+            "current": 5,
+            "max": 5
+          }
+        }
+      },
+      "tal": {
+        "hp": {
+          "current": 27,
+          "max": 27
+        }
+      }
+    },
+    "continuityBaseline": {},
+    "inventoryBaseline": {
+      "ena": {},
+      "tal": {}
+    },
+    "index": 0,
+    "round": 1,
+    "elapsed": 0,
+    "turnSerial": 2,
+    "sequence": 11,
+    "phase": "active",
+    "started": true,
+    "random": {
+      "value": 1,
+      "draws": 3,
+      "tape": []
+    },
+    "queue": [
+      {
+        "kind": "attackCompleted",
+        "actor": "ena",
+        "target": "hunter_a"
+      }
+    ],
+    "pending": {
+      "id": "decision-11",
+      "kind": "roll",
+      "actor": "ena",
+      "roll": {
+        "kind": "roll",
+        "actor": "ena",
+        "label": "Мантия крестоносца",
+        "count": 1,
+        "sides": 4,
+        "bonus": 0,
+        "next": {
+          "kind": "advancedTask",
+          "actor": "ena",
+          "op": "smiteDamage",
+          "target": "hunter_a"
+        },
+        "magicBonusDone": true,
+        "rolls": [
+          4
+        ]
+      },
+      "heroic": true,
+      "lucky": false
+    },
+    "events": [
+      {
+        "seq": 1,
+        "turn": 1,
+        "round": 1,
+        "type": "turnStarted",
+        "actor": "ena",
+        "text": "Ход: Audit caster."
+      },
+      {
+        "seq": 2,
+        "turn": 2,
+        "round": 1,
+        "type": "turnStarted",
+        "actor": "ena",
+        "text": "Ход: Audit caster."
+      },
+      {
+        "seq": 4,
+        "turn": 2,
+        "round": 1,
+        "type": "effect",
+        "actor": "ena",
+        "text": "Мантия крестоносца",
+        "effect": {
+          "id": "effect-3",
+          "kind": "crusaderMantle",
+          "owner": "ena",
+          "targets": [
+            "ena"
+          ],
+          "level": 3,
+          "dc": 19,
+          "until": 60,
+          "concentration": true
+        }
+      },
+      {
+        "seq": 5,
+        "turn": 2,
+        "round": 1,
+        "type": "roll",
+        "actor": "ena",
+        "text": "Audit caster: Staff → Болотный ловчий [18] +5 = 23.",
+        "rolls": [
+          18
+        ],
+        "sides": 20,
+        "bonus": 5,
+        "total": 23,
+        "mode": 0
+      },
+      {
+        "seq": 6,
+        "turn": 2,
+        "round": 1,
+        "type": "attack",
+        "actor": "ena",
+        "text": "Audit caster: Staff → Болотный ловчий; обычный бросок; 18 +5 = 23 против КД 13 — попадание.",
+        "target": "hunter_a",
+        "hit": true,
+        "critical": false,
+        "rolls": [
+          18
+        ],
+        "modifiers": {
+          "advantage": [],
+          "disadvantage": [],
+          "adv": false,
+          "disadv": false
+        }
+      },
+      {
+        "seq": 8,
+        "turn": 2,
+        "round": 1,
+        "type": "roll",
+        "actor": "ena",
+        "text": "Audit caster: Урон Staff [5] +1 = 6.",
+        "rolls": [
+          5
+        ],
+        "sides": 6,
+        "bonus": 1,
+        "total": 6,
+        "mode": 0
+      },
+      {
+        "seq": 10,
+        "turn": 2,
+        "round": 1,
+        "type": "damage",
+        "actor": "hunter_a",
+        "text": "Болотный ловчий: 6 урона, осталось 194/200.",
+        "amount": 6,
+        "lost": 6,
+        "temp": 0,
+        "damageType": "bludgeoning",
+        "source": "ena",
+        "strikeId": "strike-7"
+      }
+    ],
+    "zones": [],
+    "memory": {
+      "ena": {
+        "hunter_a": {
+          "x": 3,
+          "y": 3,
+          "name": "Болотный ловчий",
+          "seenTurn": 2
+        },
+        "hunter_b": {
+          "x": 7,
+          "y": 5,
+          "name": "Болотный ловчий",
+          "seenTurn": 2
+        }
+      },
+      "tal": {
+        "hunter_a": {
+          "x": 3,
+          "y": 3,
+          "name": "Болотный ловчий",
+          "seenTurn": 2
+        },
+        "hunter_b": {
+          "x": 7,
+          "y": 5,
+          "name": "Болотный ловчий",
+          "seenTurn": 2
+        }
+      },
+      "hunter_a": {
+        "ena": {
+          "x": 2,
+          "y": 3,
+          "name": "Audit caster",
+          "seenTurn": 2
+        },
+        "tal": {
+          "x": 2,
+          "y": 4,
+          "name": "Таль, разведчик",
+          "seenTurn": 2
+        }
+      },
+      "hunter_b": {
+        "ena": {
+          "x": 2,
+          "y": 3,
+          "name": "Audit caster",
+          "seenTurn": 2
+        },
+        "tal": {
+          "x": 2,
+          "y": 4,
+          "name": "Таль, разведчик",
+          "seenTurn": 2
+        }
+      }
+    },
+    "effects": [
+      {
+        "id": "effect-3",
+        "kind": "crusaderMantle",
+        "owner": "ena",
+        "targets": [
+          "ena"
+        ],
+        "level": 3,
+        "dc": 19,
+        "until": 60,
+        "concentration": true
+      }
+    ],
+    "spellFrames": {
+      "effect-3": {
+        "actor": "ena",
+        "spell": "crusaderMantle",
+        "level": 3,
+        "id": "effect-3"
+      }
+    },
+    "objects": {},
+    "help": []
+  }
+}

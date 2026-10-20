@@ -1,14 +1,14 @@
 {
   "schema_version": 3,
   "engine": "v30",
-  "engine_version": "30.5.2",
+  "engine_version": "30.5.3",
   "current_ui_path": "index.html",
   "source_state": "config/rin_runtime.json",
   "mode": "training",
   "canonical": false,
   "source_state_revision": 1,
   "source_state_sha256": "bf8bd1f85817996db5961dd8c658c028f7c87a7632fd53f75a98812a013139e9",
-  "bundle_sha256": "0c81e49a6b3390af8dfe5a5782205335a7b02d01706582544e9156fa9b0530ca",
-  "bundle_size_bytes": 902125,
+  "bundle_sha256": "1530c4a16149e852e10f09bbbc694151bdac8668797e0a84500dba9f909ed0b1",
+  "bundle_size_bytes": 909821,
   "battle_handoff": "rin-combat-result-v30"
 }

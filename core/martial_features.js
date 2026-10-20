@@ -116,7 +116,7 @@ class CombatMartialFeatures {
     return (u.features.maneuvers || []).filter(
       (m) =>
         ["trip", "push", "goad", "maneuvering"].includes(m) &&
-        (!["trip", "push"].includes(m) || (target.size ?? 2) <= 3) &&
+        (!["trip", "push"].includes(m) || e.size(t.target) <= 3) &&
         (m !== "maneuvering" ||
           e.s.order.some(
             (k) =>
@@ -194,6 +194,49 @@ class CombatMartialFeatures {
       e.enqueue(frame);
     } else return false;
     return true;
+  }
+  static restoreLegacyHits(e) {
+    const source = e.s.engineVersion.split('.').map(Number);
+    if (source[1] > 5 || (source[1] === 5 && source[2] >= 2)) return false;
+    let resume = false;
+    for (const hit of [...e.s.queue]) {
+      if (hit.kind !== "weaponHitEffects") continue;
+      const f = hit.frame, strike = f.strikeId;
+      const p = e.s.pending;
+      const damage = strike && p?.damage?.strikeId === strike ? p.damage :
+        e.s.queue.find(t => strike && t.kind === "damage" && t.strikeId === strike);
+      let raw = (f.baseDamage || 0) + Math.max(0, f.result?.total);
+      if (f.maneuverAdded) {
+        const die = e.s.events.findLast(x => x.type === "roll" && x.actor === hit.actor &&
+          typeof x.text === "string" && x.text.includes("Кость превосходства — урон"));
+        raw += die?.total ?? NaN;
+      }
+      const untouched = damage && !damage.components && !damage.mitigated &&
+        Number.isFinite(raw) && !damage.uncannyResolved && !damage.deflectResolved &&
+        !e.s.events.some(x => x.type === "damage" && x.strikeId === strike);
+      if (untouched && (!p || (p.damage === damage && ["deflect","uncannyDodge"].includes(p.kind)))) {
+        const next = {kind:"weaponDamage",actor:hit.actor,target:hit.target,
+          frame:f,amount:raw};
+        e.s.queue = e.s.queue.filter(t => t !== hit);
+        if (p?.damage === damage) {
+          e.s.pending = null;
+          e.enqueue(next);
+          resume = true;
+        } else e.s.queue[e.s.queue.indexOf(damage)] = next;
+      } else {
+        // A historical base hit or a partially resolved defense cannot be
+        // replayed. Finish only its still-unresolved old rider continuation.
+        hit.frame = {...f,legacyRiders:true};
+      }
+    }
+    const visit = t => {
+      if (!t || typeof t !== "object") return;
+      if (t.kind === "attackRoll" && !t.spec?.dynamicWeaponBase &&
+          !["reaction","haste"].includes(t.mode)) t.weaponPrepared = true;
+      for (const value of Object.values(t)) if (value && typeof value === "object") visit(value);
+    };
+    visit(e.s.queue);visit(e.s.pending);
+    return resume;
   }
   static weaponRoll(e, t) {
     if (
@@ -487,7 +530,7 @@ class CombatMartialFeatures {
             expiresOnSourceStart: t.actor,
             stackBySource: true,
           });
-        if (mastery === "push" && (target.size ?? 2) <= 3)
+        if (mastery === "push" && e.size(t.target) <= 3)
           this.push(e, t.actor, t.target, 10);
         if (mastery === "slow" && damage > 0) {
           e.status(t.target, "slow", {

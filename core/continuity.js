@@ -379,7 +379,17 @@ class CombatContinuity {
         );
         if (z.effect !== undefined)
           this.require(
-            effects.has(z.effect) && effects.get(z.effect).targets.includes(id),
+            effects.has(z.effect) && (
+              effects.get(z.effect).targets.includes(id) ||
+              (z.kind === "restrained" && z.magic === true &&
+                effects.get(z.effect).kind === "web" &&
+                z.source === effects.get(z.effect).owner &&
+                z.dc === effects.get(z.effect).dc &&
+                z.until === effects.get(z.effect).until &&
+                (c.zones || []).some(zone => zone.effect === z.effect &&
+                  zone.kind === "web" && zone.owner === z.source &&
+                  zone.until === z.until))
+            ),
             "Нет эффекта состояния",
           );
       }
