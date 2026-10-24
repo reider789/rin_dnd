@@ -4,7 +4,29 @@ class CombatJournal {
   static DAMAGE_TYPES = {bludgeoning:"дробящий",piercing:"колющий",slashing:"рубящий",
     acid:"кислота",cold:"холод",fire:"огонь",force:"силовой",lightning:"электричество",
     necrotic:"некротический",poison:"яд",psychic:"психический",radiant:"излучение",thunder:"звук"};
+  static validateEvent(event) {
+    const object = x => x && typeof x === "object" && !Array.isArray(x);
+    const require = ok => { if (!ok) throw Error("Повреждены подробности журнала"); };
+    require(object(event) && typeof event.text === "string");
+    const array = (value, check) => value === undefined ||
+      (Array.isArray(value) && value.every(check));
+    if (event.modifiers !== undefined) {
+      require(object(event.modifiers));
+      for (const key of ["advantage", "disadvantage"])
+        require(array(event.modifiers[key], x => typeof x === "string"));
+    }
+    require(array(event.bonusParts, b => object(b) && typeof b.label === "string" &&
+      Number.isFinite(b.amount) && array(b.rolls, Number.isFinite)));
+    require(array(event.breakdown, b => object(b) && typeof b.label === "string" &&
+      Number.isFinite(b.before) && Number.isFinite(b.after) &&
+      (b.damageType === undefined || typeof b.damageType === "string")));
+    this.validateTrace(event.trace);
+  }
   static details(event) {
+    // Runtime diagnostics must never prevent the rest of the battle from rendering.
+    try { this.validateEvent(event); }
+    catch (_) { return ["Подробности события повреждены; исходная запись сохранена."]; }
+
     const out = [], sign = n => (n >= 0 ? "+" : "") + n;
     const m = event.modifiers;
     if (m?.advantage?.length) out.push("Источники преимущества: " + m.advantage.join("; "));

@@ -1,7 +1,7 @@
 {
   "schema_version": 3,
   "engine": "rin-combat-v30",
-  "engine_version": "30.7.0",
+  "engine_version": "30.7.1",
   "desktop_only": true,
   "main_ui_path": "index.html",
   "source_engine": "web/shell.html",

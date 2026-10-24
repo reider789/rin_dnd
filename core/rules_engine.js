@@ -38,6 +38,9 @@ class CombatRulesEngine {
     CombatRulesEngine.validate(state);
     this.state = structuredClone(state);
     RulesMagic.init(this.state);
+    for (const u of Object.values(this.state.units))
+      if (u.blockedCells) u.blockedCells = u.blockedCells.filter(p =>
+        p.turn === this.state.turnSerial && p.context !== undefined);
     this.revision = 0;
     const resume = RulesMartial.restoreLegacyHits(this);
     this.state.engineVersion = CombatRulesEngine.VERSION;
@@ -91,6 +94,7 @@ class CombatRulesEngine {
       s.terrain.height > 40
     )
       throw Error("Неверный размер поля");
+    s.events.forEach(event => RulesJournal.validateEvent(event));
     const cells = new Map(),
       movingActor =
         s.queue.find((t) => t.kind === "moveStep")?.actor ||
@@ -100,6 +104,12 @@ class CombatRulesEngine {
         if (u[flag] !== undefined && typeof u[flag] !== "boolean")
           throw Error("Неверное состояние жизни");
       RulesContinuity.validateLife(RulesContinuity.life(u), u.hp);
+      if (u.blockedCells !== undefined && (!Array.isArray(u.blockedCells) ||
+          !u.blockedCells.every(p => p && Number.isInteger(p.x) && Number.isInteger(p.y) &&
+            p.x >= 0 && p.y >= 0 && p.x < s.terrain.width && p.y < s.terrain.height &&
+            Number.isSafeInteger(p.turn) && p.turn >= 0 &&
+            (p.context === undefined || typeof p.context === "string"))))
+        throw Error("Повреждена память препятствий");
       if (
         !Number.isInteger(u.hp) ||
         !Number.isInteger(u.max) ||
@@ -1363,9 +1373,31 @@ class CombatRulesEngine {
     if (known && (stop || forced || !this.canPass(id, occupant)))
       return fail("Маршрут перекрыт");
     if (knowledge === "observed" && !forced && (this.unit(id).blockedCells || []).some(p =>
-      p.x === to.x && p.y === to.y && p.turn === this.s.turnSerial))
+      p.x === to.x && p.y === to.y && p.turn === this.s.turnSerial &&
+      p.context === this.movementKnowledge(id)))
       return fail("Маршрут перекрыт");
     return {allowed: true, canStop: !known, cost: this.stepCost(id, to), reason: ""};
+  }
+  movementKnowledge(id) {
+    const u = this.unit(id);
+    const visible = other => this.unit(other).team === u.team ||
+      (!this.unit(other).hidden && this.canSee(id,other));
+    // Only observations invalidate a failed attempt; unseen movement is not an AI oracle.
+    return JSON.stringify([u.x,u.y,this.has(id,"frightened"),
+      this.fearSources(id).map(other => [other, visible(other)
+        ? [this.unit(other).x,this.unit(other).y]
+        : [this.s.memory?.[id]?.[other]?.x,this.s.memory?.[id]?.[other]?.y]]),
+      this.s.order.filter(other => other !== id && visible(other) &&
+        this.unit(other).hp > 0 && !this.unit(other).fled)
+        .map(other => [other,this.unit(other).x,this.unit(other).y,this.canPass(id,other)]),
+      this.s.terrain.walls]);
+  }
+  rememberBlockedStep(id, point) {
+    const u = this.unit(id), context = this.movementKnowledge(id);
+    u.blockedCells = (u.blockedCells || []).filter(p =>
+      p.turn === this.s.turnSerial && p.context === context &&
+      (p.x !== point.x || p.y !== point.y));
+    u.blockedCells.push({x:point.x,y:point.y,turn:this.s.turnSerial,context});
   }
   require(value, message) {
     if (!value) throw Error(message);
@@ -1908,6 +1940,7 @@ class CombatRulesEngine {
       const id = this.actorId,
         a = this.unit(id);
       s.turnSerial++;
+      for (const unit of Object.values(s.units)) delete unit.blockedCells;
       a.turnCount++;
       a.action = 1;
       a.dashCount = 0;
@@ -2580,8 +2613,7 @@ class CombatRulesEngine {
         {stop: t.path.length === 1, knowledge: "actual", forced: Boolean(t.forced)});
       if (!step.allowed && !occupant) {
         if (!t.forced) {
-          u.blockedCells ??= [];
-          u.blockedCells.push({...p,turn:s.turnSerial});
+          this.rememberBlockedStep(t.actor,p);
         }
         this.markSharedSpace(t.actor);
         this.emit("movementBlocked",t.actor,
@@ -2592,8 +2624,7 @@ class CombatRulesEngine {
         occupant &&
         !step.allowed
       ) {
-        u.blockedCells ??= [];
-        u.blockedCells.push({ ...p, turn: s.turnSerial });
+        if (!t.forced) this.rememberBlockedStep(t.actor,p);
         this.markSharedSpace(t.actor);
         this.emit(
           "movementBlocked",

@@ -213,3 +213,34 @@ test("AI knowledge: a hidden enemy is not a planning obstacle; execution discove
   assert.deepEqual([e.unit("hunter_a").x, e.unit("hunter_a").y], [6,3]);
   assert.ok(e.s.events.some(v => v.type === "movementBlocked"));
 });
+
+test("failed movement expires when fear ends, survives reload while unchanged",()=>{
+  let e=setup();Object.assign(e.unit('ena'),{x:5,y:3});
+  Object.assign(e.unit('hunter_a'),{x:7,y:3,hidden:true});
+  e.s.memory={ena:{hunter_a:{x:1,y:3,seenTurn:1}}};
+  e.status('ena','frightened',{source:'hunter_a'});
+  const c={kind:'move',actor:'ena',path:[{x:6,y:3}]};
+  e.dispatch(c);assert.equal(e.unit('ena').x,5);
+  e=reload(e);assert.equal(e.availableAction(c).enabled,false);
+  e.removeStatus('ena','frightened');assert.equal(e.availableAction(c).enabled,true);
+  e.dispatch(c);assert.equal(e.unit('ena').x,6);
+});
+test("block memory uses observations, invalidates vacated visible cells, and clears each turn",()=>{
+  const e=setup();e.rememberBlockedStep('ena',{x:2,y:3});
+  const check=()=>e.movementStep('ena',e.unit('ena'),{x:2,y:3},{stop:true});
+  assert.equal(check().allowed,false);
+  e.unit('hunter_a').hidden=true;const context=e.movementKnowledge('ena');
+  e.unit('hunter_a').x=8;assert.equal(e.movementKnowledge('ena'),context);
+  e.unit('hunter_b').x=3;assert.equal(check().allowed,true);
+  e.dispatch({kind:'endTurn',actor:'ena'});
+  assert.ok(Object.values(e.s.units).every(u=>!u.blockedCells));
+});
+test("invalid movement cache is rejected, legacy cache migrates without mutating input",()=>{
+  const e=setup();for(const bad of [{},[null],[{x:-1,y:0,turn:1}],[{x:1,y:1,turn:1,context:{}}]]) {
+    const s=structuredClone(e.s);s.units.ena.blockedCells=bad;
+    assert.throws(()=>new E(s),/память препятствий/);
+  }
+  e.unit('ena').blockedCells=[{x:2,y:2,turn:10}];
+  const before=JSON.stringify(e.s),loaded=reload(e);
+  assert.deepEqual(loaded.unit('ena').blockedCells,[]);assert.equal(JSON.stringify(e.s),before);
+});

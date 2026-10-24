@@ -142,3 +142,15 @@ test("Luck cancels disadvantage in the roll's displayed sources too",()=>{
   assert.equal(r.mode,0);assert.ok(r.modifiers.advantage.includes("Удача"));
   assert.match(J.details(r).join(" "),/отменяют друг друга/);
 });
+
+test("malformed journal diagnostics reject loading and render a safe fallback",()=>{
+  for(const fields of [{breakdown:{}},{breakdown:[null]},{bonusParts:[null]},
+      {bonusParts:[{label:'bonus',amount:2,rolls:{length:1}}]},
+      {modifiers:{advantage:'bad'}},{trace:{actionId:'bad'}}]) {
+    const e=setup(),event={round:1,type:'damage',text:'Original',...fields};
+    e.s.events.push(event);const before=JSON.stringify(e.s);
+    assert.throws(()=>reload(e));assert.equal(JSON.stringify(e.s),before);
+    assert.match(J.details(event).join(' '),/повреждены/);
+    assert.match(J.text([event]),/Original/);
+  }
+});

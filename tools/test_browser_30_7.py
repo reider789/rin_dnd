@@ -33,6 +33,24 @@ def run(html=None, screenshots=None):
         page.goto(Path(html or ROOT / "index.html").resolve().as_uri())
         page.wait_for_function(f"Boolean({API})")
         page.evaluate(f"{API}.stop()")
+        # Rejected imports must preserve the active battle and every storage slot.
+        original = page.evaluate(f"JSON.stringify({API}.snapshot())")
+        storage = page.evaluate("JSON.stringify({...localStorage})")
+        for bad in [{"breakdown": {}}, {"bonusParts": [None]}, {"modifiers": {"advantage": "bad"}}]:
+            session = json.loads(original)
+            session["events"].append({"round": 1, "type": "damage", "text": "BAD_IMPORT", **bad})
+            page.locator("#import-file").set_input_files({
+                "name": "broken.json", "mimeType": "application/json",
+                "buffer": json.dumps({"kind": "dnd-combat-session", "version": 32, "session": session}).encode(),
+            })
+            page.wait_for_function("document.getElementById('import-file').value === ''")
+            assert page.evaluate(f"JSON.stringify({API}.snapshot())") == original
+            assert page.evaluate("JSON.stringify({...localStorage})") == storage
+            assert "Повреждены" in page.locator("#notice").inner_text()
+        page.reload()
+        page.wait_for_function(f"Boolean({API})")
+        page.evaluate(f"{API}.stop()")
+        assert page.evaluate(f"JSON.stringify({API}.snapshot())") == original
         if screenshots:
             screenshots = Path(screenshots)
             screenshots.mkdir(parents=True, exist_ok=True)
