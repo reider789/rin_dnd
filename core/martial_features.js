@@ -363,6 +363,9 @@ class CombatMartialFeatures {
         result: {
           ...t.attack.result,
           total: t.attack.result.total + t.result.total,
+          bonusParts: [...(t.attack.result.bonusParts || [{rule:"base",label:"Основной модификатор",
+            amount:t.attack.result.total-t.attack.result.kept}]),
+            {rule:"maneuver.precision",label:"Точная атака",amount:t.result.total,rolls:t.result.rolls}],
         },
       });
     } else if (t.kind === "weaponDamageRoll") this.weaponRoll(e, t);

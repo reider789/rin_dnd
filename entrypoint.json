@@ -1,13 +1,15 @@
 {
   "schema_version": 3,
   "engine": "rin-combat-v30",
-  "engine_version": "30.6.0",
+  "engine_version": "30.7.0",
   "desktop_only": true,
   "main_ui_path": "index.html",
   "source_engine": "web/shell.html",
   "source_modules": [
     "core/battlefield.js",
     "core/capabilities.js",
+    "core/activities.js",
+    "core/combat_journal.js",
     "core/content_pack.js",
     "core/class_features.js",
     "core/defenses.js",

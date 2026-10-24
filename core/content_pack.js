@@ -3,6 +3,8 @@ const ContentCapabilities =
   typeof module !== "undefined"
     ? require("./capabilities").CombatCapabilities
     : CombatCapabilities;
+const ContentActivities = typeof module !== "undefined"
+  ? require("./activities").CombatActivities : CombatActivities;
 class CombatContentPack {
   static compile(input) {
     const C = ContentCapabilities,
@@ -87,7 +89,8 @@ class CombatContentPack {
         );
         const { attacks, ...effect } = ability;
         C.effect(effect);
-      } else
+      } else if (ability.handler === "healing") ContentActivities.validate(ability);
+      else
         throw Error(
           "Недостающий обработчик способности: " +
             key +
@@ -180,6 +183,8 @@ class CombatContentPack {
             );
             p.features[feature] = structuredClone(value);
           }
+        } else if (ability.handler === "healing") {
+          (p.activities ??= {})[abilityId] = structuredClone(ability);
         } else {
           const { attacks, ...effect } = ability;
           for (const attackId of attacks) {

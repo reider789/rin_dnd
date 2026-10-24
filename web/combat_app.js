@@ -1141,6 +1141,7 @@
       id = engine.actorId,
       u = engine.unit(id);
     const base = { actor: id, target: selected, weapon };
+    if (op === "activity") return {...base, kind: "activity", activity: b.dataset.activity};
     if (op === "attackObject")
       return { ...base, kind: op, object: $("combat-object")?.value };
     if (op === "endConcentration")
@@ -1761,6 +1762,13 @@
     if (classButtons)
       panels.abilities +=
         '<h3>Способности</h3><div class="choices">' + classButtons + "</div>";
+    const activities = CombatActivities.catalogue(u);
+    if (activities.length) panels.abilities += '<h3>Действия персонажа</h3><div class="choices">' +
+      activities.map(a => button("activity", esc(a.name) + "<small>" +
+        (a.cost === "bonus" ? "Бонусное действие" : "Действие") + " · " +
+        a.dice.count + "к" + a.dice.sides + "+" + a.dice.flat + " ПЗ · " +
+        (a.target === "self" ? "на себя" : a.range + " фт") + "</small>", !play,
+        'data-activity="' + esc(a.id) + '"')).join("") + "</div>";
     if (f.greatWeaponMaster)
       panels.abilities += button(
         "hew",
@@ -1884,6 +1892,8 @@
           e.round +
           "</small>" +
           esc(e.text) +
+          (CombatJournal.details(e).length ? '<details class="event-details"><summary>Подробности</summary><ul>' +
+            CombatJournal.details(e).map(line => '<li>' + esc(line) + '</li>').join('') + '</ul></details>' : '') +
           "</div>",
       )
       .join("");
@@ -2092,6 +2102,7 @@
               : null;
           },
           actor: () => movingUnit,
+          transition: (from, to, stop) => engine.movementStep(movingId, from, to, {stop}),
           webDifficult: () => false,
           stepCost: (p) => engine.stepCost(movingId, p),
           canStop: (p) => {
@@ -2289,8 +2300,15 @@
     if (op === "journal-export") {
       download(
         runtime.campaign_id + "-combat-journal.txt",
-        engine.s.events.map((e) => e.text).join("\n"),
+        CombatJournal.text(engine.s.events),
       );
+      return;
+    }
+    if (op === "journal-json") {
+      download(runtime.campaign_id + "-combat-journal.json", {
+        format: "dnd-combat-journal", version: 1, engineVersion: engine.s.engineVersion,
+        battleId: engine.s.meta.battleId, events: engine.s.events,
+      });
       return;
     }
     if (op === "cancel-route") {

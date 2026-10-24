@@ -2,10 +2,10 @@
 // Among equal-cost paths prefer fewer opportunity attacks, fewer turns,
 // then cells nearer the direct line. This avoids arbitrary zigzags.
 class CombatBattlefield {
-  constructor({walls,rubble,key,occupant,actor,webDifficult,movementRisk=null,stepCost=null,canStop=null,width=11,height=8}){
+  constructor({walls,rubble,key,occupant,actor,webDifficult,movementRisk=null,stepCost=null,canStop=null,transition=null,width=11,height=8}){
     Object.assign(this,{_walls:walls,_rubble:rubble,_key:key,_occupant:occupant,
       _actor:actor,_webDifficult:webDifficult,_movementRisk:movementRisk,
-      _stepCost:stepCost,_canStop:canStop,_width:width,_height:height});
+      _stepCost:stepCost,_canStop:canStop,_transition:transition,_width:width,_height:height});
   }
   inBounds(x,y){return Number.isInteger(x)&&Number.isInteger(y)&&x>=0&&y>=0&&x<this._width&&y<this._height;}
   isWall(x,y){return this._walls.has(this._key(x,y));}
@@ -41,10 +41,12 @@ class CombatBattlefield {
       }
       for(let d=0;d<directions.length;d++){
         const [mx,my]=directions[d],x=node.x+mx,y=node.y+my;
+        const transition=this._transition?.(node,{x,y},x===goal.x&&y===goal.y);
+        if(transition&&!transition.allowed)continue;
         if(this.isBlocked(x,y))continue;
         // PHB 2024 grid: a diagonal cannot cross a terrain corner.
         if(mx!==0&&my!==0&&(this.isWall(node.x+mx,node.y)||this.isWall(node.x,node.y+my)))continue;
-        const step=this.stepCost({x,y});
+        const step=transition?transition.cost:this.stepCost({x,y});
         const exposure=typeof this._movementRisk==='function'?
           Math.max(0,Number(this._movementRisk(node,{x,y}))||0):0;
         const cross=(x-src.x)*dyTarget-(y-src.y)*dxTarget;

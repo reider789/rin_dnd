@@ -1,143 +1,10 @@
 "use strict";
 // Declarative spell data and serialized continuations. Campaign packs contain no executable code.
+const MagicActivities = typeof module !== "undefined"
+  ? require("./activities").CombatActivities : CombatActivities;
 class CombatMagic {
-  static SPELLS = {
-    fireBolt: ["Огненный снаряд", 0, "action", 120, "attack", "evocation"],
-    rayFrost: ["Луч холода", 0, "action", 60, "attack", "evocation"],
-    mindSliver: ["Расщепление разума", 0, "action", 60, "enemy", "enchantment"],
-    mageHand: ["Магическая рука", 0, "action", 30, "point", "conjuration"],
-    prestidigitation: ["Фокусы", 0, "action", 10, "point", "transmutation"],
-    mageArmor: ["Доспехи мага", 1, "action", 5, "ally", "abjuration"],
-    magicMissile: [
-      "Волшебная стрела",
-      1,
-      "action",
-      120,
-      "enemies",
-      "evocation",
-    ],
-    thunderwave: ["Громовая волна", 1, "action", 0, "direction", "evocation"],
-    burningHands: ["Огненные ладони", 1, "action", 0, "direction", "evocation"],
-    fogCloud: [
-      "Туманное облако",
-      1,
-      "action",
-      120,
-      "point",
-      "conjuration",
-      3600,
-    ],
-    shield: ["Щит", 1, "reaction", 0, "self", "abjuration"],
-    scorchingRay: ["Палящий луч", 2, "action", 120, "enemies", "evocation"],
-    mistyStep: ["Туманный шаг", 2, "bonus", 30, "point", "conjuration"],
-    web: ["Паутина", 2, "action", 60, "point", "conjuration", 3600],
-    fireball: ["Огненный шар", 3, "action", 150, "point", "evocation"],
-    slow: ["Замедление", 3, "action", 120, "enemies", "transmutation", 60],
-    counterspell: ["Контрзаклинание", 3, "reaction", 60, "enemy", "abjuration"],
-    dispelMagic: ["Рассеивание магии", 3, "action", 120, "any", "abjuration"],
-    fly: ["Полёт", 3, "action", 5, "allies", "transmutation", 600],
-    dimensionDoor: [
-      "Дверь в измерение",
-      4,
-      "action",
-      500,
-      "point",
-      "conjuration",
-    ],
-    greaterInvisibility: [
-      "Высшая невидимость",
-      4,
-      "action",
-      5,
-      "ally",
-      "illusion",
-      60,
-    ],
-    coneCold: ["Конус холода", 5, "action", 0, "direction", "evocation"],
-    seeming: ["Кажущаяся внешность", 5, "action", 30, "allies", "illusion"],
-    holdMonster: [
-      "Удержание чудовища",
-      5,
-      "action",
-      90,
-      "enemies",
-      "enchantment",
-      60,
-    ],
-    bigbyHand: ["Рука Бигби", 5, "action", 120, "point", "evocation", 60],
-    bless: ["Благословение", 1, "action", 30, "allies", "enchantment", 60],
-    cureWounds: ["Лечение ран", 1, "action", 5, "ally", "abjuration"],
-    heroism: ["Героизм", 1, "action", 5, "allies", "enchantment", 60],
-    command: ["Приказ: Стой", 1, "action", 60, "enemies", "enchantment"],
-    compelledDuel: [
-      "Вынужденная дуэль",
-      1,
-      "bonus",
-      30,
-      "enemy",
-      "enchantment",
-      60,
-    ],
-    protectionEvil: [
-      "Защита от зла и добра",
-      1,
-      "action",
-      5,
-      "ally",
-      "abjuration",
-      600,
-    ],
-    shieldFaith: ["Щит веры", 1, "bonus", 60, "ally", "abjuration", 600],
-    aid: ["Помощь", 2, "action", 30, "allies", "abjuration"],
-    lesserRestoration: [
-      "Малое восстановление",
-      2,
-      "bonus",
-      5,
-      "ally",
-      "abjuration",
-    ],
-    zoneTruth: ["Зона истины", 2, "action", 60, "point", "enchantment"],
-    wardingBond: ["Защитная связь", 2, "action", 5, "ally", "abjuration"],
-    beaconHope: ["Маяк надежды", 3, "action", 30, "allies", "abjuration", 60],
-    crusaderMantle: [
-      "Мантия крестоносца",
-      3,
-      "action",
-      0,
-      "self",
-      "evocation",
-      60,
-    ],
-    auraVitality: [
-      "Аура жизненной силы",
-      3,
-      "action",
-      0,
-      "self",
-      "abjuration",
-      60,
-    ],
-    divineSmite: ["Божественная кара", 1, "bonus", 0, "enemy", "evocation"],
-    findSteed: ["Верный скакун", 2, "action", 30, "point", "conjuration"],
-    stormSphere: [
-      "Сфера бури · наручи",
-      4,
-      "action",
-      150,
-      "point",
-      "evocation",
-      60,
-    ],
-    drainingWave: [
-      "Истощающая волна · фокус",
-      0,
-      "action",
-      0,
-      "direction",
-      "necromancy",
-    ],
-  };
+  static SPELLS = MagicActivities.legacySpellTuples();
+
   static OPS = new Set([
     "window",
     "resolve",
@@ -213,11 +80,7 @@ class CombatMagic {
         ...(u.equipment?.vaeltirFocus ? ["drainingWave"] : []),
       ]),
     ].map((id) => ({
-      id,
-      name: this.SPELLS[id][0],
-      level: this.SPELLS[id][1],
-      cost: this.SPELLS[id][2],
-      target: this.SPELLS[id][4],
+      ...MagicActivities.spell(id),
     }));
   }
   static validateCasting(c) {
@@ -552,12 +415,16 @@ class CombatMagic {
   static rollBonus(e, t) {
     let n = 0;
     const id = t.actor;
-    if ((t.save || t.attackRoll) && this.effects(e, id, "bless").length)
-      n += e.roll(4);
+    const parts = [];
+    if ((t.save || t.attackRoll) && this.effects(e, id, "bless").length) {
+      const roll = e.roll(4); n += roll;
+      parts.push({rule:"spell.bless",label:"Благословение",amount:roll,rolls:[roll]});
+    }
     if (t.save && !t.deathSave) {
       const u = e.unit(id);
       if (u.mindSliver) {
-        n -= e.roll(4);
+        const roll = e.roll(4); n -= roll;
+        parts.push({rule:"spell.mindSliver",label:"Расщепление разума",amount:-roll,rolls:[roll]});
         delete u.mindSliver;
       }
     }
@@ -565,8 +432,11 @@ class CombatMagic {
       t.check &&
       t.stat === "STR" &&
       this.effects(e, id, "giantStrength").length
-    )
-      n += Math.max(0, 5 - e.unit(id).stats.STR);
+    ) {
+      const amount = Math.max(0, 5 - e.unit(id).stats.STR); n += amount;
+      parts.push({rule:"item.giantStrength",label:"Сила великана",amount});
+    }
+    t.magicModifiers = parts;
     if (n)
       e.emit(
         "magicRollBonus",
@@ -642,9 +512,9 @@ class CombatMagic {
   }
   static validate(e, c, u) {
     e.require(c.spell !== "divineSmite", "Кара применяется после попадания");
-    const def = this.SPELLS[c.spell];
+    const def = MagicActivities.spell(c.spell);
     e.require(def, "Неизвестное заклинание");
-    const [name, base, cost, range, shape] = def,
+    const {name, level: base, cost, range, target: shape} = def,
       id = c.actor,
       targets = c.spell === "dispelMagic" ? [] : this.targets(e, c),
       dispelTarget =
@@ -836,7 +706,7 @@ class CombatMagic {
     if (c.sculpt?.length) {
       e.require(
         u.features.sculptSpells &&
-          def[5] === "evocation" &&
+          def.school === "evocation" &&
           c.sculpt.length <= 1 + level &&
           new Set(c.sculpt).size === c.sculpt.length,
         "Скульптура заклинаний недоступна",
@@ -907,6 +777,7 @@ class CombatMagic {
     this.init(e.s);
     if (c.kind === "cast") {
       const f = this.validate(e, c, u);
+      if (e.trace) f.trace = structuredClone(e.trace);
       this.pay(e, f, this.SPELLS[f.spell][2]);
       if (this.SPELLS[f.spell][6]) e.endConcentration(c.actor);
       e.s.spellFrames[f.id] = f;
@@ -1026,9 +897,10 @@ class CombatMagic {
       const adv = e.has(c.actor, "aim") || e.has(c.actor, "invisible"),
         ranged = !["melee", "meleeSpell"].includes(spec.kind),
         disadv =
-          ["restrained", "poisoned", "prone", "frightened", "blinded"].some(
+          ["restrained", "prone", "blinded"].some(
             (k) => e.has(c.actor, k),
           ) ||
+          e.conditionD20Modifiers(c.actor, "attack").disadvantage.length > 0 ||
           e.has(c.actor, "sap") ||
           (ranged &&
             !(u.features.sharpshooter && spec.kind === "ranged") &&
@@ -1219,12 +1091,15 @@ class CombatMagic {
           targetFrame: f.id,
           offered: [],
           cancelled: false,
+          trace: e.trace?.command === "decide" && e.trace.actor === p.actor
+            ? structuredClone(e.trace) : e.newTrace("counterspell", p.actor, e.trace),
         };
         this.pay(e, child, "reaction");
         e.s.spellFrames[child.id] = child;
         e.emit("cast", p.actor, u.name + ": Контрзаклинание.", {
           spell: "counterspell",
           targetFrame: f.id,
+          trace: child.trace,
         });
         e.enqueue(this.task(p.actor, "window", { frame: child.id }));
       }
@@ -1239,6 +1114,7 @@ class CombatMagic {
           offered: [],
           cancelled: false,
           after: p.next,
+          ...(e.trace ? {trace: structuredClone(e.trace)} : {}),
         };
         if (u.counters.shield_magic_initiate?.current > 0) {
           u.counters.shield_magic_initiate.current--;
@@ -1448,7 +1324,7 @@ class CombatMagic {
       );
       e.enqueue(
         {
-          ...e.reduceDamage(t.damage, transferred),
+          ...e.reduceDamage(t.damage, transferred, null, "item.rootLeaf", "Кольца Корня и Листа"),
           leafResolved: true,
           mitigated: true,
         },
@@ -1639,6 +1515,12 @@ class CombatMagic {
         );
       return;
     }
+    const healing = MagicActivities.healing(f.spell, {level: lv, ability: u.stats[u.casting?.ability] || 0});
+    if (healing) {
+      this.healing(e, f.actor, t, healing.count, healing.sides, healing.bonus,
+        MagicActivities.spell(f.spell).name);
+      return;
+    }
     switch (f.spell) {
       case "findSteed":
         this.finishSteed(e, f);
@@ -1771,17 +1653,6 @@ class CombatMagic {
         e.enqueue(...jobs);
         break;
       }
-      case "cureWounds":
-        this.healing(
-          e,
-          f.actor,
-          t,
-          2 * lv,
-          8,
-          u.stats[u.casting.ability],
-          this.SPELLS[f.spell][0],
-        );
-        break;
       case "mageArmor":
         this.remove(
           e,
@@ -2054,7 +1925,8 @@ class CombatMagic {
       e.unit(t.target).conditionImmunities.includes("paralyzed")
     )
       return;
-    let amount = t.amount ?? t.result?.total ?? 0;
+    const initial = t.amount ?? t.result?.total ?? 0;
+    let amount = initial;
     if (t.halfMiss) amount = Math.floor(amount / 2);
     else if (t.type) {
       if (
@@ -2073,6 +1945,11 @@ class CombatMagic {
         target: t.target,
         amount,
         damageType: t.type,
+        breakdown: [{rule: t.halfMiss ? "spell.potentCantrip" : "save.damage",
+          label: t.halfMiss ? "Мощный заговор при промахе" :
+            (t.stat === "DEX" && t.half && e.unit(t.target).features.evasion && !e.incapacitated(t.target))
+              ? "Увёртливость" : passed ? "Успешный спасбросок" : "Урон после спасброска",
+          before:initial,after:amount}],
       };
       if (
         passed &&
@@ -2446,6 +2323,7 @@ class CombatMagic {
       "ready",
       "helpAttack",
       "healPotion",
+      "activity",
       "stabilize",
       "layOnHands",
       "secondWind",
@@ -2457,7 +2335,7 @@ class CombatMagic {
       "hasteAction",
     ];
     let kind =
-      c.kind === "move"
+      c.kind === "activity" ? u.activities?.[c.activity]?.cost : c.kind === "move"
         ? "move"
         : c.kind === "cast"
           ? this.SPELLS[c.spell]?.[2]
@@ -2513,17 +2391,18 @@ class CombatMagic {
       e.require(Array.isArray(c.path),"Задай маршрут движения");
       let from = u;
       e.require(c.path.every(p => {
-        const allowed = this.canApproach(e,c.actor,from,p);
+        const allowed = this.canApproach(e,c.actor,from,p,{observed:true});
         from=p;return allowed;
       }), "Нельзя приближаться к источнику страха");
     }
   }
-  static canApproach(e,id,from,to) {
+  static canApproach(e,id,from,to,{observed=false}={}) {
     if (!e.has(id,"frightened")) return true;
-    const sources = [...this.effects(e,id,"abjure").map(x=>x.owner),
-      ...e.unit(id).statuses.filter(z=>z.kind==='frightened').map(z=>z.source)];
-    return sources.filter(src=>e.s.units[src]).every(src=>
-      e.distance(to,e.unit(src))>=e.distance(from,e.unit(src)));
+    return e.fearSources(id).every(src => {
+      const visible = !e.unit(src).hidden && e.canSee(id,src);
+      const position = observed && !visible ? e.s.memory?.[id]?.[src] : e.unit(src);
+      return !position || e.distance(to,position)>=e.distance(from,position);
+    });
   }
   static moved(e, id) {
     for (const z of e.s.zones)
@@ -2624,6 +2503,7 @@ class CombatMagic {
         offered: [],
         cancelled: false,
         after,
+        ...(e.trace ? {trace: structuredClone(e.trace)} : {}),
       };
     if (u.counters.shield_magic_initiate?.current > 0) {
       u.counters.shield_magic_initiate.current--;

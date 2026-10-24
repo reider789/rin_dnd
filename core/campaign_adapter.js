@@ -54,6 +54,7 @@ class CombatCampaignAdapter {
       skills: { ...skills, ...p.skills },
       proficiency: p.proficiency || 0,
       features: p.features || {},
+      ...(p.activities ? {activities: p.activities} : {}),
       senses: p.senses || {},
       casting: p.casting || null,
       equipment: p.equipment || {},

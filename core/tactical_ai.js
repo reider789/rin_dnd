@@ -44,27 +44,10 @@ class CombatTacticalAI {
         [-1, 1],
         [-1, -1],
       ]) {
-        const q = { x: p.x + dx, y: p.y + dy },
-          occupant = e.occupied(q.x, q.y, id),
-          knownOccupant =
-            occupant &&
-            (e.unit(occupant).team === u.team ||
-              (!e.unit(occupant).hidden && e.canSee(id, occupant)));
-        if (
-          e.wall(q) ||
-          (knownOccupant && !e.canPass(id, occupant)) ||
-          (u.blockedCells || []).some(
-            (v) => v.x === q.x && v.y === q.y && v.turn === e.s.turnSerial,
-          )
-        )
-          continue;
-        if (
-          dx &&
-          dy &&
-          (e.wall({ x: p.x, y: q.y }) || e.wall({ x: q.x, y: p.y }))
-        )
-          continue;
-        const cost = p.cost + e.stepCost(id, q),
+        const q = { x: p.x + dx, y: p.y + dy };
+        const step = e.movementStep(id,p,q);
+        if (!step.allowed) continue;
+        const cost = p.cost + step.cost,
           key = q.x + "," + q.y;
         if (cost > budget || (best.get(key) ?? Infinity) <= cost) continue;
         best.set(key, cost);
@@ -113,6 +96,7 @@ class CombatTacticalAI {
             ally !== id &&
             e.unit(ally).team === u.team &&
             e.active(ally) &&
+            !e.incapacitated(ally) &&
             e.distance(e.unit(ally), target) <= 5,
         )) ||
       e.s.help?.some(
@@ -123,9 +107,11 @@ class CombatTacticalAI {
       );
     const disadv =
       !e.canSee(id, target.id, from) ||
-      ["restrained", "poisoned", "prone", "frightened"].some((k) =>
+      ["restrained", "poisoned", "prone"].some((k) =>
         e.has(id, k),
       ) ||
+      (e.has(id,"frightened") && e.fearSources(id).some(source =>
+        known.some(t => t.id === source && t.visible) && e.canSee(id,source,from))) ||
       e.has(target.id, "dodge") ||
       (e.has(target.id, "prone") && distance > 5) ||
       u.statuses.some((z) => z.kind === "grappled" && z.source !== target.id) ||
@@ -199,6 +185,14 @@ class CombatTacticalAI {
       : done;
   }
   choose(id) {
+    const command = this.plan(id), e = this.engine;
+    if (command.kind === "endTurn" || e.availableAction(command).enabled) return command;
+    // One bounded fallback. Execution still reports unexpected errors instead of
+    // retrying indefinitely; unavailable known actions never stop the UI timer.
+    const dodge = {kind: "dodge", actor: id};
+    return e.availableAction(dodge).enabled ? dodge : {kind: "endTurn", actor: id};
+  }
+  plan(id) {
     const e = this.engine,
       s = e.s,
       u = e.unit(id),

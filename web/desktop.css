@@ -467,3 +467,7 @@ button:focus-visible, select:focus-visible { outline: 2px solid #ecd1a0; outline
 .object-label { position:absolute; left:3px; bottom:3px; padding:2px 4px; font-size:10px; line-height:1.2; color:#e4f5ff; background:#123049e6; border-radius:4px; }
 
 .magic-form{display:grid;gap:8px}.magic-form label{display:grid;gap:4px}.magic-form select[multiple]{min-height:58px}.inline-field{display:flex;gap:6px}.inline-field input{width:75px}.spell-zone{box-shadow:inset 0 0 12px #7ba8ae88}.magic-object:after{content:"✋";position:absolute;right:3px;top:2px;font-size:24px;color:#a9dfff;filter:drop-shadow(0 0 4px #2978c9)}.item-counters{font-size:12px;line-height:1.7}#magic-reason{font-size:12px;color:var(--muted,#c8bda4)}#magic details p{font-size:12px;line-height:1.45}#magic small{display:block}
+
+.event-details { margin-top: .4rem; color: var(--muted, #abb4c4); font-size: .9em; }
+.event-details summary { cursor: pointer; }
+.event-details ul { margin: .4rem 0; padding-left: 1.4rem; }

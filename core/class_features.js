@@ -215,6 +215,8 @@ class CombatClassFeatures {
         ...roll,
         kind: "roll",
         bonus: (roll.bonus || 0) + u.features.fighterLevel,
+        bonusParts: [...(roll.bonusParts || [{rule:"base",label:"Основной модификатор",amount:roll.bonus || 0}]),
+          {rule:"feature.indomitable",label:"Несгибаемость",amount:u.features.fighterLevel}],
         label: "Несгибаемость: " + roll.label,
       });
     } else {
@@ -265,7 +267,7 @@ class CombatClassFeatures {
       if (c.choice === "yes") {
         e.require(u.reaction > 0, "Реакция потрачена");
         u.reaction--;
-        Object.assign(damage, e.halfDamage(damage));
+        Object.assign(damage, e.halfDamage(damage, "defense.uncannyDodge", "Невероятное уклонение"));
       }
       e.enqueue(damage);
     } else return false;
@@ -327,7 +329,9 @@ class CombatClassFeatures {
           t.result.total,
         dc = roll.dc ?? roll.next.dc;
       if (total >= dc) this.spend(e, t.actor, "second_wind");
-      e.finishRoll({ ...roll, bonus: (roll.bonus || 0) + t.result.total });
+      e.finishRoll({ ...roll, bonus: (roll.bonus || 0) + t.result.total,
+        bonusParts: [...(roll.bonusParts || [{rule:"base",label:"Основной модификатор",amount:roll.bonus || 0}]),
+          {rule:"feature.tacticalMind",label:"Тактический разум",amount:t.result.total,rolls:t.result.rolls}] });
     } else return false;
     return true;
   }
@@ -351,7 +355,7 @@ class CombatClassFeatures {
       else {
         u.reaction--;
         e.enqueue({
-          ...e.halfDamage(t),
+          ...e.halfDamage(t, "defense.uncannyDodge", "Невероятное уклонение"),
           uncannyResolved: true,
         });
       }

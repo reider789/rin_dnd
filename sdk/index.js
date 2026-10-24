@@ -13,6 +13,8 @@ function createBattle(pack, encounter, seed = 1) {
   return { runtime, scene, engine };
 }
 module.exports = {
+  CombatJournal: require("../core/combat_journal").CombatJournal,
+  CombatActivities: require("../core/activities").CombatActivities,
   CombatContinuity: require("../core/continuity").CombatContinuity,
   CombatMagic: require("../core/magic").CombatMagic,
   CombatAdvancedFeatures: require("../core/advanced_features")

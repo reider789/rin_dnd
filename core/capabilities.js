@@ -2,7 +2,7 @@
 // The only registration point for supported data-level mechanics. No code from packs is executed.
 class CombatCapabilities {
   static API = 1;
-  static ENGINE = "30.6.0";
+  static ENGINE = "30.7.0";
   static STATUSES = new Set([
     "prone",
     "unconscious",
@@ -27,7 +27,6 @@ class CombatCapabilities {
     "slow",
     "goaded",
     "charmed",
-    "exhaustion",
     "noReactions",
     "burning",
     "rooted",
@@ -139,6 +138,11 @@ class CombatCapabilities {
   }
   static require(ok, message) {
     if (!ok) throw Error(message);
+  }
+  static validateStatus(kind) {
+    this.require(kind !== "exhaustion",
+      "Истощение пока не поддерживается: требуется разбор состояния ведущим; исходные данные сохранены");
+    this.require(this.STATUSES.has(kind), "Неизвестное состояние участника: " + kind);
   }
   static features(features = {}) {
     for (const key of ["secondWind", "tacticalMind", "indomitable"])
@@ -305,6 +309,7 @@ class CombatCapabilities {
         "spellcasting",
         "magicItems",
         "advancedClasses",
+        "healing",
       ],
       counters: [...this.COUNTERS],
       conditions: ["poisoned", "prone", "frost"],
