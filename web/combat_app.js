@@ -1448,6 +1448,7 @@
         ? a.name + " · " + a.hp + "/" + a.max + " ПЗ"
         : engine.cell(p);
       if (heightFeet) b.title += " · Высота местности +" + heightFeet + " фт";
+      if (visible && a.exhaustion) b.title += " · Истощение " + a.exhaustion + " (−" + (2*a.exhaustion) + " к испытаниям d20)";
       if (objects.length)
         b.title +=
           " · " +
@@ -1475,6 +1476,7 @@
             asset(key) +
             "')\"><b>" +
             esc(a.name.split(" ")[0]) +
+            (a.exhaustion ? " <span class=\"exhaustion-indicator\" title=\"Истощение\">И" + a.exhaustion + "</span>" : "") +
             " " +
             a.hp +
             '</b><span class="hpbar"><i style="width:' +
