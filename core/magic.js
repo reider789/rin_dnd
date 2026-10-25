@@ -319,7 +319,10 @@ class CombatMagic {
             if (before > 0 && u.hp === 0) {
               u.stable = false;
               u.reaction = 0;
-              if (!u.deathSaves) u.dead = true;
+              if (!u.deathSaves) {
+                u.dead = true;
+                u.diedAtSeconds ??= s.elapsed;
+              }
               for (const kind of ["unconscious","prone"])
                 if (!u.statuses.some(z => z.kind === kind)) u.statuses.push({kind});
               collapsed.add(id);
@@ -626,7 +629,8 @@ class CombatMagic {
         const origin = chainSecondary ? e.unit(targets[0]) : u;
         const reach = chainSecondary ? 30 : range;
         e.require(
-          !v.dead && e.distance(origin, v) <= reach && e.wallLOS(origin, v),
+          (c.spell === "revivify" || !v.dead) &&
+            e.distance(origin, v) <= reach && e.wallLOS(origin, v),
           "Цель вне дистанции / за стеной",
         );
         if (["enemy", "enemies", "attack"].includes(shape))
@@ -700,6 +704,22 @@ class CombatMagic {
         options.length <= 1 || c.condition !== undefined,
         "Выбери одно состояние для восстановления",
       );
+    }
+    if (c.spell === "revivify") {
+      e.require(targets.length === 1, "Возрождение требует одну цель");
+      const v = e.unit(targets[0]);
+      e.require(v.dead && v.hp === 0, "Цель Возрождения должна быть мертва");
+      e.require(Number.isInteger(v.diedAtSeconds) &&
+        v.diedAtSeconds >= 0 && v.diedAtSeconds <= e.s.elapsed &&
+        e.s.elapsed - v.diedAtSeconds <= 60,
+        "Смерть не подтверждена в течение последней минуты");
+      e.require(!v.deathOldAge && !v.missingVitalParts,
+        "Возрождение не устраняет старость и отсутствующие части тела");
+      const material = u.casting?.components?.revivify;
+      e.require(material && typeof material === "object" &&
+        Number.isInteger(material.count) && material.count > 0 &&
+        Number.isFinite(material.valueGp) && material.valueGp >= 300,
+        "Нужен подтверждённый расходуемый алмаз стоимостью от 300 зм");
     }
     if (c.spell === "wardingBond") {
       e.require(
@@ -1559,6 +1579,29 @@ class CombatMagic {
       return;
     }
     switch (f.spell) {
+      case "revivify": {
+        const v = e.unit(t);
+        const material = u.casting?.components?.revivify;
+        e.require(v?.dead && v.hp === 0 &&
+          Number.isInteger(v.diedAtSeconds) &&
+          e.s.elapsed - v.diedAtSeconds >= 0 &&
+          e.s.elapsed - v.diedAtSeconds <= 60 &&
+          material?.count > 0 && material.valueGp >= 300,
+          "Возрождение: время смерти или компонент больше недействительны");
+        material.count--;
+        v.dead = false;
+        v.hp = 1;
+        v.stable = false;
+        v.deathSuccesses = 0;
+        v.deathFailures = 0;
+        delete v.diedAtSeconds;
+        e.removeStatus(t, "unconscious");
+        e.emit("revived", t, v.name + " возвращается к жизни с 1 ПЗ.",
+          {spell:"revivify", source:f.actor, target:t, hp:1,
+           consumed:{item:"diamond",valueGp:material.valueGp,count:1}});
+        e.checkEnd();
+        break;
+      }
       case "globeInvulnerability": {
         const fixed = {x:u.x,y:u.y};
         const x = this.add(e, f, "globeInvulnerability", [f.actor], 60, {point:fixed});
