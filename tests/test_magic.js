@@ -789,3 +789,76 @@ test("Combat deaths acquire a timestamp for Revivify while ordinary healing cann
   assert.equal(v.diedAtSeconds,e.s.elapsed);
   assert.throws(()=>e.heal("tal",1),/не воскрешает/);
 });
+
+
+function cauldronSetup() {
+  const e=setup(), u=e.unit("ena");
+  u.casting.level=11;
+  u.items.gildedLadle=1;
+  u.casting.components.tashasBubblingCauldron={itemId:"gildedLadle",valueGp:500};
+  return e;
+}
+test("Tasha cauldron creates five potions, never consumes the gilded ladle, and draws once per bonus action",()=>{
+  let e=cauldronSetup();
+  const slot=e.unit("ena").slots[6].current;
+  cast(e,"tashasBubblingCauldron",{level:6,point:{x:3,y:3},potionKind:"healing"});
+  let x=e.s.effects.find(x=>x.kind==="tashasBubblingCauldron");
+  assert(x);
+  assert.equal(x.remaining,5);
+  assert.equal(x.until-e.s.elapsed,600);
+  assert.equal(x.concentration,false);
+  assert.equal(e.unit("ena").items.gildedLadle,1);
+  assert.equal(e.unit("ena").slots[6].current,slot-1);
+  e=reload(e);
+  x=e.s.effects.find(x=>x.kind==="tashasBubblingCauldron");
+  e.dispatch({kind:"cauldronDraw",actor:"ena",cauldron:x.id});
+  assert.equal(e.s.cauldronVials.length,1);
+  assert.equal(e.s.cauldronVials[0].sourceSpellId,x.id);
+  assert.equal(e.unit("ena").bonus,0);
+  assert.throws(()=>e.dispatch({kind:"cauldronDraw",actor:"ena",cauldron:x.id}));
+  assert.equal(e.s.cauldronVials.length,1);
+  assert.equal(x.remaining,4);
+});
+test("Cauldron potions use genuine 2d4+2 or 4d4+4 healing and one-time vials",()=>{
+  let e=cauldronSetup();
+  cast(e,"tashasBubblingCauldron",{level:6,point:{x:3,y:3},potionKind:"greaterHealing"});
+  const x=e.s.effects.find(x=>x.kind==="tashasBubblingCauldron");
+  e.dispatch({kind:"cauldronDraw",actor:"ena",cauldron:x.id});
+  const vial=e.s.cauldronVials[0].id;
+  e=reload(e);
+  const u=e.unit("ena");u.hp=50;u.bonus=1;
+  e.s.random.tape=[1,2,3,4];
+  e.dispatch({kind:"cauldronDrink",actor:"ena",vial});
+  assert.equal(e.unit("ena").hp,64); // 4d4 [1,2,3,4] +4
+  assert.equal(e.s.cauldronVials.length,0);
+  assert.throws(()=>e.dispatch({kind:"cauldronDrink",actor:"ena",vial}));
+  assert(e.s.events.some(v=>v.type==="cauldronDrink"&&v.vial===vial));
+});
+test("Cauldron rejects absent/cheap ladle and unsupported potion before spending a slot",()=>{
+  for(const reason of ["missing","cheap","type"]) {
+    const e=cauldronSetup(),u=e.unit("ena");
+    if(reason==="missing") u.items.gildedLadle=0;
+    if(reason==="cheap") u.casting.components.tashasBubblingCauldron.valueGp=499;
+    const before=JSON.stringify(e.s);
+    assert.throws(()=>cast(e,"tashasBubblingCauldron",
+      {level:6,point:{x:3,y:3},potionKind:reason==="type"?"superiorHealing":"healing"}));
+    assert.equal(JSON.stringify(e.s),before);
+  }
+});
+test("Cauldron recasting removes prior withdrawn vials, but expiration preserves extracted vials",()=>{
+  const e=cauldronSetup();
+  cast(e,"tashasBubblingCauldron",{level:6,point:{x:3,y:3},potionKind:"healing"});
+  let x=e.s.effects.find(x=>x.kind==="tashasBubblingCauldron");
+  e.dispatch({kind:"cauldronDraw",actor:"ena",cauldron:x.id});
+  const prior=e.s.cauldronVials[0].id;
+  e.unit("ena").action=1;e.unit("ena").slotTurn=null;
+  cast(e,"tashasBubblingCauldron",{level:6,point:{x:3,y:2},potionKind:"greaterHealing"});
+  assert.equal(e.s.cauldronVials.some(v=>v.id===prior),false);
+  x=e.s.effects.findLast(x=>x.kind==="tashasBubblingCauldron");
+  e.unit("ena").bonus=1;
+  e.dispatch({kind:"cauldronDraw",actor:"ena",cauldron:x.id});
+  const current=e.s.cauldronVials[0].id;
+  M.expireState(e.s,e.s.elapsed+600);
+  assert.equal(e.s.effects.filter(v=>v.kind==="tashasBubblingCauldron").length,0);
+  assert.equal(e.s.cauldronVials[0].id,current);
+});
