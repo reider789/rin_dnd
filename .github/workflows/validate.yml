@@ -57,4 +57,10 @@ jobs:
           node-version: '22'
       - run: python -m pip install playwright==1.55.0
       - run: python -m playwright install --with-deps chromium
+      # Test the CURRENT source rather than aborting on a previous offline build.
+      # Keep a strict post-test drift guard: generated artifacts MUST be committed
+      # before a release/merge can be considered ready.
+      - run: python tools/build_rin.py
       - run: python tools/run_tests.py --suite combat --browser
+      - name: Check committed offline bundle matches current code
+        run: git diff --exit-code -- index.html config/rin_runtime.json rin-build-manifest.json entrypoint.json current-manifest.json
