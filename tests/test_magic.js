@@ -693,3 +693,46 @@ test("Chain Lightning respects Sculpt Spells for an ally without removing other 
   assert.equal(e.unit("hunter_a").hp,145);
   assert.ok(e.s.events.some(x=>x.type==="sculpt"));
 });
+
+
+test("Globe of Invulnerability stays on its cast square and survives session export", () => {
+  let e = setup();
+  e.unit("ena").casting.level = 11;
+  cast(e,"globeInvulnerability",{level:6});
+  const globe=e.s.effects.find(x=>x.kind==="globeInvulnerability");
+  assert(globe && globe.concentration);
+  assert.deepEqual(globe.point,{x:2,y:3});
+  assert.equal(globe.until - e.s.elapsed,60);
+  assert(e.s.zones.some(z=>z.effect===globe.id && z.radius===10));
+  e.unit("ena").x=9; // Protection is anchored, not carried with the caster.
+  e=reload(e);
+  assert.deepEqual(e.s.effects.find(x=>x.kind==="globeInvulnerability").point,{x:2,y:3});
+  assert.equal(M.globeBlocked(e,{actor:"hunter_a",level:5,castOrigin:{x:6,y:3}},"tal"),true);
+  assert.equal(M.globeBlocked(e,{actor:"hunter_a",level:6,castOrigin:{x:6,y:3}},"tal"),false);
+  assert.equal(M.globeBlocked(e,{actor:"ena",level:3,castOrigin:{x:2,y:3}},"tal"),false);
+  assert.equal(M.globeBlocked(e,{actor:"hunter_a",level:3,castOrigin:{x:6,y:3}},"hunter_b"),false);
+});
+test("Globe intercepts eligible fireball targets and incoming spell attacks, not outside targets", () => {
+  const e=setup();e.unit("ena").casting.level=11;
+  cast(e,"globeInvulnerability",{level:6});
+  const f={id:"spell-globe-check",actor:"hunter_a",spell:"fireball",level:3,
+    castOrigin:{x:6,y:3}};
+  const effect={stat:"DEX",dc:17,type:"fire",half:true};
+  const before=e.s.queue.length;
+  M.area(e,f,["tal","hunter_b"],8,6,0,effect);
+  assert.equal(e.s.queue.length,before+1);
+  assert.deepEqual(e.s.queue.at(-1).next.targets,["hunter_b"]);
+  const queued=e.s.queue.length;
+  M.attack(e,{...f,spell:"rayFrost"},"tal",{count:2,die:8,flat:0,type:"cold"});
+  assert.equal(e.s.queue.length,queued);
+  M.attack(e,{...f,spell:"rayFrost"},"hunter_b",{count:2,die:8,flat:0,type:"cold"});
+  assert.equal(e.s.queue.length,queued+1);
+});
+test("Globe is concentration and ending it removes the associated field",()=>{
+  const e=setup();e.unit("ena").casting.level=11;
+  cast(e,"globeInvulnerability",{level:6});
+  assert.equal(e.s.effects.filter(x=>x.kind==="globeInvulnerability").length,1);
+  M.endConcentration(e,"ena");
+  assert.equal(e.s.effects.filter(x=>x.kind==="globeInvulnerability").length,0);
+  assert.equal(e.s.zones.filter(z=>z.kind==="globeInvulnerability").length,0);
+});
