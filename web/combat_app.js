@@ -1416,6 +1416,7 @@
           (o) => o.x === x && o.y === y,
         ),
         rough = s.terrain.rubble.includes(x + "," + y),
+        heightFeet = engine.elevationAt(p),
         dark = s.zones.some(
           (z) => z.kind === "darkness" && engine.zoneAt(p, z),
         );
@@ -1423,6 +1424,7 @@
         "tile" +
         (wall ? " wall" : "") +
         (rough ? " rubble" : "") +
+        (heightFeet ? " elevated" : "") +
         (dark ? " dark" : "") +
         (s.zones.some(
           (z) =>
@@ -1445,6 +1447,7 @@
       b.title = visible
         ? a.name + " · " + a.hp + "/" + a.max + " ПЗ"
         : engine.cell(p);
+      if (heightFeet) b.title += " · Высота местности +" + heightFeet + " фт";
       if (objects.length)
         b.title +=
           " · " +
@@ -1462,6 +1465,7 @@
         '<span class="coord">' +
         engine.cell(p) +
         "</span>" +
+        (heightFeet ? '<span class="height-label">+' + heightFeet + ' фт</span>' : '') +
         (visible
           ? '<span class="token ' +
             (a.team === "enemies" ? "enemy " : "") +
