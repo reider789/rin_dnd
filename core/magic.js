@@ -4,6 +4,11 @@ const MagicActivities = typeof module !== "undefined"
   ? require("./activities").CombatActivities : CombatActivities;
 class CombatMagic {
   static SPELLS = MagicActivities.legacySpellTuples();
+  // Never manufacture unknown potion effects; expand the registry only with tested rules.
+  static CAULDRON_POTIONS = Object.freeze({
+    healing:{name:"Лечебное зелье",rarity:"common",count:2,sides:4,bonus:2},
+    greaterHealing:{name:"Улучшенное лечебное зелье",rarity:"uncommon",count:4,sides:4,bonus:4},
+  });
 
   static OPS = new Set([
     "window",
@@ -181,6 +186,19 @@ class CombatMagic {
         );
       }
     }
+    if (s.cauldronVials !== undefined) {
+      req(Array.isArray(s.cauldronVials) && s.cauldronVials.length <= 200,
+        "Повреждены зелья котла");
+      const ids=new Set();
+      for(const v of s.cauldronVials) {
+        req(v && /^[A-Za-z0-9][A-Za-z0-9_.:-]{0,119}$/.test(v.id) &&
+          !ids.has(v.id) && s.units[v.owner] && s.units[v.holder] &&
+          typeof v.sourceSpellId==="string" &&
+          Object.hasOwn(this.CAULDRON_POTIONS,v.potionKind),
+          "Повреждён созданный флакон");
+        ids.add(v.id);
+      }
+    }
     if (s.spellFrames !== undefined) {
       req(
         s.spellFrames &&
@@ -240,6 +258,7 @@ class CombatMagic {
     s.effects ??= [];
     s.spellFrames ??= {};
     s.objects ??= {};
+    s.cauldronVials ??= [];
   }
   static task(actor, op, data = {}) {
     return { kind: "magicTask", actor, op, ...data };
@@ -705,6 +724,18 @@ class CombatMagic {
         "Выбери одно состояние для восстановления",
       );
     }
+    if (c.spell === "tashasBubblingCauldron") {
+      e.require(Object.hasOwn(this.CAULDRON_POTIONS,c.potionKind),
+        "Поддерживаются только проверенные обычные и необычные зелья");
+      e.require(c.point && !e.occupied(c.point.x,c.point.y) && e.distance(u,c.point)<=5,
+        "Котлу нужна свободная клетка в 5 футах");
+      const ladle=u.casting?.components?.tashasBubblingCauldron;
+      e.require(ladle && typeof ladle.itemId==="string" &&
+        /^[A-Za-z0-9][A-Za-z0-9_.:-]{0,119}$/.test(ladle.itemId) &&
+        Number.isInteger(ladle.valueGp) && ladle.valueGp>=500 &&
+        (u.items?.[ladle.itemId] || 0)>0,
+        "Не подтверждён позолоченный половник стоимостью не менее 500 зм");
+    }
     if (c.spell === "revivify") {
       e.require(targets.length === 1, "Возрождение требует одну цель");
       const v = e.unit(targets[0]);
@@ -766,6 +797,7 @@ class CombatMagic {
       spell: c.spell,
       level,
       castOrigin: {x:u.x,y:u.y},
+      potionKind: c.spell==="tashasBubblingCauldron" ? c.potionKind : undefined,
       targets,
       point: c.point,
       sculpt: c.sculpt || [],
@@ -832,6 +864,35 @@ class CombatMagic {
         point: f.point,
       });
       e.enqueue(this.task(c.actor, "window", { frame: f.id }));
+      return true;
+    }
+    if (c.kind === "cauldronDraw") {
+      const x=e.s.effects.find(x=>x.id===c.cauldron &&
+        x.kind==="tashasBubblingCauldron" && x.until>e.s.elapsed && x.remaining>0);
+      e.require(x && e.unit(x.owner).team===u.team &&
+        e.distance(u,x.point)<=5 && u.bonus>0,
+        "Рядом нет доступного котла или бонусного действия");
+      u.bonus--;
+      x.remaining--;
+      const vial={id:"vial-"+(++e.s.sequence),sourceSpellId:x.id,
+        owner:x.owner,holder:c.actor,potionKind:x.potionKind};
+      e.s.cauldronVials.push(vial);
+      e.emit("cauldronDraw",c.actor,u.name+": получено "+this.CAULDRON_POTIONS[x.potionKind].name+".",
+        {sourceSpellId:x.id,vial:vial.id,potionKind:x.potionKind,remaining:x.remaining});
+      if (x.remaining===0) this.remove(e,[x.id]);
+      return true;
+    }
+    if (c.kind === "cauldronDrink") {
+      const v=e.s.cauldronVials.find(x=>x.id===c.vial && x.holder===c.actor);
+      e.require(v && u.bonus>0 && u.hp>0 && !u.dead,
+        "Нет созданного зелья или бонусного действия");
+      const recipe=this.CAULDRON_POTIONS[v.potionKind];
+      e.require(recipe,"Зелье нельзя применить автоматически");
+      u.bonus--;
+      e.s.cauldronVials=e.s.cauldronVials.filter(x=>x.id!==v.id);
+      e.emit("cauldronDrink",c.actor,u.name+": выпивает "+recipe.name+".",
+        {vial:v.id,sourceSpellId:v.sourceSpellId,potionKind:v.potionKind});
+      this.healing(e,c.actor,c.actor,recipe.count,recipe.sides,recipe.bonus,recipe.name);
       return true;
     }
     if (c.kind === "hand") {
@@ -1581,6 +1642,19 @@ class CombatMagic {
       return;
     }
     switch (f.spell) {
+      case "tashasBubblingCauldron": {
+        const before=e.s.cauldronVials.length;
+        e.s.cauldronVials=e.s.cauldronVials.filter(v=>v.owner!==f.actor);
+        e.emit("cauldronRecast",f.actor,"Прежние неиспользованные зелья котла исчезают.",
+          {removed:before-e.s.cauldronVials.length});
+        const quantity=Math.max(1,u.stats[u.casting.ability]);
+        const x=this.add(e,f,"tashasBubblingCauldron",[],600,
+          {point:{x:p.x,y:p.y},remaining:quantity,potionKind:f.potionKind,concentration:false});
+        e.emit("cauldronCreated",f.actor,
+          "Кипящий котёл Таши: "+this.CAULDRON_POTIONS[f.potionKind].name+".",
+          {effect:x.id,point:x.point,potionKind:x.potionKind,quantity});
+        break;
+      }
       case "revivify": {
         const v = e.unit(t);
         const material = u.casting?.components?.revivify;
