@@ -43,6 +43,7 @@ class CombatCampaignAdapter {
       max: r.hp?.max ?? p.hp ?? 11,
       ac: p.ac ?? 12,
       speed: p.speed ?? 30,
+      exhaustion: p.exhaustion ?? 0,
       size: p.size ?? 2,
       summoner: p.summoner || null,
       summonLevel: p.summonLevel || null,
@@ -191,7 +192,7 @@ class CombatCampaignAdapter {
         Math.floor((randomValue / 4294967296) * 20) +
         1 +
         u.stats.DEX +
-        (u.features.alert ? u.proficiency : 0)
+        (u.features.alert ? u.proficiency : 0) - 2 * (u.exhaustion || 0)
       );
     };
     for (const [id, r] of Object.entries(scene.heroes)) {
@@ -226,6 +227,7 @@ class CombatCampaignAdapter {
           .filter((v) => v.combat_available && v.consumable_type)
           .map((v) => [v.id, v.consumable_type]),
       );
+      units[id].exhaustion = continuity.exhaustion?.[id] ?? units[id].exhaustion;
       units[id].temp = continuity.temporary_hp?.[id] || 0;
       units[id].tempSource = continuity.temp_sources?.[id] || null;
       units[id].statuses = structuredClone(continuity.statuses?.[id] || []);
@@ -489,6 +491,9 @@ class CombatCampaignAdapter {
         ]),
       ),
       continuity: {
+        ...(retained.size && [...retained].some(id => (s.units[id].exhaustion || 0) > 0)
+          ? {exhaustion: Object.fromEntries([...retained].map(id => [id, s.units[id].exhaustion || 0]))}
+          : {}),
         cauldron_vials: (s.cauldronVials || []).filter(v =>
           retained.has(v.owner) && retained.has(v.holder)).map(v=>structuredClone(v)),
         scene: {
