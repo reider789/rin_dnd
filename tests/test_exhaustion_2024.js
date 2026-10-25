@@ -68,3 +68,22 @@ test("exhaustion level survives save/load; corrupted level is rejected",()=>{
   copy.units.ena.exhaustion=6;
   assert.throws(()=>new E(copy),/истощения/);
 });
+
+test("authored elevations affect steps, reject sheer cliffs and survive reload",()=>{
+  const pack=structuredClone(base);
+  pack.encounters["marsh-road"].elevation={"D4":5,"E4":15};
+  const {engine:e}=createBattle(pack,undefined,123);
+  e.initialize();
+  const ground={x:2,y:3}, step={x:3,y:3},cliff={x:4,y:3};
+  assert.equal(e.s.terrain.elevation["3,3"],5);
+  const climb=e.movementStep("ena",ground,step);
+  assert.equal(climb.allowed,true);
+  assert.equal(climb.cost,10);
+  const blocked=e.movementStep("ena",step,cliff);
+  assert.equal(blocked.allowed,false);
+  assert.match(blocked.reason,/уступ/);
+  const saved=JSON.parse(JSON.stringify(e.export())).session;
+  assert.equal(new E(saved).elevationAt(step),5);
+  saved.terrain.elevation["3,3"]=7;
+  assert.throws(()=>new E(saved),/высот/);
+});
