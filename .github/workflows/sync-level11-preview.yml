@@ -1,0 +1,63 @@
+name: Sync Level-11 Draft Browser Bundle
+
+on:
+  push:
+    branches: [feature/level11-radiant-strikes-20261025]
+    paths:
+      - 'core/**'
+      - 'web/**'
+      - 'tools/**'
+      - 'config/**'
+      - 'encounters/**'
+      - 'art/**'
+      - 'assets/**'
+      - 'tests/**'
+      - '.github/workflows/sync-level11-preview.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: rin-level11-draft-bundle
+  cancel-in-progress: false
+
+jobs:
+  generate-and-check:
+    if: github.ref == 'refs/heads/feature/level11-radiant-strikes-20261025'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Generate deterministic offline bundle
+        run: python tools/build_rin.py
+      - name: Check Node.js combat regressions before publishing draft artifact
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re,subprocess
+          s=Path('tools/run_tests.py').read_text(encoding='utf8')
+          match=re.search(r"run\('node','--test',(.+?)\)\n",s)
+          if not match: raise SystemExit('Cannot find authoritative test list')
+          import ast
+          args=ast.literal_eval('('+match.group(1)+')')
+          subprocess.run(['node','--test',*args],check=True)
+          PY
+      - name: Commit synchronized draft-only generated files
+        run: |
+          git add -- index.html config/rin_runtime.json rin-build-manifest.json entrypoint.json current-manifest.json
+          if git diff --cached --quiet; then
+            echo "Generated bundle is already synchronized"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "build(draft): sync offline combat bundle to level-11 source [skip ci]"
+          git push origin HEAD:refs/heads/feature/level11-radiant-strikes-20261025
