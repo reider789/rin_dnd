@@ -402,3 +402,24 @@ test("Single Cunning Strike and skipping second option keep legacy behavior", ()
   assert.deepEqual(newer.jobs[0].cunningEffects, ["poison"]);
   assert.equal(newer.jobs[0].sneakCount, 5);
 });
+
+
+test("Improved Cunning Strike never offers a second paid effect without dice", () => {
+  const e = cunningHarness({dice:1});
+  cunningPick(e, "poison");
+  assert.equal(e.pending, null);
+  assert.equal(e.jobs[0].sneakCount, 0);
+  assert.deepEqual(e.jobs[0].cunningEffects, ["poison"]);
+});
+test("Improved Cunning Strike preserves first effect when last choice is skipped after save/load", () => {
+  const e = cunningHarness();
+  cunningPick(e, "withdraw");
+  const carried = JSON.parse(JSON.stringify(e.pending));
+  e.pending = carried;
+  cunningPick(e, "skip");
+  assert.equal(e.jobs[0].cunning, "withdraw");
+  assert.deepEqual(e.jobs[0].cunningEffects, ["withdraw"]);
+  assert.equal(e.jobs[0].sneakCount, 5);
+  Advanced.afterWeapon(e, {actor:"rada", target:"enemy", frame:e.jobs[0]});
+  assert.equal(e.jobs[1].mode, "withdraw");
+});
