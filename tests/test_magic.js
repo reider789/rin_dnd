@@ -723,9 +723,9 @@ test("Globe intercepts eligible fireball targets and incoming spell attacks, not
   assert.equal(e.s.queue.length,before+1);
   assert.deepEqual(e.s.queue.at(-1).next.targets,["hunter_b"]);
   const queued=e.s.queue.length;
-  M.attack(e,{...f,spell:"rayFrost"},"tal",{count:2,die:8,flat:0,type:"cold"});
+  M.attack(e,{...f,spell:"rayFrost"},"tal",{count:2,die:8,flat:0,type:"cold",bonus:8});
   assert.equal(e.s.queue.length,queued);
-  M.attack(e,{...f,spell:"rayFrost"},"hunter_b",{count:2,die:8,flat:0,type:"cold"});
+  M.attack(e,{...f,spell:"rayFrost"},"hunter_b",{count:2,die:8,flat:0,type:"cold",bonus:8});
   assert.equal(e.s.queue.length,queued+1);
 });
 test("Globe is concentration and ending it removes the associated field",()=>{
