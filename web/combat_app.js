@@ -731,8 +731,11 @@
       ),
       handMode: $("magic-hand")?.value || "interpose",
     };
-    if (spell === "tashasBubblingCauldron")
+    if (spell === "tashasBubblingCauldron") {
       base.potionKind = $("magic-cauldron-potion")?.value || "healing";
+      if (base.potionKind==="resistance")
+        base.potionVariant = $("magic-cauldron-element")?.value || "fire";
+    }
     if (spell === "findSteed") {
       base.free = $("magic-steed-payment")?.value === "free";
       base.steedType = $("magic-steed-type")?.value || "celestial";
@@ -826,7 +829,13 @@
           .map(([key,value])=>'<option value="'+esc(key)+'"'+
             (draft["magic-cauldron-potion"]===key?' selected':'')+'>'+esc(value.name)+
             " · "+(value.rarity==="uncommon"?"необычное":"обычное")+"</option>")
-          .join("") + "</select></label>";
+          .join("") + "</select></label>" +
+        ((draft["magic-cauldron-potion"]==="resistance")
+          ? '<label>Тип сопротивления<select id="magic-cauldron-element">' +
+            ["acid","cold","fire","force","lightning","necrotic","poison","psychic","radiant","thunder"]
+              .map(k=>'<option value="'+k+'"'+
+                (draft["magic-cauldron-element"]===k?' selected':'')+'>'+k+'</option>').join("")+
+            "</select></label>" : "");
     if (spell === "findSteed")
       spellControls =
         '<label>Способ призыва<select id="magic-steed-payment">' +
