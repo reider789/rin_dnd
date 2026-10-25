@@ -223,6 +223,11 @@ class CombatContinuity {
                     .every((n, i) => Number(n) < (i ? s.height : s.width)),
               ),
           ) &&
+          (s.elevation === undefined || (this.object(s.elevation) &&
+            Object.entries(s.elevation).every(([k,v]) =>
+              /^\\d+,\\d+$/.test(k) &&
+              k.split(",").every((n,i) => Number(n) < (i ? s.height : s.width)) &&
+              this.integer(v,0,60) && v%5===0))) &&
           this.object(s.cover) &&
           Object.entries(s.cover).every(
             ([k, v]) =>
