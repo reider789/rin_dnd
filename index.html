@@ -773,6 +773,7 @@ class CombatCapabilities {
     abjureFoes: "boolean",
     shieldMaster: "boolean",
     divineSmite: "boolean",
+    radiantStrikes: "boolean",
     cunningStrike: "boolean",
     stealthAttack: "boolean",
     thiefHands: "boolean",
@@ -947,6 +948,7 @@ class CombatCapabilities {
           "light",
           "mastery",
           "unarmed",
+          "meleeWeapon",
           "ammo",
           "ammoCounter",
           "ammoInventoryId",
@@ -967,6 +969,12 @@ class CombatCapabilities {
       "Неверный набор эффектов атаки",
     );
     for (const effect of attack.effects || []) this.effect(effect);
+    this.require(
+      attack.meleeWeapon === undefined ||
+        (typeof attack.meleeWeapon === "boolean" &&
+          ["melee", "ranged"].includes(attack.kind)),
+      "meleeWeapon применяется только к оружейной атаке",
+    );
     if (attack.mastery)
       this.require(
         ["vex", "nick", "graze", "sap", "push", "slow"].includes(
@@ -1025,6 +1033,7 @@ class CombatActivities {
     fly: {"name": "Полёт", "level": 3, "cost": "action", "range": 5, "target": "allies", "school": "transmutation", "concentrationSeconds": 600},
     dimensionDoor: {"name": "Дверь в измерение", "level": 4, "cost": "action", "range": 500, "target": "point", "school": "conjuration"},
     greaterInvisibility: {"name": "Высшая невидимость", "level": 4, "cost": "action", "range": 5, "target": "ally", "school": "illusion", "concentrationSeconds": 60},
+    chainLightning: {"name": "Цепная молния", "level": 6, "cost": "action", "range": 150, "target": "enemies", "school": "evocation"},
     coneCold: {"name": "Конус холода", "level": 5, "cost": "action", "range": 0, "target": "direction", "school": "evocation"},
     seeming: {"name": "Кажущаяся внешность", "level": 5, "cost": "action", "range": 30, "target": "allies", "school": "illusion"},
     holdMonster: {"name": "Удержание чудовища", "level": 5, "cost": "action", "range": 90, "target": "enemies", "school": "enchantment", "concentrationSeconds": 60},
@@ -2678,6 +2687,11 @@ class CombatMartialFeatures {
         t.riders ||
         (["melee", "ranged"].includes(f.spec.kind)
           ? [
+              ...(u.features.radiantStrikes &&
+                (f.spec.kind === "melee" || f.spec.unarmed ||
+                 (f.spec.kind === "ranged" && f.spec.meleeWeapon))
+                ? [{ label: "Сияющие удары", damageType: "radiant", die: 8 }]
+                : []),
               ...(f.forge
                 ? [
                     {
@@ -3452,14 +3466,20 @@ class CombatMagic {
           holdMonster: 1 + level - 5,
           magicMissile: 2 + level,
           scorchingRay: level + 1,
+          chainLightning: 4,
           beaconHope: 100,
           seeming: 100,
         }[c.spell] || 1;
       e.require(targets.length <= max, "Слишком много целей");
-      for (const t of targets) {
+      for (const [index, t] of targets.entries()) {
         const v = e.unit(t);
+        // Chain Lightning: the first bolt is cast within 150 feet; all others
+        // leap from the FIRST target within 30 feet (not from the caster).
+        const chainSecondary = c.spell === "chainLightning" && index > 0;
+        const origin = chainSecondary ? e.unit(targets[0]) : u;
+        const reach = chainSecondary ? 30 : range;
         e.require(
-          !v.dead && e.distance(u, v) <= range && e.wallLOS(u, v),
+          !v.dead && e.distance(origin, v) <= reach && e.wallLOS(origin, v),
           "Цель вне дистанции / за стеной",
         );
         if (["enemy", "enemies", "attack"].includes(shape))
@@ -4450,6 +4470,13 @@ class CombatMagic {
           dc,
           type: "fire",
           half: true,
+        });
+        break;
+      case "chainLightning":
+        // One damage roll for all selected targets; each makes its own DEX save.
+        // Sculpt Spells applies to explicitly protected allies as usual.
+        this.area(e, f, targets, 10 + (lv - 6), 8, ev, {
+          stat: "DEX", dc, type: "lightning", half: true,
         });
         break;
       case "coneCold":
@@ -11187,6 +11214,7 @@ class CombatVisualFX {
     fireBolt: ["fire", "attack"], rayFrost: ["ice", "attack"],
     scorchingRay: ["fire", "attack"], mindSliver: ["mind", "targets"],
     magicMissile: ["arcane", "missiles"], fireball: ["fire", "circle", 20],
+    chainLightning: ["storm", "targets"],
     burningHands: ["fire", "cone", 15], coneCold: ["ice", "cone", 60],
     thunderwave: ["storm", "cone", 15], drainingWave: ["shadow", "cone", 30],
     web: ["web", "web", 20], fogCloud: ["mist", "circle", 20],
