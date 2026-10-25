@@ -1738,14 +1738,11 @@ class CombatRulesEngine {
       "petrified",
     ].some((k) => this.has(id, k))
       ? 0
-      : RulesMagic.speed(
+      : Math.max(0, RulesMagic.speed(
           this,
           id,
-          Math.max(
-            0,
-            u.speed - (this.has(id, "frost") || this.has(id, "slow") ? 10 : 0),
-          ),
-        );
+          Math.max(0, u.speed - (this.has(id, "frost") || this.has(id, "slow") ? 10 : 0),
+        ) - 5 * (u.exhaustion || 0));
   }
   adjustMovementBudget(id, delta) {
     const u = this.unit(id),
@@ -2882,13 +2879,17 @@ class CombatRulesEngine {
           : Math.min(...t.rolls)
         : t.rolls[0];
     const kept = t.sides === 20 ? Math.max(rawKept, t.minimum || 0) : rawKept;
+    // The 2024 exhaustion penalty affects every D20 Test, never damage dice.
+    const exhaustionPenalty = t.sides === 20 ? -2 * (this.unit(t.actor).exhaustion || 0) : 0;
+    const rollBonus = (t.bonus || 0) + exhaustionPenalty;
     const total =
         (t.sides === 20
           ? kept
           : t.rolls.reduce((a, b) => a + Math.max(b, t.minimumDie || 0), 0)) +
-        (t.bonus || 0),
+        rollBonus,
       success = !t.autoFail && total >= t.dc;
     const modifiers = t.modifiers ? structuredClone(t.modifiers) : undefined;
+    const bonusParts = [...(t.bonusParts || []), ...(exhaustionPenalty ? [{rule:"condition.exhaustion", label:"Истощение", amount:exhaustionPenalty}] : [])];
     if (modifiers && t.luckyUsed) modifiers.advantage.push("Удача");
     this.emit(
       "roll",
@@ -2899,21 +2900,21 @@ class CombatRulesEngine {
         " [" +
         t.rolls.join(", ") +
         "] " +
-        (t.bonus >= 0 ? "+" : "") +
-        (t.bonus || 0) +
+        (rollBonus >= 0 ? "+" : "") +
+        rollBonus +
         " = " +
         total +
         ".",
       {
         rolls: t.rolls,
         sides: t.sides,
-        bonus: t.bonus || 0,
+        bonus: rollBonus,
         total,
         mode: t.mode || 0,
         kept, rawKept, minimum: t.minimum || 0,
         ...(Number.isFinite(t.dc) ? {dc: t.dc} : {}),
         modifiers,
-        bonusParts: t.bonusParts,
+        bonusParts,
       },
     );
     this.enqueue({
@@ -2922,7 +2923,7 @@ class CombatRulesEngine {
         rolls: t.rolls,
         kept,
         total,
-        bonusParts: t.bonusParts,
+        bonusParts,
         dc: t.dc,
         success,
         lucky: Boolean(t.luckyUsed),
