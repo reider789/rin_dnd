@@ -71,6 +71,19 @@ class CombatMagic {
   static label(kind) {
     return this.SPELLS[kind]?.[0] || this.LABELS[kind] || kind;
   }
+  // Stationary 2024 sphere: spells cast OUTSIDE at a lower level cannot
+  // affect anything INSIDE its 10-foot emanation. Weapon attacks are exempt.
+  static globeBlocked(e, frame, target) {
+    const v = e.s.units?.[target];
+    if (!v || !Number.isInteger(frame?.level)) return false;
+    const origin = frame.castOrigin || e.s.units?.[frame.actor];
+    if (!origin) return false;
+    const distance = (a,b) => Math.hypot(a.x-b.x,a.y-b.y)*5;
+    return (e.s.effects || []).some(x =>
+      x.kind === "globeInvulnerability" && x.until > e.s.elapsed &&
+      x.point && frame.level < x.level &&
+      distance(v,x.point) <= 10 && distance(origin,x.point) > 10);
+  }
   static catalogue(u) {
     return [
       ...new Set([
@@ -235,6 +248,7 @@ class CombatMagic {
     return (e.s.effects || []).filter(
       (x) =>
         x.kind === kind &&
+        !this.globeBlocked(e, {actor:x.owner, level:x.level, castOrigin:x.castOrigin}, id) &&
         (x.targets?.includes(id) ||
           (x.aura &&
             e.active(x.owner) &&
@@ -271,6 +285,7 @@ class CombatMagic {
       dc: e.unit(f.actor).casting?.dc || f.dc || 10,
       until: e.s.elapsed + duration,
       concentration: Boolean(this.SPELLS[f.spell]?.[6]),
+      castOrigin: f.castOrigin || { x: e.unit(f.actor).x, y: e.unit(f.actor).y },
       ...extra,
     };
     e.s.spellFrames[x.id] = { ...f, id: x.id };
@@ -728,6 +743,7 @@ class CombatMagic {
       actor: id,
       spell: c.spell,
       level,
+      castOrigin: {x:u.x,y:u.y},
       targets,
       point: c.point,
       sculpt: c.sculpt || [],
@@ -1216,6 +1232,11 @@ class CombatMagic {
         ),
       );
     } else if (t.op === "apply") {
+      if (t.frame && this.globeBlocked(e, this.frame(e,t.frame), t.target)) {
+        e.emit("globeBlocked", t.actor, "Сфера неуязвимости блокирует эффект.",
+          {target:t.target});
+        return true;
+      }
       if (t.halfMiss) {
         this.apply(e, t, false);
         return true;
@@ -1437,6 +1458,8 @@ class CombatMagic {
   }
   static area(e, f, targets, count, sides, flat, effect) {
     this.init(e.s);
+    targets = targets.filter(id => !this.globeBlocked(e, f, id));
+    if (!targets.length) return;
     e.s.spellFrames[f.id] ??= f;
     e.enqueue({
       kind: "roll",
@@ -1494,7 +1517,9 @@ class CombatMagic {
       lv = f.level,
       dc = f.dc || u.casting?.dc || 10,
       ev = this.empowered(e, f),
-      targets = f.targets || [],
+      originalTargets = f.targets || [],
+      targets = ["magicMissile", "scorchingRay"].includes(f.spell)
+        ? originalTargets : originalTargets.filter(id => !this.globeBlocked(e, f, id)),
       t = targets[0],
       p = f.point;
     this.init(e.s);
@@ -1508,6 +1533,12 @@ class CombatMagic {
       origin: { x: u.x, y: u.y },
       target: f.target,
     });
+    if (originalTargets.length && !targets.length) {
+      e.emit("globeBlocked", f.actor, "Сфера неуязвимости блокирует заклинание.", {
+        spell:f.spell, targets:originalTargets,
+      });
+      return;
+    }
     if (f.spell === "counterspell") {
       const parent = this.frame(e, f.targetFrame);
       if (!parent.cancelled)
@@ -1528,6 +1559,15 @@ class CombatMagic {
       return;
     }
     switch (f.spell) {
+      case "globeInvulnerability": {
+        const fixed = {x:u.x,y:u.y};
+        const x = this.add(e, f, "globeInvulnerability", [f.actor], 60, {point:fixed});
+        // Treat this as a geometric field, not an aura that follows the caster.
+        e.s.zones.push({id:"zone-"+x.id, kind:"globeInvulnerability",
+          owner:f.actor, effect:x.id, x:fixed.x, y:fixed.y, radius:10,
+          until:x.until, concentration:true});
+        break;
+      }
       case "findSteed":
         this.finishSteed(e, f);
         break;
@@ -1839,6 +1879,18 @@ class CombatMagic {
       }
       case "dispelMagic": {
         const selected = f.dispelTarget || { kind: "creature", id: t };
+        const subject = selected.kind === "creature" ? e.s.units[selected.id] :
+          selected.kind === "object" ? e.s.objects[selected.id] :
+            e.s.effects.find(x=>x.id===selected.id)?.point;
+        const inside = subject && (e.s.effects || []).some(x =>
+          x.kind==="globeInvulnerability" && x.point && x.until>e.s.elapsed &&
+          lv < x.level && Math.hypot(subject.x-x.point.x,subject.y-x.point.y)*5<=10 &&
+          Math.hypot(u.x-x.point.x,u.y-x.point.y)*5>10);
+        if (inside) {
+          e.emit("globeBlocked",f.actor,"Сфера неуязвимости препятствует рассеиванию.",
+            {spell:f.spell,target:selected.id});
+          break;
+        }
         const effects = (e.s.effects || []).filter(
           (x) =>
             Object.hasOwn(this.SPELLS, x.kind) &&
@@ -1879,6 +1931,10 @@ class CombatMagic {
     }
   }
   static attack(e, f, target, a) {
+    if (this.globeBlocked(e,f,target)) {
+      e.emit("globeBlocked", f.actor, "Сфера неуязвимости отражает заклинание.", {spell:f.spell, target});
+      return;
+    }
     const u = e.unit(f.actor);
     e.enqueue({
       kind: "attackRoll",
@@ -2003,6 +2059,12 @@ class CombatMagic {
       e.unit(t.target).truthZone = t.effect;
   }
   static missile(e, t) {
+    const f = this.frame(e,t.frame);
+    if (this.globeBlocked(e,f,t.target)) {
+      e.emit("globeBlocked", t.actor, "Сфера неуязвимости отражает Волшебную стрелу.",
+        {spell:f.spell,target:t.target});
+      return;
+    }
     const u = e.unit(t.target);
     if (e.has(t.target, "shield")) {
       e.emit("shieldBlocked", t.target, "Щит блокирует Волшебную стрелу.");
