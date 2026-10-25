@@ -717,9 +717,11 @@ class CombatMagic {
         "Возрождение не устраняет старость и отсутствующие части тела");
       const material = u.casting?.components?.revivify;
       e.require(material && typeof material === "object" &&
-        Number.isInteger(material.count) && material.count > 0 &&
-        Number.isFinite(material.valueGp) && material.valueGp >= 300,
-        "Нужен подтверждённый расходуемый алмаз стоимостью от 300 зм");
+        typeof material.itemId === "string" &&
+        /^[A-Za-z0-9][A-Za-z0-9_.:-]{0,119}$/.test(material.itemId) &&
+        Number.isInteger(material.valueGp) && material.valueGp >= 300 &&
+        (u.items?.[material.itemId] || 0) > 0,
+        "Нужен подтверждённый алмаз ≥300 зм в инвентаре");
     }
     if (c.spell === "wardingBond") {
       e.require(
@@ -1586,9 +1588,12 @@ class CombatMagic {
           Number.isInteger(v.diedAtSeconds) &&
           e.s.elapsed - v.diedAtSeconds >= 0 &&
           e.s.elapsed - v.diedAtSeconds <= 60 &&
-          material?.count > 0 && material.valueGp >= 300,
+          material?.valueGp >= 300 &&
+          (u.items?.[material.itemId] || 0) > 0,
           "Возрождение: время смерти или компонент больше недействительны");
-        material.count--;
+        // Physical inventory is authoritative; the campaign report exports
+        // inventory_after, unlike mutable casting profile metadata.
+        u.items[material.itemId]--;
         v.dead = false;
         v.hp = 1;
         v.stable = false;
@@ -1598,7 +1603,7 @@ class CombatMagic {
         e.removeStatus(t, "unconscious");
         e.emit("revived", t, v.name + " возвращается к жизни с 1 ПЗ.",
           {spell:"revivify", source:f.actor, target:t, hp:1,
-           consumed:{item:"diamond",valueGp:material.valueGp,count:1}});
+           consumed:{item:"diamond",itemId:material.itemId,valueGp:material.valueGp,count:1}});
         e.checkEnd();
         break;
       }
