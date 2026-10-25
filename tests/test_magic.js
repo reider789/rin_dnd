@@ -736,3 +736,52 @@ test("Globe is concentration and ending it removes the associated field",()=>{
   assert.equal(e.s.effects.filter(x=>x.kind==="globeInvulnerability").length,0);
   assert.equal(e.s.zones.filter(z=>z.kind==="globeInvulnerability").length,0);
 });
+
+
+test("Revivify restores one HP only to a confirmed recent dead target and consumes one diamond", () => {
+  let e = setup();
+  const dead=e.unit("tal"), caster=e.unit("ena");
+  dead.hp=0; dead.dead=true; dead.diedAtSeconds=e.s.elapsed;
+  dead.statuses.push({kind:"unconscious"});
+  caster.casting.components.revivify={count:2,valueGp:300};
+  const before=caster.slots[3].current;
+  e=reload(e);
+  cast(e,"revivify",{level:3,target:"tal"});
+  assert.equal(e.unit("tal").hp,1);
+  assert.equal(e.unit("tal").dead,false);
+  assert.equal(e.unit("tal").diedAtSeconds,undefined);
+  assert(!e.has("tal","unconscious"));
+  assert.equal(e.unit("ena").casting.components.revivify.count,1);
+  assert.equal(e.unit("ena").slots[3].current,before-1);
+  assert(e.s.events.some(x=>x.type==="revived" && x.target==="tal"));
+});
+test("Revivify refuses missing, undervalued or spent diamonds without charging spell slots", () => {
+  for(const component of [undefined,{count:0,valueGp:300},{count:1,valueGp:299}]) {
+    const e=setup(), u=e.unit("ena"), v=e.unit("tal");
+    v.hp=0;v.dead=true;v.diedAtSeconds=e.s.elapsed;
+    u.casting.components.revivify=component;
+    const before=JSON.stringify(e.s);
+    assert.throws(()=>cast(e,"revivify",{level:3,target:"tal"}),/алмаз/);
+    assert.equal(JSON.stringify(e.s),before);
+  }
+});
+test("Revivify rejects deaths older than one minute or with unknown death time", () => {
+  for(const stamp of [undefined,0]) {
+    const e=setup(),v=e.unit("tal");
+    e.s.elapsed=61;v.hp=0;v.dead=true;
+    if(stamp!==undefined)v.diedAtSeconds=stamp;
+    e.unit("ena").casting.components.revivify={count:1,valueGp:300};
+    const before=JSON.stringify(e.s);
+    assert.throws(()=>cast(e,"revivify",{level:3,target:"tal"}),/минуты/);
+    assert.equal(JSON.stringify(e.s),before);
+  }
+});
+test("Combat deaths acquire a timestamp for Revivify while ordinary healing cannot resurrect", () => {
+  const e=setup(), v=e.unit("tal");
+  v.hp=1;v.max=20;v.deathSaves=false;
+  e.enqueue({kind:"damage",actor:"hunter_a",target:"tal",amount:30,damageType:"fire"});
+  e.run();
+  assert(v.dead);
+  assert.equal(v.diedAtSeconds,e.s.elapsed);
+  assert.throws(()=>e.heal("tal",1),/не воскрешает/);
+});
