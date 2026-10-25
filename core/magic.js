@@ -8,6 +8,12 @@ class CombatMagic {
   static CAULDRON_POTIONS = Object.freeze({
     healing:{name:"Лечебное зелье",rarity:"common",count:2,sides:4,bonus:2},
     greaterHealing:{name:"Улучшенное лечебное зелье",rarity:"uncommon",count:4,sides:4,bonus:4},
+    climbing:{name:"Зелье лазания",rarity:"common",effect:"climbing",seconds:3600},
+    comprehension:{name:"Зелье понимания",rarity:"common",effect:"comprehension",seconds:3600},
+    growth:{name:"Зелье роста",rarity:"uncommon",effect:"enlarge",seconds:600},
+    hillGiantStrength:{name:"Зелье силы холмового великана",rarity:"uncommon",effect:"giantStrength",seconds:3600},
+    waterBreathing:{name:"Зелье подводного дыхания",rarity:"uncommon",effect:"waterBreathing",seconds:86400},
+    resistance:{name:"Зелье сопротивления",rarity:"uncommon",effect:"potionResistance",seconds:3600},
   });
 
   static OPS = new Set([
@@ -72,6 +78,9 @@ class CombatMagic {
     noReactions: "Без реакций",
     burning: "Горение",
     rooted: "Укоренён",
+    comprehension:"Понимание языков",
+    waterBreathing:"Подводное дыхание",
+    potionResistance:"Сопротивление стихии",
   };
   static label(kind) {
     return this.SPELLS[kind]?.[0] || this.LABELS[kind] || kind;
@@ -181,6 +190,9 @@ class CombatMagic {
               "enlarge",
               "giantStrength",
               "climbing",
+              "comprehension",
+              "waterBreathing",
+              "potionResistance",
             ].includes(x.kind),
           "Неизвестный магический эффект",
         );
@@ -727,6 +739,13 @@ class CombatMagic {
     if (c.spell === "tashasBubblingCauldron") {
       e.require(Object.hasOwn(this.CAULDRON_POTIONS,c.potionKind),
         "Поддерживаются только проверенные обычные и необычные зелья");
+      const resistanceTypes=["acid","cold","fire","force","lightning",
+        "necrotic","poison","psychic","radiant","thunder"];
+      if(c.potionKind==="resistance")
+        e.require(resistanceTypes.includes(c.potionVariant),
+          "Для зелья сопротивления требуется утверждённый тип урона");
+      else
+        e.require(c.potionVariant===undefined,"Неверный вариант зелья");
       e.require(c.point && !e.occupied(c.point.x,c.point.y) && e.distance(u,c.point)<=5,
         "Котлу нужна свободная клетка в 5 футах");
       const ladle=u.casting?.components?.tashasBubblingCauldron;
@@ -798,6 +817,7 @@ class CombatMagic {
       level,
       castOrigin: {x:u.x,y:u.y},
       potionKind: c.spell==="tashasBubblingCauldron" ? c.potionKind : undefined,
+      potionVariant: c.spell==="tashasBubblingCauldron" ? c.potionVariant : undefined,
       targets,
       point: c.point,
       sculpt: c.sculpt || [],
@@ -875,7 +895,8 @@ class CombatMagic {
       u.bonus--;
       x.remaining--;
       const vial={id:"vial-"+(++e.s.sequence),sourceSpellId:x.id,
-        owner:x.owner,holder:c.actor,potionKind:x.potionKind};
+        owner:x.owner,holder:c.actor,potionKind:x.potionKind,
+        ...(x.potionVariant?{potionVariant:x.potionVariant}:{})};
       e.s.cauldronVials.push(vial);
       e.emit("cauldronDraw",c.actor,u.name+": получено "+this.CAULDRON_POTIONS[x.potionKind].name+".",
         {sourceSpellId:x.id,vial:vial.id,potionKind:x.potionKind,remaining:x.remaining});
@@ -892,7 +913,17 @@ class CombatMagic {
       e.s.cauldronVials=e.s.cauldronVials.filter(x=>x.id!==v.id);
       e.emit("cauldronDrink",c.actor,u.name+": выпивает "+recipe.name+".",
         {vial:v.id,sourceSpellId:v.sourceSpellId,potionKind:v.potionKind});
-      this.healing(e,c.actor,c.actor,recipe.count,recipe.sides,recipe.bonus,recipe.name);
+      if(recipe.count)
+        this.healing(e,c.actor,c.actor,recipe.count,recipe.sides,recipe.bonus,recipe.name);
+      else {
+        const frame={id:v.sourceSpellId,actor:c.actor,
+          spell:"tashasBubblingCauldron",level:6,
+          castOrigin:{x:u.x,y:u.y}};
+        this.add(e,frame,recipe.effect,[c.actor],recipe.seconds,
+          {concentration:false,
+           ...(v.potionVariant?{damageType:v.potionVariant}:{}),
+           potionSource:v.sourceSpellId});
+      }
       return true;
     }
     if (c.kind === "hand") {
@@ -1649,7 +1680,9 @@ class CombatMagic {
           {removed:before-e.s.cauldronVials.length});
         const quantity=Math.max(1,u.stats[u.casting.ability]);
         const x=this.add(e,f,"tashasBubblingCauldron",[],600,
-          {point:{x:p.x,y:p.y},remaining:quantity,potionKind:f.potionKind,concentration:false});
+          {point:{x:p.x,y:p.y},remaining:quantity,potionKind:f.potionKind,
+           ...(f.potionVariant?{potionVariant:f.potionVariant}:{}),
+           concentration:false});
         e.emit("cauldronCreated",f.actor,
           "Кипящий котёл Таши: "+this.CAULDRON_POTIONS[f.potionKind].name+".",
           {effect:x.id,point:x.point,potionKind:x.potionKind,quantity});
@@ -2628,6 +2661,7 @@ class CombatMagic {
     const resistant = e.unit(t.target).resistances?.includes(t.damageType) ||
       e.has(t.target, "petrified") ||
       (t.damageType === "fire" && this.effects(e, t.target, "fireResistance").length) ||
+      this.effects(e,t.target,"potionResistance").some(x=>x.damageType===t.damageType) ||
       this.effects(e, t.target, "wardingBond").some(
         (x) =>
           e.active(x.owner) &&
