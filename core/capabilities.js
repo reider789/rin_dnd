@@ -97,6 +97,7 @@ class CombatCapabilities {
     divineSmite: "boolean",
     radiantStrikes: "boolean",
     cunningStrike: "boolean",
+    improvedCunningStrike: "boolean",
     stealthAttack: "boolean",
     thiefHands: "boolean",
     climbSpeed: [5, 120],
