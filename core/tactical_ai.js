@@ -229,6 +229,22 @@ class CombatTacticalAI {
           reason: "освобождает общую клетку",
         };
     }
+    // Support behavior uses only allies in reach and actual carried supplies.
+    // Revive an unconscious ally before spending the action to Stabilize;
+    // only self-administer preventively when seriously injured.
+    if (u.bonus > 0) {
+      const healing = Object.keys(u.itemTypes || {}).find(
+        item => u.itemTypes[item] === "healing" && (u.items[item] || 0) > 0,
+      );
+      if (healing) {
+        const ally = s.order.find(k => k !== id && e.unit(k).team === u.team &&
+          !e.unit(k).dead && e.unit(k).hp === 0 &&
+          e.distance(u, e.unit(k)) <= 5);
+        const target = ally || (u.hp > 0 && u.hp <= Math.floor(u.max * 0.3) ? id : null);
+        if (target) return {kind:"healPotion",actor:id,item:healing,target,
+          reason:ally ? "помогает потерявшему сознание союзнику" : "использует лечебное зелье"};
+      }
+    }
     const dying = s.order.find(
       (k) =>
         e.unit(k).team === u.team &&
