@@ -178,6 +178,23 @@ aside {
   background: #8d75555e;
   background-size: cover;
 }
+.tile.elevated {
+  background-color: #676f5655;
+  box-shadow: inset 0 0 0 2px #b5c18a6b, inset 0 -9px 0 #17251f50;
+}
+.height-label {
+  position: absolute;
+  z-index: 3;
+  right: 2px;
+  top: 1px;
+  padding: 0 3px;
+  border-radius: 3px;
+  color: #fff1c7;
+  background: #28392edb;
+  font-size: 9px;
+  line-height: 1.3;
+  pointer-events: none;
+}
 .tile.dark {
   background: #080a27d9 !important;
 }
@@ -6716,6 +6733,11 @@ class CombatContinuity {
                     .every((n, i) => Number(n) < (i ? s.height : s.width)),
               ),
           ) &&
+          (s.elevation === undefined || (this.object(s.elevation) &&
+            Object.entries(s.elevation).every(([k,v]) =>
+              /^\\d+,\\d+$/.test(k) &&
+              k.split(",").every((n,i) => Number(n) < (i ? s.height : s.width)) &&
+              this.integer(v,0,60) && v%5===0))) &&
           this.object(s.cover) &&
           Object.entries(s.cover).every(
             ([k, v]) =>
@@ -7092,6 +7114,12 @@ class CombatRulesEngine {
       s.terrain.height > 40
     )
       throw Error("Неверный размер поля");
+    if (s.terrain.elevation !== undefined &&
+        (!s.terrain.elevation || typeof s.terrain.elevation !== "object" || Array.isArray(s.terrain.elevation) ||
+         !Object.entries(s.terrain.elevation).every(([key,feet]) =>
+           /^\\d+,\\d+$/.test(key) && key.split(",").every((n,i) => Number(n) < (i ? s.terrain.height : s.terrain.width)) &&
+           Number.isInteger(feet) && feet>=0 && feet<=60 && feet%5===0)))
+      throw Error("Повреждена карта высот");
     s.events.forEach(event => RulesJournal.validateEvent(event));
     const cells = new Map(),
       movingActor =
@@ -8365,6 +8393,9 @@ class CombatRulesEngine {
     );
     return cost;
   }
+  elevationAt(point) {
+    return this.s.terrain.elevation?.[point.x + "," + point.y] || 0;
+  }
   movementStep(id, from, to, {stop = false, knowledge = "observed", forced = false} = {}) {
     const fail = reason => ({allowed: false, canStop: false, cost: 0, reason});
     if (!to || !this.inside(to) || this.wall(to) || this.distance(from, to) !== 5)
@@ -8372,6 +8403,10 @@ class CombatRulesEngine {
     if (from.x !== to.x && from.y !== to.y &&
         (this.wall({x: from.x, y: to.y}) || this.wall({x: to.x, y: from.y})))
       return fail("Закрытый угол");
+    const rise = this.elevationAt(to) - this.elevationAt(from);
+    // A sheer drop or climb above one grid tier requires a GM-authored route.
+    // Never silently teleport between elevations or infer aerial movement.
+    if (Math.abs(rise) > 5) return fail("Слишком высокий уступ: нужен отдельный маршрут или решение мастера");
     if (!forced && !RulesMagic.canApproach(this, id, from, to, {observed: knowledge === "observed"}))
       return fail("Нельзя приближаться к источнику страха");
     const occupant = this.occupied(to.x, to.y, id);
@@ -8384,7 +8419,8 @@ class CombatRulesEngine {
       p.x === to.x && p.y === to.y && p.turn === this.s.turnSerial &&
       p.context === this.movementKnowledge(id)))
       return fail("Маршрут перекрыт");
-    return {allowed: true, canStop: !known, cost: this.stepCost(id, to), reason: ""};
+    return {allowed: true, canStop: !known,
+      cost: this.stepCost(id, to) + (rise > 0 && !this.unit(id).features.climbSpeed ? 5 : 0), reason: ""};
   }
   movementKnowledge(id) {
     const u = this.unit(id);
@@ -10533,12 +10569,14 @@ class CombatTacticalAI {
         return u.action + (u.surgeAction || 0) > 0
           ? { kind: "search", actor: id }
           : done;
-      let spent = 0;
+      let spent = 0, previous = u;
       const path = [];
       for (const p of goal.path) {
-        spent += e.stepCost(id, p);
-        if (spent > u.move) break;
+        const step = e.movementStep(id, previous, p, {stop: false});
+        if (!step.allowed || spent + step.cost > u.move) break;
+        spent += step.cost;
         path.push(p);
+        previous = p;
       }
       while (path.length && !endpoints.has(path.at(-1).x + "," + path.at(-1).y))
         path.pop();
@@ -10602,6 +10640,22 @@ class CombatTacticalAI {
           reason: "освобождает общую клетку",
         };
     }
+    // Support behavior uses only allies in reach and actual carried supplies.
+    // Revive an unconscious ally before spending the action to Stabilize;
+    // only self-administer preventively when seriously injured.
+    if (u.bonus > 0) {
+      const healing = Object.keys(u.itemTypes || {}).find(
+        item => u.itemTypes[item] === "healing" && (u.items[item] || 0) > 0,
+      );
+      if (healing) {
+        const ally = s.order.find(k => k !== id && e.unit(k).team === u.team &&
+          !e.unit(k).dead && e.unit(k).hp === 0 &&
+          e.distance(u, e.unit(k)) <= 5);
+        const target = ally || (u.hp > 0 && u.hp <= Math.floor(u.max * 0.3) ? id : null);
+        if (target) return {kind:"healPotion",actor:id,item:healing,target,
+          reason:ally ? "помогает потерявшему сознание союзнику" : "использует лечебное зелье"};
+      }
+    }
     const dying = s.order.find(
       (k) =>
         e.unit(k).team === u.team &&
@@ -10610,6 +10664,12 @@ class CombatTacticalAI {
         !e.unit(k).stable &&
         e.canSee(id, k),
     );
+    if (dying && u.bonus > 0 && e.distance(u, e.unit(dying)) <= 5) {
+      const potion = Object.keys(u.itemTypes || {}).find(item =>
+        u.itemTypes[item] === "healing" && (u.items?.[item] || 0) > 0);
+      if (potion) return {kind:"healPotion",actor:id,target:dying,item:potion,
+        reason:"помогает раненому союзнику лечебным зельем"};
+    }
     if (dying && u.action + (u.surgeAction || 0) > 0) {
       if (e.distance(u, e.unit(dying)) <= 5)
         return { kind: "stabilize", actor: id, target: dying };
@@ -11015,6 +11075,12 @@ class CombatCampaignAdapter {
       throw Error("Несовместимая версия правил снимка");
     const width = scene.width || 11,
       height = scene.height || 8,
+      elevation = Object.fromEntries(Object.entries(scene.elevation || {}).map(([cell, feet]) => {
+        const p = this.cell(cell);
+        if (p.x >= width || p.y >= height || !Number.isInteger(feet) || feet < 0 || feet > 60 || feet % 5)
+          throw Error("Некорректная высота клетки: " + cell);
+        return [p.x + "," + p.y, feet];
+      })),
       units = {},
       initiative = {},
       baseline = {},
@@ -11049,6 +11115,7 @@ class CombatCampaignAdapter {
         JSON.stringify([...previous.rubble].sort()) ===
           JSON.stringify(cells(scene.rubble)) &&
         sorted(previous.cover) === sorted(cover) &&
+        sorted(previous.elevation || {}) === sorted(elevation) &&
         (scene.scene_id || scene.id || scene.battle_id || scene.name) ===
           previous.id;
       if (!same)
@@ -11230,6 +11297,7 @@ class CombatCampaignAdapter {
             return [p.x + "," + p.y, v];
           }),
         ),
+        ...(Object.keys(elevation).length ? {elevation} : {}),
       },
       units,
       order,
@@ -13391,6 +13459,7 @@ if (typeof module !== "undefined") module.exports = { CombatVisualFX };
           (o) => o.x === x && o.y === y,
         ),
         rough = s.terrain.rubble.includes(x + "," + y),
+        heightFeet = engine.elevationAt(p),
         dark = s.zones.some(
           (z) => z.kind === "darkness" && engine.zoneAt(p, z),
         );
@@ -13398,6 +13467,7 @@ if (typeof module !== "undefined") module.exports = { CombatVisualFX };
         "tile" +
         (wall ? " wall" : "") +
         (rough ? " rubble" : "") +
+        (heightFeet ? " elevated" : "") +
         (dark ? " dark" : "") +
         (s.zones.some(
           (z) =>
@@ -13420,6 +13490,7 @@ if (typeof module !== "undefined") module.exports = { CombatVisualFX };
       b.title = visible
         ? a.name + " · " + a.hp + "/" + a.max + " ПЗ"
         : engine.cell(p);
+      if (heightFeet) b.title += " · Высота местности +" + heightFeet + " фт";
       if (objects.length)
         b.title +=
           " · " +
@@ -13437,6 +13508,7 @@ if (typeof module !== "undefined") module.exports = { CombatVisualFX };
         '<span class="coord">' +
         engine.cell(p) +
         "</span>" +
+        (heightFeet ? '<span class="height-label">+' + heightFeet + ' фт</span>' : '') +
         (visible
           ? '<span class="token ' +
             (a.team === "enemies" ? "enemy " : "") +
