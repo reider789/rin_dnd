@@ -373,8 +373,9 @@ test("Improved Cunning Strike costs two distinct Sneak Attack dice and processes
   assert.equal(e.pending.attack.sneakCount, 5);
   // Resume from serialized pending decision rather than retaining object identity.
   e.pending = JSON.parse(JSON.stringify(e.pending));
-  assert.throws(() => cunningPick(e, "poison"));
-  // An invalid choice cannot commit changes to a real engine; test the valid continuation.
+  assert.throws(() => Advanced.decision(e, {choice:"poison"}, e.pending));
+  assert.equal(e.pending.attack.sneakCount, 5);
+  // The invalid duplicate choice must not consume dice.
   cunningPick(e, "trip");
   assert.equal(e.jobs.length, 1);
   assert.equal(e.jobs[0].sneakCount, 4);
