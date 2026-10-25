@@ -160,12 +160,14 @@ class CombatTacticalAI {
         return u.action + (u.surgeAction || 0) > 0
           ? { kind: "search", actor: id }
           : done;
-      let spent = 0;
+      let spent = 0, previous = u;
       const path = [];
       for (const p of goal.path) {
-        spent += e.stepCost(id, p);
-        if (spent > u.move) break;
+        const step = e.movementStep(id, previous, p, {stop: false});
+        if (!step.allowed || spent + step.cost > u.move) break;
+        spent += step.cost;
         path.push(p);
+        previous = p;
       }
       while (path.length && !endpoints.has(path.at(-1).x + "," + path.at(-1).y))
         path.pop();
@@ -253,6 +255,12 @@ class CombatTacticalAI {
         !e.unit(k).stable &&
         e.canSee(id, k),
     );
+    if (dying && u.bonus > 0 && e.distance(u, e.unit(dying)) <= 5) {
+      const potion = Object.keys(u.itemTypes || {}).find(item =>
+        u.itemTypes[item] === "healing" && (u.items?.[item] || 0) > 0);
+      if (potion) return {kind:"healPotion",actor:id,target:dying,item:potion,
+        reason:"помогает раненому союзнику лечебным зельем"};
+    }
     if (dying && u.action + (u.surgeAction || 0) > 0) {
       if (e.distance(u, e.unit(dying)) <= 5)
         return { kind: "stabilize", actor: id, target: dying };
