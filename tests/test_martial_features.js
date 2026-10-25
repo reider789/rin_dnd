@@ -340,3 +340,64 @@ test("Radiant Strikes resistance applies only to radiant component", () => {
   attack(e,[15,1,2,4]);
   assert.equal(e.unit("hunter_a").hp, 189); // 9 physical + 2 radiant
 });
+
+
+const { CombatAdvancedFeatures: Advanced } = require("../core/advanced_features");
+function cunningHarness({ improved = true, dice = 6, critical = false } = {}) {
+  const u = { features: { cunningStrike: true, improvedCunningStrike: improved, cunningDC: 17 },
+    proficiency: 4, stats: { DEX: 4 } };
+  const e = {
+    s: { turnSerial: 7, elapsed: 0 }, pending: null, jobs: [],
+    unit(id) { return u; }, size() { return 2; }, active() { return true; },
+    require(ok, reason) { assert.ok(ok, reason); },
+    decision(kind, actor, data) { this.pending = { kind, actor, ...data }; },
+    enqueue(...jobs) { this.jobs.push(...jobs); },
+    saveTask(target, stat, dc, next) { return { kind: "save", target, stat, dc, next }; },
+    status() {},
+  };
+  const attack = { actor: "rada", target: "enemy", sneakCount: dice * (critical ? 2 : 1),
+    critical, extraOptions: [], spec: {kind: "ranged", id: "bow"}, };
+  e.pending = { kind: "magicChoice", actor: "rada", choice: "cunning",
+    options: ["skip", "poison", "trip", "withdraw"], attack };
+  return e;
+}
+function cunningPick(e, choice) {
+  const pending = JSON.parse(JSON.stringify(e.pending));
+  e.pending = null;
+  assert.equal(Advanced.decision(e, {choice}, pending), true);
+}
+test("Improved Cunning Strike costs two distinct Sneak Attack dice and processes both saves", () => {
+  const e = cunningHarness();
+  cunningPick(e, "poison");
+  assert.deepEqual(e.pending.options, ["skip", "trip", "withdraw"]);
+  assert.equal(e.pending.attack.sneakCount, 5);
+  // Resume from serialized pending decision rather than retaining object identity.
+  e.pending = JSON.parse(JSON.stringify(e.pending));
+  assert.throws(() => cunningPick(e, "poison"));
+  // An invalid choice cannot commit changes to a real engine; test the valid continuation.
+  cunningPick(e, "trip");
+  assert.equal(e.jobs.length, 1);
+  assert.equal(e.jobs[0].sneakCount, 4);
+  assert.deepEqual(e.jobs[0].cunningEffects, ["poison", "trip"]);
+  Advanced.afterWeapon(e, {actor:"rada", target:"enemy", frame:e.jobs[0]});
+  assert.deepEqual(e.jobs.slice(1).map(x => [x.stat,x.next.mode]), [["CON","poison"],["DEX","trip"]]);
+});
+test("Improved Cunning Strike crit costs two critical Sneak Attack dice per option", () => {
+  const e = cunningHarness({critical:true});
+  cunningPick(e, "withdraw");
+  assert.equal(e.pending.attack.sneakCount, 10);
+  cunningPick(e, "trip");
+  assert.equal(e.jobs[0].sneakCount, 8);
+});
+test("Single Cunning Strike and skipping second option keep legacy behavior", () => {
+  const old = cunningHarness({improved:false});
+  cunningPick(old, "trip");
+  assert.equal(old.pending, null);
+  assert.deepEqual(old.jobs[0].cunningEffects, ["trip"]);
+  assert.equal(old.jobs[0].sneakCount, 5);
+  const newer = cunningHarness();
+  cunningPick(newer, "poison");
+  cunningPick(newer, "skip");
+  assert.deepEqual(newer.jobs[0].cunningEffects, ["poison"]);
+  assert.equal(newer.jobs[0].sneakCount, 5);
+});
