@@ -647,7 +647,7 @@ class CombatMagic {
           holdMonster: 1 + level - 5,
           magicMissile: 2 + level,
           scorchingRay: level + 1,
-          chainLightning: 4,
+          chainLightning: 4 + level - 6,
           beaconHope: 100,
           seeming: 100,
         }[c.spell] || 1;
@@ -1802,7 +1802,7 @@ class CombatMagic {
       case "chainLightning":
         // One damage roll for all selected targets; each makes its own DEX save.
         // Sculpt Spells applies to explicitly protected allies as usual.
-        this.area(e, f, targets, 10 + (lv - 6), 8, ev, {
+        this.area(e, f, targets, 10, 8, ev, {
           stat: "DEX", dc, type: "lightning", half: true,
         });
         break;
