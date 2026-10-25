@@ -886,7 +886,11 @@
           )
           .join("") +
         '</select></label><label>Клетка пассажира · рядом с местом прибытия<div class="inline-field"><input id="magic-passenger-point" aria-label="Клетка пассажира"><button data-op="passengerPoint">Выбрать на поле</button></div></label>';
-    const targets = known
+    const targets = [...known,
+      ...(spell==="chainLightning" ?
+        Object.values(engine.s.objects||{})
+          .filter(o=>o.hp>0 && engine.canSee(id,o))
+          .map(o=>"object:"+o.id) : [])]
       .map(
         (k) =>
           '<option value="' +
@@ -894,7 +898,7 @@
           '"' +
           (k === selected ? " selected" : "") +
           ">" +
-          esc(engine.name(k)) +
+          esc(k.startsWith("object:") ? "Предмет · "+(engine.s.objects[k.slice(7)]?.name||k.slice(7)) : engine.name(k)) +
           "</option>",
       )
       .join("");
