@@ -731,6 +731,8 @@
       ),
       handMode: $("magic-hand")?.value || "interpose",
     };
+    if (spell === "tashasBubblingCauldron")
+      base.potionKind = $("magic-cauldron-potion")?.value || "healing";
     if (spell === "findSteed") {
       base.free = $("magic-steed-payment")?.value === "free";
       base.steedType = $("magic-steed-type")?.value || "celestial";
@@ -818,6 +820,12 @@
           .join("") +
         "</select></label>";
     }
+    if (spell === "tashasBubblingCauldron")
+      spellControls = '<label>Вид зелья<select id="magic-cauldron-potion">' +
+        Object.entries(CombatMagic.CAULDRON_POTIONS)
+          .map(([key,value])=>'<option value="'+esc(key)+'">'+esc(value.name)+
+            " · "+(value.rarity==="uncommon"?"необычное":"обычное")+"</option>")
+          .join("") + "</select></label>";
     if (spell === "findSteed")
       spellControls =
         '<label>Способ призыва<select id="magic-steed-payment">' +
@@ -912,8 +920,13 @@
       sphere = engine.s.effects.some(
         (x) => x.owner === id && x.kind === "stormSphere",
       );
+    const cauldrons=engine.s.effects.filter(x=>
+      x.kind==="tashasBubblingCauldron" &&
+      x.until>engine.s.elapsed && x.remaining>0 &&
+      engine.unit(x.owner).team===u.team && engine.distance(u,x.point)<=5);
+    const cauldronVials=(engine.s.cauldronVials||[]).filter(v=>v.holder===id);
     let html = "";
-    if (options || u.features.abjureFoes || hand || sphere)
+    if (options || u.features.abjureFoes || hand || sphere || cauldrons.length || cauldronVials.length)
       html =
         '<details class="magic-panel" ' +
         (u.casting ? "open" : "") +
@@ -954,6 +967,20 @@
         (hand ? button("hand", "Управлять рукой · бонусное", !play) : "") +
         (sphere
           ? button("stormStrike", "Молния сферы · бонусное", !play)
+          : "") +
+        (cauldrons.length
+          ? '<label>Взять из котла<select id="cauldron-source">' +
+            cauldrons.map(x=>'<option value="'+esc(x.id)+'">'+
+              esc(CombatMagic.CAULDRON_POTIONS[x.potionKind]?.name||x.potionKind)+
+              ' · осталось '+x.remaining+"</option>").join("")+
+            '</select></label>'+button("cauldronDraw","Взять зелье · бонусное",!play||u.bonus<=0)
+          : "") +
+        (cauldronVials.length
+          ? '<label>Выпить зелье котла<select id="cauldron-vial">' +
+            cauldronVials.map(v=>'<option value="'+esc(v.id)+'">'+
+              esc(CombatMagic.CAULDRON_POTIONS[v.potionKind]?.name||v.potionKind)+
+              "</option>").join("")+'</select></label>'+
+            button("cauldronDrink","Выпить зелье · бонусное",!play||u.bonus<=0)
           : "") +
         (u.features.abjureFoes
           ? button("abjure", "Изгнание врагов", !play)
@@ -1142,6 +1169,10 @@
       u = engine.unit(id);
     const base = { actor: id, target: selected, weapon };
     if (op === "activity") return {...base, kind: "activity", activity: b.dataset.activity};
+    if (op === "cauldronDraw")
+      return {kind:op,actor:id,cauldron:$("cauldron-source")?.value};
+    if (op === "cauldronDrink")
+      return {kind:op,actor:id,vial:$("cauldron-vial")?.value};
     if (op === "attackObject")
       return { ...base, kind: op, object: $("combat-object")?.value };
     if (op === "endConcentration")
