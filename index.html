@@ -2960,7 +2960,8 @@ class CombatMagic {
   // Stationary 2024 sphere: spells cast OUTSIDE at a lower level cannot
   // affect anything INSIDE its 10-foot emanation. Weapon attacks are exempt.
   static globeBlocked(e, frame, target) {
-    const v = e.s.units?.[target];
+    const v = typeof target==="string" && target.startsWith("object:")
+      ? e.s.objects?.[target.slice(7)] : e.s.units?.[target];
     if (!v || !Number.isInteger(frame?.level)) return false;
     const origin = frame.castOrigin || e.s.units?.[frame.actor];
     if (!origin) return false;
@@ -3525,20 +3526,27 @@ class CombatMagic {
         }[c.spell] || 1;
       e.require(targets.length <= max, "Слишком много целей");
       for (const [index, t] of targets.entries()) {
-        const v = e.unit(t);
-        // Chain Lightning: the first bolt is cast within 150 feet; all others
-        // leap from the FIRST target within 30 feet (not from the caster).
+        const objectTarget=c.spell==="chainLightning" &&
+          typeof t==="string" && t.startsWith("object:");
+        const v=objectTarget ? e.s.objects[t.slice(7)] : e.unit(t);
+        e.require(v && (!objectTarget || Number.isFinite(v.hp) && v.hp>0),
+          "Цель-предмет не существует или разрушена");
+        // The first target must be seen from the caster; subsequent bolts
+        // originate at the first target and need a clear line from there.
         const chainSecondary = c.spell === "chainLightning" && index > 0;
-        const origin = chainSecondary ? e.unit(targets[0]) : u;
-        const reach = chainSecondary ? 30 : range;
+        const first=targets[0], origin=chainSecondary
+          ? (first.startsWith("object:")?e.s.objects[first.slice(7)]:e.unit(first))
+          :u;
+        const reach=chainSecondary?30:range;
         e.require(
-          (c.spell === "revivify" || !v.dead) &&
-            e.distance(origin, v) <= reach && e.wallLOS(origin, v),
+          (objectTarget || c.spell === "revivify" || !v.dead) &&
+            e.distance(origin,v)<=reach && e.wallLOS(origin,v),
           "Цель вне дистанции / за стеной",
         );
-        if (["enemy", "enemies", "attack"].includes(shape))
+        if (["enemy", "enemies", "attack"].includes(shape) &&
+            (!chainSecondary || c.spell!=="chainLightning"))
           e.require(
-            e.canSee(id, t) && e.knowsPosition(id, t),
+            (objectTarget?e.canSee(id,v):e.canSee(id,t)&&e.knowsPosition(id,t)),
             "Нужна видимая цель",
           );
         if (["ally", "allies"].includes(shape))
@@ -4207,8 +4215,25 @@ class CombatMagic {
       if (f.after) e.enqueue(f.after);
     } else if (t.op === "areaRoll") {
       const f = this.frame(e, t.frame);
+      // 2024: objects lack ability scores and therefore fail Dexterity saves.
+      // They receive the SAME shared damage roll, not a fresh roll per bolt.
+      for(const target of t.targets.filter(id=>id.startsWith("object:"))) {
+        const objectId=target.slice(7), o=e.s.objects[objectId];
+        if (!o || this.globeBlocked(e,f,target)) continue;
+        const raw=t.result.total;
+        const damage=o.immunities?.includes("lightning")?0:
+          o.resistances?.includes("lightning")?Math.floor(raw/2):raw;
+        o.hp=Math.max(0,o.hp-damage);
+        e.emit("objectDamage",t.actor,"Цепная молния поражает предмет.",
+          {spell:f.spell,object:objectId,amount:damage,hp:o.hp});
+        if(!o.hp) {
+          const linked=e.s.effects.some(x=>x.id===objectId);
+          if(linked) this.remove(e,[objectId]);
+          else delete e.s.objects[objectId];
+        }
+      }
       e.enqueue(
-        ...t.targets.map((target) =>
+        ...t.targets.filter(id=>!id.startsWith("object:")).map((target) =>
           this.task(t.actor, "apply", {
             frame: f.id,
             target,
