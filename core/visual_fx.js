@@ -8,6 +8,7 @@ class CombatVisualFX {
     fireBolt: ["fire", "attack"], rayFrost: ["ice", "attack"],
     scorchingRay: ["fire", "attack"], mindSliver: ["mind", "targets"],
     magicMissile: ["arcane", "missiles"], fireball: ["fire", "circle", 20],
+    revivify: ["holy", "healing"],
     globeInvulnerability: ["arcane", "circle", 10],
     chainLightning: ["storm", "targets"],
     burningHands: ["fire", "cone", 15], coneCold: ["ice", "cone", 60],
