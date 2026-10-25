@@ -87,3 +87,15 @@ test("authored elevations affect steps, reject sheer cliffs and survive reload",
   saved.terrain.elevation["3,3"]=7;
   assert.throws(()=>new E(saved),/высот/);
 });
+
+test("NPCs use a healing potion on a dying adjacent ally",()=>{
+  const {CombatTacticalAI:AI}=require("../sdk");
+  const e=battle();
+  const u=e.unit("ena"),ally=e.unit("tal");
+  Object.assign(u,{x:2,y:3,bonus:1,itemTypes:{healing:"healing"},items:{healing:1}});
+  Object.assign(ally,{x:2,y:4,hp:0,dead:false,stable:false});
+  const chosen=new AI(e).choose("ena");
+  assert.equal(chosen.kind,"healPotion");
+  assert.equal(chosen.target,"tal");
+  assert.equal(chosen.item,"healing");
+});
