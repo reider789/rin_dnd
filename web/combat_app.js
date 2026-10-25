@@ -823,7 +823,8 @@
     if (spell === "tashasBubblingCauldron")
       spellControls = '<label>Вид зелья<select id="magic-cauldron-potion">' +
         Object.entries(CombatMagic.CAULDRON_POTIONS)
-          .map(([key,value])=>'<option value="'+esc(key)+'">'+esc(value.name)+
+          .map(([key,value])=>'<option value="'+esc(key)+'"'+
+            (draft["magic-cauldron-potion"]===key?' selected':'')+'>'+esc(value.name)+
             " · "+(value.rarity==="uncommon"?"необычное":"обычное")+"</option>")
           .join("") + "</select></label>";
     if (spell === "findSteed")
