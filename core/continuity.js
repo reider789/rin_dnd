@@ -438,6 +438,7 @@ class CombatContinuity {
             "web",
             "zoneTruth",
             "stormSphere",
+            "globeInvulnerability",
           ].includes(z.kind) &&
           this.integer(z.radius, 0, 600) &&
           this.integer(z.remaining_seconds, 1, 86400) &&
