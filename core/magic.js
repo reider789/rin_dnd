@@ -598,14 +598,20 @@ class CombatMagic {
           holdMonster: 1 + level - 5,
           magicMissile: 2 + level,
           scorchingRay: level + 1,
+          chainLightning: 4,
           beaconHope: 100,
           seeming: 100,
         }[c.spell] || 1;
       e.require(targets.length <= max, "Слишком много целей");
-      for (const t of targets) {
+      for (const [index, t] of targets.entries()) {
         const v = e.unit(t);
+        // Chain Lightning: the first bolt is cast within 150 feet; all others
+        // leap from the FIRST target within 30 feet (not from the caster).
+        const chainSecondary = c.spell === "chainLightning" && index > 0;
+        const origin = chainSecondary ? e.unit(targets[0]) : u;
+        const reach = chainSecondary ? 30 : range;
         e.require(
-          !v.dead && e.distance(u, v) <= range && e.wallLOS(u, v),
+          !v.dead && e.distance(origin, v) <= reach && e.wallLOS(origin, v),
           "Цель вне дистанции / за стеной",
         );
         if (["enemy", "enemies", "attack"].includes(shape))
@@ -1596,6 +1602,13 @@ class CombatMagic {
           dc,
           type: "fire",
           half: true,
+        });
+        break;
+      case "chainLightning":
+        // One damage roll for all selected targets; each makes its own DEX save.
+        // Sculpt Spells applies to explicitly protected allies as usual.
+        this.area(e, f, targets, 10 + (lv - 6), 8, ev, {
+          stat: "DEX", dc, type: "lightning", half: true,
         });
         break;
       case "coneCold":

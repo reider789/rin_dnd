@@ -665,3 +665,31 @@ test("Beacon maximizes the actual grade of healing potion", () => {
   e.dispatch({ kind: "healPotion", actor: "ena", item: "potion" });
   assert.equal(u.hp, 70);
 });
+
+test("Chain Lightning VI deals one empowered 10d8 roll to both targets with independent saves", () => {
+  const e=setup();
+  e.unit("ena").casting.level=11;
+  e.s.random.tape=[...Array(10).fill(5),1,1];
+  const before=e.unit("ena").slots[6].current;
+  cast(e,"chainLightning",{level:6,targets:["hunter_a","hunter_b"]});
+  assert.equal(e.unit("ena").slots[6].current,before-1);
+  assert.equal(e.unit("hunter_a").hp,145);
+  assert.equal(e.unit("hunter_b").hp,145);
+  assert.equal(e.s.events.filter(x=>x.type==="roll"&&x.text.includes("Цепная молния")).length,1);
+});
+test("Chain Lightning checks secondary target distance from first target before paying a spell slot",()=>{
+  const e=setup();e.unit("ena").casting.level=11;
+  e.unit("hunter_b").x=13;e.unit("hunter_b").y=3;
+  const before=JSON.stringify(e.export());
+  assert.throws(()=>cast(e,"chainLightning",{level:6,targets:["hunter_a","hunter_b"]}),/дистанции/);
+  assert.equal(JSON.stringify(e.export()),before);
+});
+test("Chain Lightning respects Sculpt Spells for an ally without removing other targets",()=>{
+  const e=setup();e.unit("ena").casting.level=11;
+  e.s.random.tape=[...Array(10).fill(5),1];
+  const ally=e.unit("tal").hp;
+  cast(e,"chainLightning",{level:6,targets:["hunter_a","tal"],sculpt:["tal"]});
+  assert.equal(e.unit("tal").hp,ally);
+  assert.equal(e.unit("hunter_a").hp,145);
+  assert.ok(e.s.events.some(x=>x.type==="sculpt"));
+});
