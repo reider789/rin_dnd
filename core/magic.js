@@ -971,7 +971,8 @@ class CombatMagic {
       u.bonus--;
       this.attack(
         e,
-        { actor: c.actor, spell: "stormSphere", level: 4, id: effect.id },
+        { actor: c.actor, spell: "stormSphere", level: 4, id: effect.id,
+          castOrigin:effect.castOrigin },
         c.target,
         {
           count: 4,
@@ -1453,8 +1454,9 @@ class CombatMagic {
           {
             actor: x.owner,
             spell: "stormSphere",
-            level: 4,
+            level: x.level,
             id: t.effect,
+            castOrigin:x.castOrigin,
             sculpt: [],
             dc: 16,
           },
