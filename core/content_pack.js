@@ -125,7 +125,7 @@ class CombatContentPack {
           "conditionImmunities",
           "tactics",
           "tokenKey",
-          "size", "casting", "equipment", "reference", "summoner", "summonLevel", "summonDC", "creatureType", "powerAvailable", "initialHP",
+          "size", "casting", "equipment", "exhaustion", "reference", "summoner", "summonLevel", "summonDC", "creatureType", "powerAvailable", "initialHP",
         ],
         key,
       );
