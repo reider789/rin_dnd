@@ -182,6 +182,16 @@ aside {
   background-color: #676f5655;
   box-shadow: inset 0 0 0 2px #b5c18a6b, inset 0 -9px 0 #17251f50;
 }
+.exhaustion-indicator {
+  display: inline-block;
+  border: 1px solid #d1a873;
+  border-radius: 3px;
+  padding: 0 2px;
+  color: #ffe6b0;
+  background: #743a31f2;
+  font-weight: 700;
+  font-size: 10px;
+}
 .height-label {
   position: absolute;
   z-index: 3;
@@ -6606,7 +6616,9 @@ class CombatContinuity {
         "Повреждена карта продолжения: " + key,
       );
     for (const [id, level] of Object.entries(c.exhaustion || {}))
-      this.require(party.has(id) && this.integer(level, 0, 5), "Недопустимое истощение в продолжении боя");
+      this.require(party.has(id) && this.integer(level, 0, 6) &&
+        (level < 6 || c.life?.[id]?.dead === true),
+        "Шестой уровень истощения требует подтверждённой смерти");
     const actors = new Set(party),
       summonIds = new Set();
     for (const u of c.units || []) {
@@ -6735,7 +6747,7 @@ class CombatContinuity {
           ) &&
           (s.elevation === undefined || (this.object(s.elevation) &&
             Object.entries(s.elevation).every(([k,v]) =>
-              /^\\d+,\\d+$/.test(k) &&
+              /^\d+,\d+$/.test(k) &&
               k.split(",").every((n,i) => Number(n) < (i ? s.height : s.width)) &&
               this.integer(v,0,60) && v%5===0))) &&
           this.object(s.cover) &&
@@ -7117,7 +7129,7 @@ class CombatRulesEngine {
     if (s.terrain.elevation !== undefined &&
         (!s.terrain.elevation || typeof s.terrain.elevation !== "object" || Array.isArray(s.terrain.elevation) ||
          !Object.entries(s.terrain.elevation).every(([key,feet]) =>
-           /^\\d+,\\d+$/.test(key) && key.split(",").every((n,i) => Number(n) < (i ? s.terrain.height : s.terrain.width)) &&
+           /^\d+,\d+$/.test(key) && key.split(",").every((n,i) => Number(n) < (i ? s.terrain.height : s.terrain.width)) &&
            Number.isInteger(feet) && feet>=0 && feet<=60 && feet%5===0)))
       throw Error("Повреждена карта высот");
     s.events.forEach(event => RulesJournal.validateEvent(event));
@@ -7134,8 +7146,9 @@ class CombatRulesEngine {
             u.diedAtSeconds < 0 || u.diedAtSeconds > s.elapsed))
         throw Error("Неверное время смерти");
       RulesContinuity.validateLife(RulesContinuity.life(u), u.hp);
-      if (u.exhaustion !== undefined && (!Number.isInteger(u.exhaustion) || u.exhaustion < 0 || u.exhaustion > 5))
-        throw Error("Недопустимый уровень истощения: нужен сюжетный разбор шестого уровня");
+      if (u.exhaustion !== undefined && (!Number.isInteger(u.exhaustion) || u.exhaustion < 0 || u.exhaustion > 6 ||
+          (u.exhaustion === 6 && (!u.dead || u.hp !== 0))))
+        throw Error("Шестой уровень истощения означает смерть персонажа");
       if (u.blockedCells !== undefined && (!Array.isArray(u.blockedCells) ||
           !u.blockedCells.every(p => p && Number.isInteger(p.x) && Number.isInteger(p.y) &&
             p.x >= 0 && p.y >= 0 && p.x < s.terrain.width && p.y < s.terrain.height &&
@@ -7469,7 +7482,10 @@ class CombatRulesEngine {
     return u;
   }
   distance(a, b) {
-    return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y)) * 5;
+    const horizontal = Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y)) * 5;
+    const vertical = Math.abs((this.s.terrain.elevation?.[a.x + "," + a.y] || 0) -
+      (this.s.terrain.elevation?.[b.x + "," + b.y] || 0));
+    return Math.max(horizontal, vertical);
   }
   has(id, kind) {
     return (
@@ -8398,7 +8414,8 @@ class CombatRulesEngine {
   }
   movementStep(id, from, to, {stop = false, knowledge = "observed", forced = false} = {}) {
     const fail = reason => ({allowed: false, canStop: false, cost: 0, reason});
-    if (!to || !this.inside(to) || this.wall(to) || this.distance(from, to) !== 5)
+    const neighboring = to && Math.max(Math.abs(from.x - to.x), Math.abs(from.y - to.y)) === 1;
+    if (!to || !this.inside(to) || this.wall(to) || !neighboring)
       return fail("Маршрут перекрыт");
     if (from.x !== to.x && from.y !== to.y &&
         (this.wall({x: from.x, y: to.y}) || this.wall({x: to.x, y: from.y})))
@@ -9740,7 +9757,7 @@ class CombatRulesEngine {
         }
       }
       const from = { x: u.x, y: u.y },
-        cost = this.stepCost(t.actor, p);
+        cost = step.cost;
       if (t.freeBudget !== undefined) t.freeBudget -= cost;
       else u.move -= cost;
       if (!t.forced && this.actorId === t.actor)
@@ -13491,6 +13508,7 @@ if (typeof module !== "undefined") module.exports = { CombatVisualFX };
         ? a.name + " · " + a.hp + "/" + a.max + " ПЗ"
         : engine.cell(p);
       if (heightFeet) b.title += " · Высота местности +" + heightFeet + " фт";
+      if (visible && a.exhaustion) b.title += " · Истощение " + a.exhaustion + " (−" + (2*a.exhaustion) + " к испытаниям d20)";
       if (objects.length)
         b.title +=
           " · " +
@@ -13518,6 +13536,7 @@ if (typeof module !== "undefined") module.exports = { CombatVisualFX };
             asset(key) +
             "')\"><b>" +
             esc(a.name.split(" ")[0]) +
+            (a.exhaustion ? " <span class=\"exhaustion-indicator\" title=\"Истощение\">И" + a.exhaustion + "</span>" : "") +
             " " +
             a.hp +
             '</b><span class="hpbar"><i style="width:' +
