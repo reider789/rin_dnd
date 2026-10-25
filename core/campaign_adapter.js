@@ -367,6 +367,8 @@ class CombatCampaignAdapter {
         ...(continuity.effects || []).map((x) =>
           Number(/(\d+)$/.exec(x.id)?.[1] || 0),
         ),
+        ...(continuity.cauldron_vials || []).map(v=>
+          Number(/(\d+)$/.exec(v.id)?.[1] || 0)),
       ),
       phase: "active",
       started: false,
