@@ -1738,11 +1738,13 @@ class CombatRulesEngine {
       "petrified",
     ].some((k) => this.has(id, k))
       ? 0
-      : Math.max(0, RulesMagic.speed(
-          this,
-          id,
-          Math.max(0, u.speed - (this.has(id, "frost") || this.has(id, "slow") ? 10 : 0),
-        ) - 5 * (u.exhaustion || 0));
+      : Math.max(
+          0,
+          RulesMagic.speed(
+            this, id,
+            Math.max(0, u.speed - (this.has(id, "frost") || this.has(id, "slow") ? 10 : 0)),
+          ) - 5 * (u.exhaustion || 0),
+        );
   }
   adjustMovementBudget(id, delta) {
     const u = this.unit(id),
