@@ -97,7 +97,7 @@ class CombatRulesEngine {
     if (s.terrain.elevation !== undefined &&
         (!s.terrain.elevation || typeof s.terrain.elevation !== "object" || Array.isArray(s.terrain.elevation) ||
          !Object.entries(s.terrain.elevation).every(([key,feet]) =>
-           /^\\d+,\\d+$/.test(key) && key.split(",").every((n,i) => Number(n) < (i ? s.terrain.height : s.terrain.width)) &&
+           /^\d+,\d+$/.test(key) && key.split(",").every((n,i) => Number(n) < (i ? s.terrain.height : s.terrain.width)) &&
            Number.isInteger(feet) && feet>=0 && feet<=60 && feet%5===0)))
       throw Error("Повреждена карта высот");
     s.events.forEach(event => RulesJournal.validateEvent(event));
@@ -449,7 +449,10 @@ class CombatRulesEngine {
     return u;
   }
   distance(a, b) {
-    return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y)) * 5;
+    const horizontal = Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y)) * 5;
+    const vertical = Math.abs((this.s.terrain.elevation?.[a.x + "," + a.y] || 0) -
+      (this.s.terrain.elevation?.[b.x + "," + b.y] || 0));
+    return Math.max(horizontal, vertical);
   }
   has(id, kind) {
     return (
@@ -1378,7 +1381,8 @@ class CombatRulesEngine {
   }
   movementStep(id, from, to, {stop = false, knowledge = "observed", forced = false} = {}) {
     const fail = reason => ({allowed: false, canStop: false, cost: 0, reason});
-    if (!to || !this.inside(to) || this.wall(to) || this.distance(from, to) !== 5)
+    const neighboring = to && Math.max(Math.abs(from.x - to.x), Math.abs(from.y - to.y)) === 1;
+    if (!to || !this.inside(to) || this.wall(to) || !neighboring)
       return fail("Маршрут перекрыт");
     if (from.x !== to.x && from.y !== to.y &&
         (this.wall({x: from.x, y: to.y}) || this.wall({x: to.x, y: from.y})))
@@ -2720,7 +2724,7 @@ class CombatRulesEngine {
         }
       }
       const from = { x: u.x, y: u.y },
-        cost = this.stepCost(t.actor, p);
+        cost = step.cost;
       if (t.freeBudget !== undefined) t.freeBudget -= cost;
       else u.move -= cost;
       if (!t.forced && this.actorId === t.actor)
