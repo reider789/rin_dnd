@@ -97,6 +97,8 @@ def run():
         page.locator('#magic-spell').select_option('tashasBubblingCauldron')
         page.locator('#magic-cauldron-potion').select_option('greaterHealing')
         page.locator('#magic-level').select_option('6')
+        page.locator('[data-op="magicPoint"]').click()
+        page.locator('[data-tile="3,3"]').click()
         page.locator('[data-op="cast"]').click()
         assert page.evaluate(f"{API}.snapshot().effects.some(x=>x.kind==='tashasBubblingCauldron'&&x.remaining===5&&x.potionKind==='greaterHealing')")
         page.locator('[data-op="cauldronDraw"]').click()
