@@ -1244,7 +1244,7 @@
         ...base,
         kind: op,
         target: b.dataset.target,
-        item: b.dataset.item,
+        item: b.dataset.item || b.dataset.potionItem,
       };
     if (op === "layOnHands" || op === "curePoison")
       return {
@@ -1651,7 +1651,7 @@
         aid.push(button("healPotion", esc(label) + " → " + esc(engine.unit(recipient).name) +
           " · " + (u.items[item] || 0) + "<small>Бонусное действие</small>",
           !play || !availability.enabled,
-          'data-item="' + esc(item) + '" data-target="' + esc(recipient) +
+          (recipient === id ? 'data-item="' : 'data-potion-item="') + esc(item) + '" data-target="' + esc(recipient) +
           '" title="' + esc(availability.reason) + '"'));
       }
     }
