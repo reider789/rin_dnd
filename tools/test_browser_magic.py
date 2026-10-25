@@ -90,6 +90,7 @@ def run():
         assert page.evaluate(f'{API}.snapshot().objects["effect-999"].hp') == 45
         # Tasha's cauldron must be operable from the real browser panel.
         reset("""s.units.ena.casting.level=11;
+          s.units.ena.stats.INT=5;
           s.units.ena.casting.prepared.push('tashasBubblingCauldron');
           s.units.ena.casting.components={tashasBubblingCauldron:{itemId:'gildedLadle',valueGp:500}};
           s.units.ena.items.gildedLadle=1;
