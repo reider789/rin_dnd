@@ -8,7 +8,7 @@
   "canonical": false,
   "source_state_revision": 1,
   "source_state_sha256": "bf8bd1f85817996db5961dd8c658c028f7c87a7632fd53f75a98812a013139e9",
-  "bundle_sha256": "08eef93abf353f9b089d65f5e1de15d887d93f8a61e926db4517af027dd0528e",
-  "bundle_size_bytes": 990160,
+  "bundle_sha256": "66cde549e9d074c4372c4151a402e39426c768054526cd01b5d71343b918d5aa",
+  "bundle_size_bytes": 990161,
   "battle_handoff": "rin-combat-result-v30"
 }
