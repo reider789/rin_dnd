@@ -356,6 +356,7 @@ class CombatCampaignAdapter {
       initiative,
       baseline,
       continuityBaseline: structuredClone(continuity),
+      cauldronVials: structuredClone(continuity.cauldron_vials || []),
       inventoryBaseline,
       index: 0,
       round: 1,
@@ -485,6 +486,8 @@ class CombatCampaignAdapter {
         ]),
       ),
       continuity: {
+        cauldron_vials: (s.cauldronVials || []).filter(v =>
+          retained.has(v.owner) && retained.has(v.holder)).map(v=>structuredClone(v)),
         scene: {
           id: s.meta.sceneId || s.meta.battleId,
           name: s.meta.name,
