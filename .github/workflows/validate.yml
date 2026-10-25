@@ -71,10 +71,22 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # CI can still be running for an older PR head while new commits
+          # arrive. Never overwrite them or treat a non-fast-forward as an
+          # error in the already superseded workflow run.
+          git fetch origin "$PR_HEAD_REF"
+          if [ "$(git rev-parse FETCH_HEAD)" != "$(git rev-parse HEAD)" ]; then
+            echo "Preview head advanced; its own newer validation will publish the bundle."
+            git restore -- index.html config/rin_runtime.json rin-build-manifest.json entrypoint.json current-manifest.json
+            exit 0
+          fi
           git add -- index.html config/rin_runtime.json rin-build-manifest.json entrypoint.json current-manifest.json
           if ! git diff --cached --quiet; then
             git commit -m "build: synchronize level-11 offline artifacts"
-            git push origin "HEAD:refs/heads/$PR_HEAD_REF"
+            if ! git push origin "HEAD:refs/heads/$PR_HEAD_REF"; then
+              echo "Preview branch advanced during push; the next PR run owns publication."
+              git reset --hard HEAD~1
+            fi
           fi
       - name: Check committed offline bundle matches current code
         run: git diff --exit-code -- index.html config/rin_runtime.json rin-build-manifest.json entrypoint.json current-manifest.json
