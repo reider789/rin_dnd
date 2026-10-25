@@ -8,7 +8,7 @@
   "sources": {
     "core/battlefield.js": "234d89d47f4d27712b54e507fafd4b319586557a3214277ec7e56cf4720a8ab7",
     "core/capabilities.js": "2d0ef630695e7d74acec72030f8a206c9c89c06c4900e361714dc690d5528240",
-    "core/activities.js": "dac6a52f214b9b7e1addd57d3993c44e5feb1c2b81a150b8ab79120e1b58be1b",
+    "core/activities.js": "ed48e796ec994b2d3bdd46d9d18eaebd38f42e1df870cb89813835b33c2389bb",
     "core/combat_journal.js": "05a02f0da402f9ac4998a3da290247a77e7371da07abffce26813bee98d0e6d3",
     "core/content_pack.js": "9954729ff0930f58d78eaa48695c9cbb41ff1ed27e4b8d0d6dd578b322c2aeb9",
     "core/class_features.js": "91f5f653e48c87a0065c40523cbf719e07278d1b31f47f4fd6f4ecaa2c7b014a",
@@ -21,15 +21,15 @@
     "core/tactical_ai.js": "ec1a6a7cd2cce83e33690b520e203d0b771e787139675c95ce88d611a576474c",
     "core/campaign_adapter.js": "54c458a612f74ff01f61b3c7750b26952e11f0d63f4e79c79b941083de08baf5",
     "web/session_store.js": "781f96690cf1855fb45731b96dd57c90d58fb8e39fd67da43fc40dc93481b69b",
-    "core/visual_fx.js": "c899bb34fc6579f8a4e3c0e6517c1bd706e7e01a227dc350b3a2cbdabb1568fb",
+    "core/visual_fx.js": "1a253881450f3e5d9a60aa5f5447b8a4b1b736901f9516a9ea3b50889cda5165",
     "web/combat_app.js": "006922a984d6aa54faf37ec49bbb3c2970273a977d5efb1897b499e183484f1d",
     "web/shell.html": "060b41f27ff94955b9760e9170213563024c8cd7500d5efb745cf6de00e54c72",
     "web/desktop.css": "0ba7eaf7a82ade6f17b145d3e24b1cdabe41b4b19529b9ea3395cbe298b20afb",
     "config/combat_profiles.json": "91e59d5e10e910a12a82dd9ae089333ac764f3f49317fb7285f81f99802fb287",
     "encounters/caravan_ambush_training.json": "e0855a32f8401b0ad1307e29eb2a428ffed46dcb9113ba504e4a6c0b1be9d714"
   },
-  "bundle_sha256": "0465f764931e9c5ae3e8b8051857d6863b331bbe9d00bce9ba1c6fa738c1ff98",
-  "bytes": 980500,
+  "bundle_sha256": "036e099b3ed91394dd18292b7459fcccab96c48a4352ed4a52868ab3a480723d",
+  "bytes": 980715,
   "art_mode": "scene",
   "art_assets": [
     "backgrounds.forest",
