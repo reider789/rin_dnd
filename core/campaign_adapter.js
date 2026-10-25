@@ -137,6 +137,12 @@ class CombatCampaignAdapter {
       throw Error("Несовместимая версия правил снимка");
     const width = scene.width || 11,
       height = scene.height || 8,
+      elevation = Object.fromEntries(Object.entries(scene.elevation || {}).map(([cell, feet]) => {
+        const p = this.cell(cell);
+        if (p.x >= width || p.y >= height || !Number.isInteger(feet) || feet < 0 || feet > 60 || feet % 5)
+          throw Error("Некорректная высота клетки: " + cell);
+        return [p.x + "," + p.y, feet];
+      })),
       units = {},
       initiative = {},
       baseline = {},
@@ -171,6 +177,7 @@ class CombatCampaignAdapter {
         JSON.stringify([...previous.rubble].sort()) ===
           JSON.stringify(cells(scene.rubble)) &&
         sorted(previous.cover) === sorted(cover) &&
+        sorted(previous.elevation || {}) === sorted(elevation) &&
         (scene.scene_id || scene.id || scene.battle_id || scene.name) ===
           previous.id;
       if (!same)
@@ -352,6 +359,7 @@ class CombatCampaignAdapter {
             return [p.x + "," + p.y, v];
           }),
         ),
+        ...(Object.keys(elevation).length ? {elevation} : {}),
       },
       units,
       order,
