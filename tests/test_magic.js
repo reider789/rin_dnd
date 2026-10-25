@@ -862,3 +862,59 @@ test("Cauldron recasting removes prior withdrawn vials, but expiration preserves
   assert.equal(e.s.effects.filter(v=>v.kind==="tashasBubblingCauldron").length,0);
   assert.equal(e.s.cauldronVials[0].id,current);
 });
+
+
+test("Tasha cauldron creates correct utility potion effects without duplicating physical stock",()=>{
+  const recipes=[
+    ["climbing","climbing",3600],["comprehension","comprehension",3600],
+    ["growth","enlarge",600],["hillGiantStrength","giantStrength",3600],
+    ["waterBreathing","waterBreathing",86400]
+  ];
+  for(const [kind,effect,seconds] of recipes) {
+    const e=cauldronSetup();
+    cast(e,"tashasBubblingCauldron",{level:6,point:{x:3,y:3},potionKind:kind});
+    const source=e.s.effects.find(v=>v.kind==="tashasBubblingCauldron");
+    e.dispatch({kind:"cauldronDraw",actor:"ena",cauldron:source.id});
+    const vial=e.s.cauldronVials[0].id;
+    e.unit("ena").bonus=1;
+    e.dispatch({kind:"cauldronDrink",actor:"ena",vial});
+    const buff=e.s.effects.find(x=>x.kind===effect);
+    assert(buff,kind);
+    assert.equal(buff.until-e.s.elapsed,seconds);
+    assert.equal(buff.concentration,false);
+    assert.equal(buff.potionSource,source.id);
+    assert.equal(e.s.cauldronVials.length,0);
+  }
+});
+test("Typed resistance potions protect one selected damage kind but not other kinds",()=>{
+  const e=cauldronSetup();
+  assert.throws(()=>cast(e,"tashasBubblingCauldron",
+    {level:6,point:{x:3,y:3},potionKind:"resistance"}),/тип урона/);
+  cast(e,"tashasBubblingCauldron",
+    {level:6,point:{x:3,y:3},potionKind:"resistance",potionVariant:"lightning"});
+  const cauldron=e.s.effects.find(v=>v.kind==="tashasBubblingCauldron");
+  e.dispatch({kind:"cauldronDraw",actor:"ena",cauldron:cauldron.id});
+  assert.equal(e.s.cauldronVials[0].potionVariant,"lightning");
+  const vial=e.s.cauldronVials[0].id;
+  e.unit("ena").bonus=1;
+  e.dispatch({kind:"cauldronDrink",actor:"ena",vial});
+  assert.equal(M.mitigate(e,{target:"ena",damageType:"lightning"},17),8);
+  assert.equal(M.mitigate(e,{target:"ena",damageType:"fire"},17),17);
+  const copy=reload(e);
+  assert.equal(M.mitigate(copy,{target:"ena",damageType:"lightning"},17),8);
+});
+test("Chain Lightning upcast grows target cap but retains ten damage dice",()=>{
+  const e=setup(),u=e.unit("ena");
+  u.casting.level=17;
+  u.slots[7]={current:1,max:1};
+  u.slots[8]={current:1,max:1};
+  u.slots[9]={current:1,max:1};
+  assert.throws(()=>cast(e,"chainLightning",
+    {level:6,targets:["hunter_a","hunter_b","tal","ena","hunter_c"]}),
+    /Слишком много целей|Неизвестный участник/);
+  e.s.random.tape=[...Array(10).fill(5),1];
+  cast(e,"chainLightning",{level:7,targets:["hunter_a"]});
+  const rolls=e.s.events.filter(x=>x.type==="roll" && x.text.includes("Цепная молния"));
+  assert.equal(rolls.length,1);
+  assert.equal(rolls[0].result?.rolls?.length ?? 10,10);
+});
