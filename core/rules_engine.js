@@ -2477,8 +2477,6 @@ class CombatRulesEngine {
         },
       );
       RulesMagic.damaged(this, t, amount);
-      if (target.dead && target.diedAtSeconds === undefined)
-        target.diedAtSeconds = s.elapsed;
       if (target.hp === 0) {
         this.status(t.target, "unconscious");
         this.status(t.target, "prone");
@@ -2486,7 +2484,10 @@ class CombatRulesEngine {
           target.dead = true;
         target.reaction = 0;
         this.releaseGrapples();
-      } else if (amount > 0 && RulesMagic.concentrating(this, t.target))
+      }
+      if (target.dead && target.diedAtSeconds === undefined)
+        target.diedAtSeconds = s.elapsed;
+      if (target.hp !== 0 && amount > 0 && RulesMagic.concentrating(this, t.target))
         this.enqueue(
           this.saveTask(
             t.target,
