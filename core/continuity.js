@@ -183,6 +183,7 @@ class CombatContinuity {
       "remaining_seconds",
       "expires_at",
       "noLethargy",
+      "castOrigin",
     ]);
     const point = (p, outside = false) =>
       this.object(p) &&
@@ -259,6 +260,8 @@ class CombatContinuity {
         );
       if (x.point !== undefined)
         this.require(point(x.point), "Неверная точка эффекта");
+      if (x.castOrigin !== undefined)
+        this.require(point(x.castOrigin), "Неверная исходная точка заклинания");
       if (x.weapon !== undefined)
         this.require(this.id(x.weapon), "Неверное оружие эффекта");
       if (x.remaining !== undefined)
