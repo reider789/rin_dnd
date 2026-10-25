@@ -95,6 +95,7 @@ class CombatCapabilities {
     abjureFoes: "boolean",
     shieldMaster: "boolean",
     divineSmite: "boolean",
+    radiantStrikes: "boolean",
     cunningStrike: "boolean",
     stealthAttack: "boolean",
     thiefHands: "boolean",
@@ -269,6 +270,7 @@ class CombatCapabilities {
           "light",
           "mastery",
           "unarmed",
+          "meleeWeapon",
           "ammo",
           "ammoCounter",
           "ammoInventoryId",
@@ -289,6 +291,12 @@ class CombatCapabilities {
       "Неверный набор эффектов атаки",
     );
     for (const effect of attack.effects || []) this.effect(effect);
+    this.require(
+      attack.meleeWeapon === undefined ||
+        (typeof attack.meleeWeapon === "boolean" &&
+          ["melee", "ranged"].includes(attack.kind)),
+      "meleeWeapon применяется только к оружейной атаке",
+    );
     if (attack.mastery)
       this.require(
         ["vex", "nick", "graze", "sap", "push", "slow"].includes(

@@ -447,6 +447,11 @@ class CombatMartialFeatures {
         t.riders ||
         (["melee", "ranged"].includes(f.spec.kind)
           ? [
+              ...(u.features.radiantStrikes &&
+                (f.spec.kind === "melee" || f.spec.unarmed ||
+                 (f.spec.kind === "ranged" && f.spec.meleeWeapon))
+                ? [{ label: "Сияющие удары", damageType: "radiant", die: 8 }]
+                : []),
               ...(f.forge
                 ? [
                     {

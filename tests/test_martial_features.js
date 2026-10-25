@@ -299,3 +299,46 @@ test("an automatic fighter selects Trip and Savage Attacker through the common d
   assert.ok(e.has("hunter_a", "prone"));
   assert.equal(e.unit("ena").savageTurn, e.s.turnSerial);
 });
+
+test("Radiant Strikes add one independently typed d8 per melee hit and double it on crit", () => {
+  const e = battle({ radiantStrikes: true });
+  attack(e, [15, 1, 2, 3]);
+  assert.equal(e.unit("hunter_a").hp, 188); // 1+2+6 sword and 3 radiant
+  const hit = e.s.events.filter(x => x.type === "damage").findLast(x => x.target === "hunter_a");
+  assert.ok(hit, "damage event exists");
+  assert.ok(e.s.events.some(x => x.type === "roll" && x.text.includes("Сияющие удары")));
+  const crit = battle({ radiantStrikes: true });
+  attack(crit, [20, 1, 2, 3, 4, 5, 6]);
+  assert.equal(crit.unit("hunter_a").hp, 173); // 4d6 1+2+3+4 + 6 and 2d8 5+6
+  const radiantRoll = crit.s.events.find(x => x.type === "roll" && x.text.includes("Сияющие удары"));
+  assert.equal(radiantRoll.rolls.length, 2);
+});
+test("Radiant Strikes do not trigger for Graze misses or for ranged-weapon attacks", () => {
+  const missed = battle({ radiantStrikes: true, masteries: ["graze"] });
+  attack(missed, [1]);
+  assert.equal(missed.unit("hunter_a").hp, 195); // 5 graze, no radiant
+  assert.equal(missed.s.events.some(x => x.type === "roll" && x.text.includes("Сияющие удары")), false);
+  const shot = battle({ radiantStrikes: true });
+  Object.assign(shot.unit("ena").attacks[0], {kind: "ranged",range: 120,normalRange: 60});
+  shot.unit("hunter_a").x = shot.unit("ena").x + 4;
+  shot.unit("hunter_a").y = shot.unit("ena").y;
+  attack(shot, [15, 1, 2, 3]);
+  assert.equal(shot.s.events.some(x => x.type === "roll" && x.text.includes("Сияющие удары")), false);
+});
+test("Radiant Strikes work for thrown melee-category weapons even with ranged attack kind", () => {
+  const thrown = battle({ radiantStrikes: true });
+  Object.assign(thrown.unit("ena").attacks[0], {
+    kind: "ranged",meleeWeapon: true,range: 120,normalRange: 60,
+  });
+  thrown.unit("hunter_a").x = thrown.unit("ena").x + 4;
+  thrown.unit("hunter_a").y = thrown.unit("ena").y;
+  attack(thrown, [15, 1, 2, 3]);
+  assert.ok(thrown.s.events.some(x => x.type === "roll" && x.text.includes("Сияющие удары")));
+  assert.equal(thrown.unit("hunter_a").hp, 188);
+});
+test("Radiant Strikes resistance applies only to radiant component", () => {
+  const e = battle({ radiantStrikes: true });
+  e.unit("hunter_a").resistances = ["radiant"];
+  attack(e,[15,1,2,4]);
+  assert.equal(e.unit("hunter_a").hp, 189); // 9 physical + 2 radiant
+});
