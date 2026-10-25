@@ -356,6 +356,7 @@ class CombatCampaignAdapter {
       initiative,
       baseline,
       continuityBaseline: structuredClone(continuity),
+      cauldronVials: structuredClone(continuity.cauldron_vials || []),
       inventoryBaseline,
       index: 0,
       round: 1,
@@ -366,6 +367,8 @@ class CombatCampaignAdapter {
         ...(continuity.effects || []).map((x) =>
           Number(/(\d+)$/.exec(x.id)?.[1] || 0),
         ),
+        ...(continuity.cauldron_vials || []).map(v=>
+          Number(/(\d+)$/.exec(v.id)?.[1] || 0)),
       ),
       phase: "active",
       started: false,
@@ -392,6 +395,7 @@ class CombatCampaignAdapter {
                 ? x.kind
                 : "item",
             level: x.level,
+            castOrigin: x.castOrigin,
             targets: x.targets,
             offered: [],
           },
@@ -485,6 +489,8 @@ class CombatCampaignAdapter {
         ]),
       ),
       continuity: {
+        cauldron_vials: (s.cauldronVials || []).filter(v =>
+          retained.has(v.owner) && retained.has(v.holder)).map(v=>structuredClone(v)),
         scene: {
           id: s.meta.sceneId || s.meta.battleId,
           name: s.meta.name,

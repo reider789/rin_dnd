@@ -4,6 +4,17 @@ const MagicActivities = typeof module !== "undefined"
   ? require("./activities").CombatActivities : CombatActivities;
 class CombatMagic {
   static SPELLS = MagicActivities.legacySpellTuples();
+  // Never manufacture unknown potion effects; expand the registry only with tested rules.
+  static CAULDRON_POTIONS = Object.freeze({
+    healing:{name:"Лечебное зелье",rarity:"common",count:2,sides:4,bonus:2},
+    greaterHealing:{name:"Улучшенное лечебное зелье",rarity:"uncommon",count:4,sides:4,bonus:4},
+    climbing:{name:"Зелье лазания",rarity:"common",effect:"climbing",seconds:3600},
+    comprehension:{name:"Зелье понимания",rarity:"common",effect:"comprehension",seconds:3600},
+    growth:{name:"Зелье роста",rarity:"uncommon",effect:"enlarge",seconds:600},
+    hillGiantStrength:{name:"Зелье силы холмового великана",rarity:"uncommon",effect:"giantStrength",seconds:3600},
+    waterBreathing:{name:"Зелье подводного дыхания",rarity:"uncommon",effect:"waterBreathing",seconds:86400},
+    resistance:{name:"Зелье сопротивления",rarity:"uncommon",effect:"potionResistance",seconds:3600},
+  });
 
   static OPS = new Set([
     "window",
@@ -67,9 +78,26 @@ class CombatMagic {
     noReactions: "Без реакций",
     burning: "Горение",
     rooted: "Укоренён",
+    comprehension:"Понимание языков",
+    waterBreathing:"Подводное дыхание",
+    potionResistance:"Сопротивление стихии",
   };
   static label(kind) {
     return this.SPELLS[kind]?.[0] || this.LABELS[kind] || kind;
+  }
+  // Stationary 2024 sphere: spells cast OUTSIDE at a lower level cannot
+  // affect anything INSIDE its 10-foot emanation. Weapon attacks are exempt.
+  static globeBlocked(e, frame, target) {
+    const v = typeof target==="string" && target.startsWith("object:")
+      ? e.s.objects?.[target.slice(7)] : e.s.units?.[target];
+    if (!v || !Number.isInteger(frame?.level)) return false;
+    const origin = frame.castOrigin || e.s.units?.[frame.actor];
+    if (!origin) return false;
+    const distance = (a,b) => Math.hypot(a.x-b.x,a.y-b.y)*5;
+    return (e.s.effects || []).some(x =>
+      x.kind === "globeInvulnerability" && x.until > e.s.elapsed &&
+      x.point && frame.level < x.level &&
+      distance(v,x.point) <= 10 && distance(origin,x.point) > 10);
   }
   static catalogue(u) {
     return [
@@ -163,9 +191,25 @@ class CombatMagic {
               "enlarge",
               "giantStrength",
               "climbing",
+              "comprehension",
+              "waterBreathing",
+              "potionResistance",
             ].includes(x.kind),
           "Неизвестный магический эффект",
         );
+      }
+    }
+    if (s.cauldronVials !== undefined) {
+      req(Array.isArray(s.cauldronVials) && s.cauldronVials.length <= 200,
+        "Повреждены зелья котла");
+      const ids=new Set();
+      for(const v of s.cauldronVials) {
+        req(v && /^[A-Za-z0-9][A-Za-z0-9_.:-]{0,119}$/.test(v.id) &&
+          !ids.has(v.id) && s.units[v.owner] && s.units[v.holder] &&
+          typeof v.sourceSpellId==="string" &&
+          Object.hasOwn(this.CAULDRON_POTIONS,v.potionKind),
+          "Повреждён созданный флакон");
+        ids.add(v.id);
       }
     }
     if (s.spellFrames !== undefined) {
@@ -227,6 +271,7 @@ class CombatMagic {
     s.effects ??= [];
     s.spellFrames ??= {};
     s.objects ??= {};
+    s.cauldronVials ??= [];
   }
   static task(actor, op, data = {}) {
     return { kind: "magicTask", actor, op, ...data };
@@ -235,6 +280,7 @@ class CombatMagic {
     return (e.s.effects || []).filter(
       (x) =>
         x.kind === kind &&
+        !this.globeBlocked(e, {actor:x.owner, level:x.level, castOrigin:x.castOrigin}, id) &&
         (x.targets?.includes(id) ||
           (x.aura &&
             e.active(x.owner) &&
@@ -271,6 +317,7 @@ class CombatMagic {
       dc: e.unit(f.actor).casting?.dc || f.dc || 10,
       until: e.s.elapsed + duration,
       concentration: Boolean(this.SPELLS[f.spell]?.[6]),
+      castOrigin: f.castOrigin || { x: e.unit(f.actor).x, y: e.unit(f.actor).y },
       ...extra,
     };
     e.s.spellFrames[x.id] = { ...f, id: x.id };
@@ -304,7 +351,10 @@ class CombatMagic {
             if (before > 0 && u.hp === 0) {
               u.stable = false;
               u.reaction = 0;
-              if (!u.deathSaves) u.dead = true;
+              if (!u.deathSaves) {
+                u.dead = true;
+                u.diedAtSeconds ??= s.elapsed;
+              }
               for (const kind of ["unconscious","prone"])
                 if (!u.statuses.some(z => z.kind === kind)) u.statuses.push({kind});
               collapsed.add(id);
@@ -598,19 +648,33 @@ class CombatMagic {
           holdMonster: 1 + level - 5,
           magicMissile: 2 + level,
           scorchingRay: level + 1,
+          chainLightning: 4 + level - 6,
           beaconHope: 100,
           seeming: 100,
         }[c.spell] || 1;
       e.require(targets.length <= max, "Слишком много целей");
-      for (const t of targets) {
-        const v = e.unit(t);
+      for (const [index, t] of targets.entries()) {
+        const objectTarget=c.spell==="chainLightning" &&
+          typeof t==="string" && t.startsWith("object:");
+        const v=objectTarget ? e.s.objects[t.slice(7)] : e.unit(t);
+        e.require(v && (!objectTarget || Number.isFinite(v.hp) && v.hp>0),
+          "Цель-предмет не существует или разрушена");
+        // The first target must be seen from the caster; subsequent bolts
+        // originate at the first target and need a clear line from there.
+        const chainSecondary = c.spell === "chainLightning" && index > 0;
+        const first=targets[0], origin=chainSecondary
+          ? (first.startsWith("object:")?e.s.objects[first.slice(7)]:e.unit(first))
+          :u;
+        const reach=chainSecondary?30:range;
         e.require(
-          !v.dead && e.distance(u, v) <= range && e.wallLOS(u, v),
+          (objectTarget || c.spell === "revivify" || !v.dead) &&
+            e.distance(origin,v)<=reach && e.wallLOS(origin,v),
           "Цель вне дистанции / за стеной",
         );
-        if (["enemy", "enemies", "attack"].includes(shape))
+        if (["enemy", "enemies", "attack"].includes(shape) &&
+            (!chainSecondary || c.spell!=="chainLightning"))
           e.require(
-            e.canSee(id, t) && e.knowsPosition(id, t),
+            (objectTarget?e.canSee(id,v):e.canSee(id,t)&&e.knowsPosition(id,t)),
             "Нужна видимая цель",
           );
         if (["ally", "allies"].includes(shape))
@@ -680,6 +744,43 @@ class CombatMagic {
         "Выбери одно состояние для восстановления",
       );
     }
+    if (c.spell === "tashasBubblingCauldron") {
+      e.require(Object.hasOwn(this.CAULDRON_POTIONS,c.potionKind),
+        "Поддерживаются только проверенные обычные и необычные зелья");
+      const resistanceTypes=["acid","cold","fire","force","lightning",
+        "necrotic","poison","psychic","radiant","thunder"];
+      if(c.potionKind==="resistance")
+        e.require(resistanceTypes.includes(c.potionVariant),
+          "Для зелья сопротивления требуется утверждённый тип урона");
+      else
+        e.require(c.potionVariant===undefined,"Неверный вариант зелья");
+      e.require(c.point && !e.occupied(c.point.x,c.point.y) && e.distance(u,c.point)<=5,
+        "Котлу нужна свободная клетка в 5 футах");
+      const ladle=u.casting?.components?.tashasBubblingCauldron;
+      e.require(ladle && typeof ladle.itemId==="string" &&
+        /^[A-Za-z0-9][A-Za-z0-9_.:-]{0,119}$/.test(ladle.itemId) &&
+        Number.isInteger(ladle.valueGp) && ladle.valueGp>=500 &&
+        (u.items?.[ladle.itemId] || 0)>0,
+        "Не подтверждён позолоченный половник стоимостью не менее 500 зм");
+    }
+    if (c.spell === "revivify") {
+      e.require(targets.length === 1, "Возрождение требует одну цель");
+      const v = e.unit(targets[0]);
+      e.require(v.dead && v.hp === 0, "Цель Возрождения должна быть мертва");
+      e.require(Number.isInteger(v.diedAtSeconds) &&
+        v.diedAtSeconds >= 0 && v.diedAtSeconds <= e.s.elapsed &&
+        e.s.elapsed - v.diedAtSeconds <= 60,
+        "Смерть не подтверждена в течение последней минуты");
+      e.require(!v.deathOldAge && !v.missingVitalParts,
+        "Возрождение не устраняет старость и отсутствующие части тела");
+      const material = u.casting?.components?.revivify;
+      e.require(material && typeof material === "object" &&
+        typeof material.itemId === "string" &&
+        /^[A-Za-z0-9][A-Za-z0-9_.:-]{0,119}$/.test(material.itemId) &&
+        Number.isInteger(material.valueGp) && material.valueGp >= 300 &&
+        (u.items?.[material.itemId] || 0) > 0,
+        "Нужен подтверждённый алмаз ≥300 зм в инвентаре");
+    }
     if (c.spell === "wardingBond") {
       e.require(
         targets[0] !== id,
@@ -722,6 +823,9 @@ class CombatMagic {
       actor: id,
       spell: c.spell,
       level,
+      castOrigin: {x:u.x,y:u.y},
+      potionKind: c.spell==="tashasBubblingCauldron" ? c.potionKind : undefined,
+      potionVariant: c.spell==="tashasBubblingCauldron" ? c.potionVariant : undefined,
       targets,
       point: c.point,
       sculpt: c.sculpt || [],
@@ -790,6 +894,46 @@ class CombatMagic {
       e.enqueue(this.task(c.actor, "window", { frame: f.id }));
       return true;
     }
+    if (c.kind === "cauldronDraw") {
+      const x=e.s.effects.find(x=>x.id===c.cauldron &&
+        x.kind==="tashasBubblingCauldron" && x.until>e.s.elapsed && x.remaining>0);
+      e.require(x && e.unit(x.owner).team===u.team &&
+        e.distance(u,x.point)<=5 && u.bonus>0,
+        "Рядом нет доступного котла или бонусного действия");
+      u.bonus--;
+      x.remaining--;
+      const vial={id:"vial-"+(++e.s.sequence),sourceSpellId:x.id,
+        owner:x.owner,holder:c.actor,potionKind:x.potionKind,
+        ...(x.potionVariant?{potionVariant:x.potionVariant}:{})};
+      e.s.cauldronVials.push(vial);
+      e.emit("cauldronDraw",c.actor,u.name+": получено "+this.CAULDRON_POTIONS[x.potionKind].name+".",
+        {sourceSpellId:x.id,vial:vial.id,potionKind:x.potionKind,remaining:x.remaining});
+      if (x.remaining===0) this.remove(e,[x.id]);
+      return true;
+    }
+    if (c.kind === "cauldronDrink") {
+      const v=e.s.cauldronVials.find(x=>x.id===c.vial && x.holder===c.actor);
+      e.require(v && u.bonus>0 && u.hp>0 && !u.dead,
+        "Нет созданного зелья или бонусного действия");
+      const recipe=this.CAULDRON_POTIONS[v.potionKind];
+      e.require(recipe,"Зелье нельзя применить автоматически");
+      u.bonus--;
+      e.s.cauldronVials=e.s.cauldronVials.filter(x=>x.id!==v.id);
+      e.emit("cauldronDrink",c.actor,u.name+": выпивает "+recipe.name+".",
+        {vial:v.id,sourceSpellId:v.sourceSpellId,potionKind:v.potionKind});
+      if(recipe.count)
+        this.healing(e,c.actor,c.actor,recipe.count,recipe.sides,recipe.bonus,recipe.name);
+      else {
+        const frame={id:v.sourceSpellId,actor:c.actor,
+          spell:"tashasBubblingCauldron",level:6,
+          castOrigin:{x:u.x,y:u.y}};
+        this.add(e,frame,recipe.effect,[c.actor],recipe.seconds,
+          {concentration:false,
+           ...(v.potionVariant?{damageType:v.potionVariant}:{}),
+           potionSource:v.sourceSpellId});
+      }
+      return true;
+    }
     if (c.kind === "hand") {
       const effect = (e.s.effects || []).find(
           (x) => x.owner === c.actor && x.kind === "bigbyHand",
@@ -827,7 +971,8 @@ class CombatMagic {
       u.bonus--;
       this.attack(
         e,
-        { actor: c.actor, spell: "stormSphere", level: 4, id: effect.id },
+        { actor: c.actor, spell: "stormSphere", level: 4, id: effect.id,
+          castOrigin:effect.castOrigin },
         c.target,
         {
           count: 4,
@@ -1199,8 +1344,25 @@ class CombatMagic {
       if (f.after) e.enqueue(f.after);
     } else if (t.op === "areaRoll") {
       const f = this.frame(e, t.frame);
+      // 2024: objects lack ability scores and therefore fail Dexterity saves.
+      // They receive the SAME shared damage roll, not a fresh roll per bolt.
+      for(const target of t.targets.filter(id=>id.startsWith("object:"))) {
+        const objectId=target.slice(7), o=e.s.objects[objectId];
+        if (!o || this.globeBlocked(e,f,target)) continue;
+        const raw=t.result.total;
+        const damage=o.immunities?.includes("lightning")?0:
+          o.resistances?.includes("lightning")?Math.floor(raw/2):raw;
+        o.hp=Math.max(0,o.hp-damage);
+        e.emit("objectDamage",t.actor,"Цепная молния поражает предмет.",
+          {spell:f.spell,object:objectId,amount:damage,hp:o.hp});
+        if(!o.hp) {
+          const linked=e.s.effects.some(x=>x.id===objectId);
+          if(linked) this.remove(e,[objectId]);
+          else delete e.s.objects[objectId];
+        }
+      }
       e.enqueue(
-        ...t.targets.map((target) =>
+        ...t.targets.filter(id=>!id.startsWith("object:")).map((target) =>
           this.task(t.actor, "apply", {
             frame: f.id,
             target,
@@ -1210,6 +1372,11 @@ class CombatMagic {
         ),
       );
     } else if (t.op === "apply") {
+      if (t.frame && this.globeBlocked(e, this.frame(e,t.frame), t.target)) {
+        e.emit("globeBlocked", t.actor, "Сфера неуязвимости блокирует эффект.",
+          {target:t.target});
+        return true;
+      }
       if (t.halfMiss) {
         this.apply(e, t, false);
         return true;
@@ -1287,8 +1454,9 @@ class CombatMagic {
           {
             actor: x.owner,
             spell: "stormSphere",
-            level: 4,
+            level: x.level,
             id: t.effect,
+            castOrigin:x.castOrigin,
             sculpt: [],
             dc: 16,
           },
@@ -1431,6 +1599,8 @@ class CombatMagic {
   }
   static area(e, f, targets, count, sides, flat, effect) {
     this.init(e.s);
+    targets = targets.filter(id => !this.globeBlocked(e, f, id));
+    if (!targets.length) return;
     e.s.spellFrames[f.id] ??= f;
     e.enqueue({
       kind: "roll",
@@ -1488,7 +1658,9 @@ class CombatMagic {
       lv = f.level,
       dc = f.dc || u.casting?.dc || 10,
       ev = this.empowered(e, f),
-      targets = f.targets || [],
+      originalTargets = f.targets || [],
+      targets = ["magicMissile", "scorchingRay"].includes(f.spell)
+        ? originalTargets : originalTargets.filter(id => !this.globeBlocked(e, f, id)),
       t = targets[0],
       p = f.point;
     this.init(e.s);
@@ -1502,6 +1674,12 @@ class CombatMagic {
       origin: { x: u.x, y: u.y },
       target: f.target,
     });
+    if (originalTargets.length && !targets.length) {
+      e.emit("globeBlocked", f.actor, "Сфера неуязвимости блокирует заклинание.", {
+        spell:f.spell, targets:originalTargets,
+      });
+      return;
+    }
     if (f.spell === "counterspell") {
       const parent = this.frame(e, f.targetFrame);
       if (!parent.cancelled)
@@ -1522,6 +1700,56 @@ class CombatMagic {
       return;
     }
     switch (f.spell) {
+      case "tashasBubblingCauldron": {
+        const before=e.s.cauldronVials.length;
+        e.s.cauldronVials=e.s.cauldronVials.filter(v=>v.owner!==f.actor);
+        e.emit("cauldronRecast",f.actor,"Прежние неиспользованные зелья котла исчезают.",
+          {removed:before-e.s.cauldronVials.length});
+        const quantity=Math.max(1,u.stats[u.casting.ability]);
+        const x=this.add(e,f,"tashasBubblingCauldron",[],600,
+          {point:{x:p.x,y:p.y},remaining:quantity,potionKind:f.potionKind,
+           ...(f.potionVariant?{potionVariant:f.potionVariant}:{}),
+           concentration:false});
+        e.emit("cauldronCreated",f.actor,
+          "Кипящий котёл Таши: "+this.CAULDRON_POTIONS[f.potionKind].name+".",
+          {effect:x.id,point:x.point,potionKind:x.potionKind,quantity});
+        break;
+      }
+      case "revivify": {
+        const v = e.unit(t);
+        const material = u.casting?.components?.revivify;
+        e.require(v?.dead && v.hp === 0 &&
+          Number.isInteger(v.diedAtSeconds) &&
+          e.s.elapsed - v.diedAtSeconds >= 0 &&
+          e.s.elapsed - v.diedAtSeconds <= 60 &&
+          material?.valueGp >= 300 &&
+          (u.items?.[material.itemId] || 0) > 0,
+          "Возрождение: время смерти или компонент больше недействительны");
+        // Physical inventory is authoritative; the campaign report exports
+        // inventory_after, unlike mutable casting profile metadata.
+        u.items[material.itemId]--;
+        v.dead = false;
+        v.hp = 1;
+        v.stable = false;
+        v.deathSuccesses = 0;
+        v.deathFailures = 0;
+        delete v.diedAtSeconds;
+        e.removeStatus(t, "unconscious");
+        e.emit("revived", t, v.name + " возвращается к жизни с 1 ПЗ.",
+          {spell:"revivify", source:f.actor, target:t, hp:1,
+           consumed:{item:"diamond",itemId:material.itemId,valueGp:material.valueGp,count:1}});
+        e.checkEnd();
+        break;
+      }
+      case "globeInvulnerability": {
+        const fixed = {x:u.x,y:u.y};
+        const x = this.add(e, f, "globeInvulnerability", [f.actor], 60, {point:fixed});
+        // Treat this as a geometric field, not an aura that follows the caster.
+        e.s.zones.push({id:"zone-"+x.id, kind:"globeInvulnerability",
+          owner:f.actor, effect:x.id, x:fixed.x, y:fixed.y, radius:10,
+          until:x.until, concentration:true});
+        break;
+      }
       case "findSteed":
         this.finishSteed(e, f);
         break;
@@ -1596,6 +1824,13 @@ class CombatMagic {
           dc,
           type: "fire",
           half: true,
+        });
+        break;
+      case "chainLightning":
+        // One damage roll for all selected targets; each makes its own DEX save.
+        // Sculpt Spells applies to explicitly protected allies as usual.
+        this.area(e, f, targets, 10, 8, ev, {
+          stat: "DEX", dc, type: "lightning", half: true,
         });
         break;
       case "coneCold":
@@ -1826,6 +2061,18 @@ class CombatMagic {
       }
       case "dispelMagic": {
         const selected = f.dispelTarget || { kind: "creature", id: t };
+        const subject = selected.kind === "creature" ? e.s.units[selected.id] :
+          selected.kind === "object" ? e.s.objects[selected.id] :
+            e.s.effects.find(x=>x.id===selected.id)?.point;
+        const inside = subject && (e.s.effects || []).some(x =>
+          x.kind==="globeInvulnerability" && x.point && x.until>e.s.elapsed &&
+          lv < x.level && Math.hypot(subject.x-x.point.x,subject.y-x.point.y)*5<=10 &&
+          Math.hypot(u.x-x.point.x,u.y-x.point.y)*5>10);
+        if (inside) {
+          e.emit("globeBlocked",f.actor,"Сфера неуязвимости препятствует рассеиванию.",
+            {spell:f.spell,target:selected.id});
+          break;
+        }
         const effects = (e.s.effects || []).filter(
           (x) =>
             Object.hasOwn(this.SPELLS, x.kind) &&
@@ -1866,6 +2113,10 @@ class CombatMagic {
     }
   }
   static attack(e, f, target, a) {
+    if (this.globeBlocked(e,f,target)) {
+      e.emit("globeBlocked", f.actor, "Сфера неуязвимости отражает заклинание.", {spell:f.spell, target});
+      return;
+    }
     const u = e.unit(f.actor);
     e.enqueue({
       kind: "attackRoll",
@@ -1990,6 +2241,12 @@ class CombatMagic {
       e.unit(t.target).truthZone = t.effect;
   }
   static missile(e, t) {
+    const f = this.frame(e,t.frame);
+    if (this.globeBlocked(e,f,t.target)) {
+      e.emit("globeBlocked", t.actor, "Сфера неуязвимости отражает Волшебную стрелу.",
+        {spell:f.spell,target:t.target});
+      return;
+    }
     const u = e.unit(t.target);
     if (e.has(t.target, "shield")) {
       e.emit("shieldBlocked", t.target, "Щит блокирует Волшебную стрелу.");
@@ -2431,6 +2688,7 @@ class CombatMagic {
     const resistant = e.unit(t.target).resistances?.includes(t.damageType) ||
       e.has(t.target, "petrified") ||
       (t.damageType === "fire" && this.effects(e, t.target, "fireResistance").length) ||
+      this.effects(e,t.target,"potionResistance").some(x=>x.damageType===t.damageType) ||
       this.effects(e, t.target, "wardingBond").some(
         (x) =>
           e.active(x.owner) &&

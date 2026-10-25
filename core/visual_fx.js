@@ -8,6 +8,10 @@ class CombatVisualFX {
     fireBolt: ["fire", "attack"], rayFrost: ["ice", "attack"],
     scorchingRay: ["fire", "attack"], mindSliver: ["mind", "targets"],
     magicMissile: ["arcane", "missiles"], fireball: ["fire", "circle", 20],
+    tashasBubblingCauldron: ["arcane", "circle", 5],
+    revivify: ["holy", "healing"],
+    globeInvulnerability: ["arcane", "circle", 10],
+    chainLightning: ["storm", "targets"],
     burningHands: ["fire", "cone", 15], coneCold: ["ice", "cone", 60],
     thunderwave: ["storm", "cone", 15], drainingWave: ["shadow", "cone", 30],
     web: ["web", "web", 20], fogCloud: ["mist", "circle", 20],
@@ -77,8 +81,9 @@ class CombatVisualFX {
         const elemental = e.components?.find(p => this.school(p.damageType) !== "steel" && p.amount > 0);
         out.push({...base,kind:"damage",target:e.actor,source:e.source,
           school:this.school(elemental?.damageType || e.damageType),amount:e.amount});
-      } else if (e.type === "heal") {
-        if (e.amount !== 0) out.push({...base,kind:"heal",target:e.actor,school:"holy",amount:e.amount});
+      } else if (e.type === "heal" || e.type === "revived") {
+        const amount = e.type === "revived" ? 1 : e.amount;
+        if (amount !== 0) out.push({...base,kind:"heal",target:e.actor,school:"holy",amount});
       } else if (e.type === "cast") {
         out.push({...base,kind:"cast",spell:e.spell,school:this.SPELLS[e.spell]?.[0] || "arcane"});
         if (e.spell === "darkness" || e.resolved)

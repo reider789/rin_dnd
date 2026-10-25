@@ -299,3 +299,127 @@ test("an automatic fighter selects Trip and Savage Attacker through the common d
   assert.ok(e.has("hunter_a", "prone"));
   assert.equal(e.unit("ena").savageTurn, e.s.turnSerial);
 });
+
+test("Radiant Strikes add one independently typed d8 per melee hit and double it on crit", () => {
+  const e = battle({ radiantStrikes: true });
+  attack(e, [15, 1, 2, 3]);
+  assert.equal(e.unit("hunter_a").hp, 188); // 1+2+6 sword and 3 radiant
+  assert.ok(e.s.events.some(x => x.type === "roll" && x.text.includes("Сияющие удары")));
+  const crit = battle({ radiantStrikes: true });
+  attack(crit, [20, 1, 2, 3, 4, 5, 6]);
+  assert.equal(crit.unit("hunter_a").hp, 173); // 4d6 1+2+3+4 + 6 and 2d8 5+6
+  const radiantRoll = crit.s.events.find(x => x.type === "roll" && x.text.includes("Сияющие удары"));
+  assert.equal(radiantRoll.rolls.length, 2);
+});
+test("Radiant Strikes do not trigger for Graze misses or for ranged-weapon attacks", () => {
+  const missed = battle({ radiantStrikes: true, masteries: ["graze"] });
+  attack(missed, [1]);
+  assert.equal(missed.unit("hunter_a").hp, 195); // 5 graze, no radiant
+  assert.equal(missed.s.events.some(x => x.type === "roll" && x.text.includes("Сияющие удары")), false);
+  const shot = battle({ radiantStrikes: true });
+  Object.assign(shot.unit("ena").attacks[0], {kind: "ranged",range: 120,normalRange: 60});
+  shot.unit("hunter_a").x = shot.unit("ena").x + 4;
+  shot.unit("hunter_a").y = shot.unit("ena").y;
+  attack(shot, [15, 1, 2, 3]);
+  assert.equal(shot.s.events.some(x => x.type === "roll" && x.text.includes("Сияющие удары")), false);
+});
+test("Radiant Strikes work for thrown melee-category weapons even with ranged attack kind", () => {
+  const thrown = battle({ radiantStrikes: true });
+  Object.assign(thrown.unit("ena").attacks[0], {
+    kind: "ranged",meleeWeapon: true,range: 120,normalRange: 60,
+  });
+  thrown.unit("hunter_a").x = thrown.unit("ena").x + 4;
+  thrown.unit("hunter_a").y = thrown.unit("ena").y;
+  attack(thrown, [15, 1, 2, 3]);
+  assert.ok(thrown.s.events.some(x => x.type === "roll" && x.text.includes("Сияющие удары")));
+  assert.equal(thrown.unit("hunter_a").hp, 188);
+});
+test("Radiant Strikes resistance applies only to radiant component", () => {
+  const e = battle({ radiantStrikes: true });
+  e.unit("hunter_a").resistances = ["radiant"];
+  attack(e,[15,1,2,4]);
+  assert.equal(e.unit("hunter_a").hp, 189); // 9 physical + 2 radiant
+});
+
+
+const { CombatAdvancedFeatures: Advanced } = require("../core/advanced_features");
+function cunningHarness({ improved = true, dice = 6, critical = false } = {}) {
+  const u = { features: { cunningStrike: true, improvedCunningStrike: improved, cunningDC: 17 },
+    proficiency: 4, stats: { DEX: 4 } };
+  const e = {
+    s: { turnSerial: 7, elapsed: 0 }, pending: null, jobs: [],
+    unit(id) { return u; }, size() { return 2; }, active() { return true; },
+    require(ok, reason) { assert.ok(ok, reason); },
+    decision(kind, actor, data) { this.pending = { kind, actor, ...data }; },
+    enqueue(...jobs) { this.jobs.push(...jobs); },
+    saveTask(target, stat, dc, next) { return { kind: "save", target, stat, dc, next }; },
+    status() {},
+  };
+  const attack = { actor: "rada", target: "enemy", sneakCount: dice * (critical ? 2 : 1),
+    critical, extraOptions: [], spec: {kind: "ranged", id: "bow"}, };
+  e.pending = { kind: "magicChoice", actor: "rada", choice: "cunning",
+    options: ["skip", "poison", "trip", "withdraw"], attack };
+  return e;
+}
+function cunningPick(e, choice) {
+  const pending = JSON.parse(JSON.stringify(e.pending));
+  e.pending = null;
+  assert.equal(Advanced.decision(e, {choice}, pending), true);
+}
+test("Improved Cunning Strike costs two distinct Sneak Attack dice and processes both saves", () => {
+  const e = cunningHarness();
+  cunningPick(e, "poison");
+  assert.deepEqual(e.pending.options, ["skip", "trip", "withdraw"]);
+  assert.equal(e.pending.attack.sneakCount, 5);
+  // Resume from serialized pending decision rather than retaining object identity.
+  e.pending = JSON.parse(JSON.stringify(e.pending));
+  assert.throws(() => Advanced.decision(e, {choice:"poison"}, e.pending));
+  assert.equal(e.pending.attack.sneakCount, 5);
+  // The invalid duplicate choice must not consume dice.
+  cunningPick(e, "trip");
+  assert.equal(e.jobs.length, 1);
+  assert.equal(e.jobs[0].sneakCount, 4);
+  assert.deepEqual(e.jobs[0].cunningEffects, ["poison", "trip"]);
+  Advanced.afterWeapon(e, {actor:"rada", target:"enemy", frame:e.jobs[0]});
+  assert.deepEqual(e.jobs.slice(1).map(x => [x.stat,x.next.mode]), [["CON","poison"],["DEX","trip"]]);
+});
+test("Improved Cunning Strike crit costs two critical Sneak Attack dice per option", () => {
+  const e = cunningHarness({critical:true});
+  cunningPick(e, "withdraw");
+  assert.equal(e.pending.attack.sneakCount, 10);
+  cunningPick(e, "trip");
+  assert.equal(e.jobs[0].sneakCount, 8);
+});
+test("Single Cunning Strike and skipping second option keep legacy behavior", () => {
+  const old = cunningHarness({improved:false});
+  cunningPick(old, "trip");
+  assert.equal(old.pending, null);
+  assert.deepEqual(old.jobs[0].cunningEffects, ["trip"]);
+  assert.equal(old.jobs[0].sneakCount, 5);
+  const newer = cunningHarness();
+  cunningPick(newer, "poison");
+  cunningPick(newer, "skip");
+  assert.deepEqual(newer.jobs[0].cunningEffects, ["poison"]);
+  assert.equal(newer.jobs[0].sneakCount, 5);
+});
+
+
+test("Improved Cunning Strike never offers a second paid effect without dice", () => {
+  const e = cunningHarness({dice:1});
+  cunningPick(e, "poison");
+  assert.equal(e.pending, null);
+  assert.equal(e.jobs[0].sneakCount, 0);
+  assert.deepEqual(e.jobs[0].cunningEffects, ["poison"]);
+});
+test("Improved Cunning Strike preserves first effect when last choice is skipped after save/load", () => {
+  const e = cunningHarness();
+  cunningPick(e, "withdraw");
+  const carried = JSON.parse(JSON.stringify(e.pending));
+  e.pending = carried;
+  cunningPick(e, "skip");
+  assert.equal(e.jobs[0].cunning, "withdraw");
+  assert.deepEqual(e.jobs[0].cunningEffects, ["withdraw"]);
+  assert.equal(e.jobs[0].sneakCount, 5);
+  Advanced.afterWeapon(e, {actor:"rada", target:"enemy", frame:e.jobs[0]});
+  assert.equal(e.jobs[1].mode, "withdraw");
+});

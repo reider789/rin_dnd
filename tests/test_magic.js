@@ -665,3 +665,278 @@ test("Beacon maximizes the actual grade of healing potion", () => {
   e.dispatch({ kind: "healPotion", actor: "ena", item: "potion" });
   assert.equal(u.hp, 70);
 });
+
+test("Chain Lightning VI deals one empowered 10d8 roll to both targets with independent saves", () => {
+  const e=setup();
+  e.unit("ena").casting.level=11;
+  e.s.random.tape=[...Array(10).fill(5),1,1];
+  const before=e.unit("ena").slots[6].current;
+  cast(e,"chainLightning",{level:6,targets:["hunter_a","hunter_b"]});
+  assert.equal(e.unit("ena").slots[6].current,before-1);
+  assert.equal(e.unit("hunter_a").hp,145);
+  assert.equal(e.unit("hunter_b").hp,145);
+  assert.equal(e.s.events.filter(x=>x.type==="roll"&&x.text.includes("Цепная молния")).length,1);
+});
+test("Chain Lightning checks secondary target distance from first target before paying a spell slot",()=>{
+  const e=setup();e.unit("ena").casting.level=11;
+  e.unit("hunter_b").x=13;e.unit("hunter_b").y=3;
+  const before=JSON.stringify(e.export());
+  assert.throws(()=>cast(e,"chainLightning",{level:6,targets:["hunter_a","hunter_b"]}),/дистанции/);
+  assert.equal(JSON.stringify(e.export()),before);
+});
+test("Chain Lightning respects Sculpt Spells for an ally without removing other targets",()=>{
+  const e=setup();e.unit("ena").casting.level=11;
+  e.s.random.tape=[...Array(10).fill(5),1];
+  const ally=e.unit("tal").hp;
+  cast(e,"chainLightning",{level:6,targets:["hunter_a","tal"],sculpt:["tal"]});
+  assert.equal(e.unit("tal").hp,ally);
+  assert.equal(e.unit("hunter_a").hp,145);
+  assert.ok(e.s.events.some(x=>x.type==="sculpt"));
+});
+
+
+test("Globe of Invulnerability stays on its cast square and survives session export", () => {
+  let e = setup();
+  e.unit("ena").casting.level = 11;
+  cast(e,"globeInvulnerability",{level:6});
+  const globe=e.s.effects.find(x=>x.kind==="globeInvulnerability");
+  assert(globe && globe.concentration);
+  assert.deepEqual(globe.point,{x:2,y:3});
+  assert.equal(globe.until - e.s.elapsed,60);
+  assert(e.s.zones.some(z=>z.effect===globe.id && z.radius===10));
+  e.unit("ena").x=9; // Protection is anchored, not carried with the caster.
+  e=reload(e);
+  assert.deepEqual(e.s.effects.find(x=>x.kind==="globeInvulnerability").point,{x:2,y:3});
+  assert.equal(M.globeBlocked(e,{actor:"hunter_a",level:5,castOrigin:{x:6,y:3}},"tal"),true);
+  assert.equal(M.globeBlocked(e,{actor:"hunter_a",level:6,castOrigin:{x:6,y:3}},"tal"),false);
+  assert.equal(M.globeBlocked(e,{actor:"ena",level:3,castOrigin:{x:2,y:3}},"tal"),false);
+  assert.equal(M.globeBlocked(e,{actor:"hunter_a",level:3,castOrigin:{x:6,y:3}},"hunter_b"),false);
+});
+test("Globe intercepts eligible fireball targets and incoming spell attacks, not outside targets", () => {
+  const e=setup();e.unit("ena").casting.level=11;
+  cast(e,"globeInvulnerability",{level:6});
+  const f={id:"spell-globe-check",actor:"hunter_a",spell:"fireball",level:3,
+    castOrigin:{x:6,y:3}};
+  const effect={stat:"DEX",dc:17,type:"fire",half:true};
+  const before=e.s.queue.length;
+  M.area(e,f,["tal","hunter_b"],8,6,0,effect);
+  assert.equal(e.s.queue.length,before+1);
+  assert.deepEqual(e.s.queue.at(-1).next.targets,["hunter_b"]);
+  const queued=e.s.queue.length;
+  M.attack(e,{...f,spell:"rayFrost"},"tal",{count:2,die:8,flat:0,type:"cold",bonus:8});
+  assert.equal(e.s.queue.length,queued);
+  M.attack(e,{...f,spell:"rayFrost"},"hunter_b",{count:2,die:8,flat:0,type:"cold",bonus:8});
+  assert.equal(e.s.queue.length,queued+1);
+});
+test("Globe is concentration and ending it removes the associated field",()=>{
+  const e=setup();e.unit("ena").casting.level=11;
+  cast(e,"globeInvulnerability",{level:6});
+  assert.equal(e.s.effects.filter(x=>x.kind==="globeInvulnerability").length,1);
+  M.endConcentration(e,"ena");
+  assert.equal(e.s.effects.filter(x=>x.kind==="globeInvulnerability").length,0);
+  assert.equal(e.s.zones.filter(z=>z.kind==="globeInvulnerability").length,0);
+});
+
+
+test("Revivify restores one HP only to a confirmed recent dead target and consumes one diamond", () => {
+  let e = setup();
+  const dead=e.unit("tal"), caster=e.unit("ena");
+  dead.hp=0; dead.dead=true; dead.diedAtSeconds=e.s.elapsed;
+  dead.statuses.push({kind:"unconscious"});
+  caster.casting.components.revivify={itemId:"diamond300",valueGp:300};
+  caster.items.diamond300=2;
+  const before=caster.slots[3].current;
+  e=reload(e);
+  cast(e,"revivify",{level:3,target:"tal"});
+  assert.equal(e.unit("tal").hp,1);
+  assert.equal(e.unit("tal").dead,false);
+  assert.equal(e.unit("tal").diedAtSeconds,undefined);
+  assert(!e.has("tal","unconscious"));
+  assert.equal(e.unit("ena").items.diamond300,1);
+  assert.equal(e.s.events.find(x=>x.type==="revived").consumed.itemId,"diamond300");
+  assert.equal(e.unit("ena").slots[3].current,before-1);
+  assert(e.s.events.some(x=>x.type==="revived" && x.target==="tal"));
+});
+test("Revivify refuses missing, undervalued or spent diamonds without charging spell slots", () => {
+  for(const component of [undefined,{itemId:"diamond300",valueGp:300},{itemId:"diamond300",valueGp:299}]) {
+    const e=setup(), u=e.unit("ena"), v=e.unit("tal");
+    v.hp=0;v.dead=true;v.diedAtSeconds=e.s.elapsed;
+    u.casting.components.revivify=component;
+    u.items.diamond300=component?.valueGp===299 ? 1 : 0;
+    const before=JSON.stringify(e.s);
+    assert.throws(()=>cast(e,"revivify",{level:3,target:"tal"}),/алмаз/);
+    assert.equal(JSON.stringify(e.s),before);
+  }
+});
+test("Revivify rejects deaths older than one minute or with unknown death time", () => {
+  for(const stamp of [undefined,0]) {
+    const e=setup(),v=e.unit("tal");
+    e.s.elapsed=61;v.hp=0;v.dead=true;
+    if(stamp!==undefined)v.diedAtSeconds=stamp;
+    e.unit("ena").casting.components.revivify={itemId:"diamond300",valueGp:300};
+    e.unit("ena").items.diamond300=1;
+    const before=JSON.stringify(e.s);
+    assert.throws(()=>cast(e,"revivify",{level:3,target:"tal"}),/минуты/);
+    assert.equal(JSON.stringify(e.s),before);
+  }
+});
+test("Combat deaths acquire a timestamp for Revivify while ordinary healing cannot resurrect", () => {
+  const e=setup(), v=e.unit("tal");
+  v.hp=1;v.max=20;v.deathSaves=false;
+  e.enqueue({kind:"damage",actor:"hunter_a",target:"tal",amount:30,damageType:"fire"});
+  e.run();
+  assert(v.dead);
+  assert.equal(v.diedAtSeconds,e.s.elapsed);
+  assert.throws(()=>e.heal("tal",1),/не воскрешает/);
+});
+
+
+function cauldronSetup() {
+  const e=setup(), u=e.unit("ena");
+  u.casting.level=11;
+  u.items.gildedLadle=1;
+  u.casting.components.tashasBubblingCauldron={itemId:"gildedLadle",valueGp:500};
+  return e;
+}
+test("Tasha cauldron creates five potions, never consumes the gilded ladle, and draws once per bonus action",()=>{
+  let e=cauldronSetup();
+  const slot=e.unit("ena").slots[6].current;
+  cast(e,"tashasBubblingCauldron",{level:6,point:{x:3,y:3},potionKind:"healing"});
+  let x=e.s.effects.find(x=>x.kind==="tashasBubblingCauldron");
+  assert(x);
+  assert.equal(x.remaining,5);
+  assert.equal(x.until-e.s.elapsed,600);
+  assert.equal(x.concentration,false);
+  assert.equal(e.unit("ena").items.gildedLadle,1);
+  assert.equal(e.unit("ena").slots[6].current,slot-1);
+  e=reload(e);
+  x=e.s.effects.find(x=>x.kind==="tashasBubblingCauldron");
+  e.dispatch({kind:"cauldronDraw",actor:"ena",cauldron:x.id});
+  assert.equal(e.s.cauldronVials.length,1);
+  assert.equal(e.s.cauldronVials[0].sourceSpellId,x.id);
+  assert.equal(e.unit("ena").bonus,0);
+  assert.throws(()=>e.dispatch({kind:"cauldronDraw",actor:"ena",cauldron:x.id}));
+  assert.equal(e.s.cauldronVials.length,1);
+  assert.equal(x.remaining,4);
+});
+test("Cauldron potions use genuine 2d4+2 or 4d4+4 healing and one-time vials",()=>{
+  let e=cauldronSetup();
+  cast(e,"tashasBubblingCauldron",{level:6,point:{x:3,y:3},potionKind:"greaterHealing"});
+  const x=e.s.effects.find(x=>x.kind==="tashasBubblingCauldron");
+  e.dispatch({kind:"cauldronDraw",actor:"ena",cauldron:x.id});
+  const vial=e.s.cauldronVials[0].id;
+  e=reload(e);
+  const u=e.unit("ena");u.hp=50;u.bonus=1;
+  e.s.random.tape=[1,2,3,4];
+  e.dispatch({kind:"cauldronDrink",actor:"ena",vial});
+  assert.equal(e.unit("ena").hp,64); // 4d4 [1,2,3,4] +4
+  assert.equal(e.s.cauldronVials.length,0);
+  assert.throws(()=>e.dispatch({kind:"cauldronDrink",actor:"ena",vial}));
+  assert(e.s.events.some(v=>v.type==="cauldronDrink"&&v.vial===vial));
+});
+test("Cauldron rejects absent/cheap ladle and unsupported potion before spending a slot",()=>{
+  for(const reason of ["missing","cheap","type"]) {
+    const e=cauldronSetup(),u=e.unit("ena");
+    if(reason==="missing") u.items.gildedLadle=0;
+    if(reason==="cheap") u.casting.components.tashasBubblingCauldron.valueGp=499;
+    const before=JSON.stringify(e.s);
+    assert.throws(()=>cast(e,"tashasBubblingCauldron",
+      {level:6,point:{x:3,y:3},potionKind:reason==="type"?"superiorHealing":"healing"}));
+    assert.equal(JSON.stringify(e.s),before);
+  }
+});
+test("Cauldron recasting removes prior withdrawn vials, but expiration preserves extracted vials",()=>{
+  const e=cauldronSetup();
+  cast(e,"tashasBubblingCauldron",{level:6,point:{x:3,y:3},potionKind:"healing"});
+  let x=e.s.effects.find(x=>x.kind==="tashasBubblingCauldron");
+  e.dispatch({kind:"cauldronDraw",actor:"ena",cauldron:x.id});
+  const prior=e.s.cauldronVials[0].id;
+  e.unit("ena").action=1;e.unit("ena").slotTurn=null;
+  cast(e,"tashasBubblingCauldron",{level:6,point:{x:3,y:2},potionKind:"greaterHealing"});
+  assert.equal(e.s.cauldronVials.some(v=>v.id===prior),false);
+  x=e.s.effects.findLast(x=>x.kind==="tashasBubblingCauldron");
+  e.unit("ena").bonus=1;
+  e.dispatch({kind:"cauldronDraw",actor:"ena",cauldron:x.id});
+  const current=e.s.cauldronVials[0].id;
+  M.expireState(e.s,e.s.elapsed+600);
+  assert.equal(e.s.effects.filter(v=>v.kind==="tashasBubblingCauldron").length,0);
+  assert.equal(e.s.cauldronVials[0].id,current);
+});
+
+
+test("Tasha cauldron creates correct utility potion effects without duplicating physical stock",()=>{
+  const recipes=[
+    ["climbing","climbing",3600],["comprehension","comprehension",3600],
+    ["growth","enlarge",600],["hillGiantStrength","giantStrength",3600],
+    ["waterBreathing","waterBreathing",86400]
+  ];
+  for(const [kind,effect,seconds] of recipes) {
+    const e=cauldronSetup();
+    cast(e,"tashasBubblingCauldron",{level:6,point:{x:3,y:3},potionKind:kind});
+    const source=e.s.effects.find(v=>v.kind==="tashasBubblingCauldron");
+    e.dispatch({kind:"cauldronDraw",actor:"ena",cauldron:source.id});
+    const vial=e.s.cauldronVials[0].id;
+    e.unit("ena").bonus=1;
+    e.dispatch({kind:"cauldronDrink",actor:"ena",vial});
+    const buff=e.s.effects.find(x=>x.kind===effect);
+    assert(buff,kind);
+    assert.equal(buff.until-e.s.elapsed,seconds);
+    assert.equal(buff.concentration,false);
+    assert.equal(buff.potionSource,source.id);
+    assert.equal(e.s.cauldronVials.length,0);
+  }
+});
+test("Typed resistance potions protect one selected damage kind but not other kinds",()=>{
+  const e=cauldronSetup();
+  assert.throws(()=>cast(e,"tashasBubblingCauldron",
+    {level:6,point:{x:3,y:3},potionKind:"resistance"}),/тип урона/);
+  cast(e,"tashasBubblingCauldron",
+    {level:6,point:{x:3,y:3},potionKind:"resistance",potionVariant:"lightning"});
+  const cauldron=e.s.effects.find(v=>v.kind==="tashasBubblingCauldron");
+  e.dispatch({kind:"cauldronDraw",actor:"ena",cauldron:cauldron.id});
+  assert.equal(e.s.cauldronVials[0].potionVariant,"lightning");
+  const vial=e.s.cauldronVials[0].id;
+  e.unit("ena").bonus=1;
+  e.dispatch({kind:"cauldronDrink",actor:"ena",vial});
+  assert.equal(M.mitigate(e,{target:"ena",damageType:"lightning"},17),8);
+  assert.equal(M.mitigate(e,{target:"ena",damageType:"fire"},17),17);
+  const copy=reload(e);
+  assert.equal(M.mitigate(copy,{target:"ena",damageType:"lightning"},17),8);
+});
+test("Chain Lightning upcast grows target cap but retains ten damage dice",()=>{
+  const e=setup(),u=e.unit("ena");
+  u.casting.level=17;
+  u.slots[7]={current:1,max:1};
+  u.slots[8]={current:1,max:1};
+  u.slots[9]={current:1,max:1};
+  assert.throws(()=>cast(e,"chainLightning",
+    {level:6,targets:["hunter_a","hunter_b","tal","ena","hunter_c"]}),
+    /Слишком много целей|Неизвестный участник/);
+  e.s.random.tape=[...Array(10).fill(5),1];
+  cast(e,"chainLightning",{level:7,targets:["hunter_a"]});
+  const rolls=e.s.events.filter(x=>x.type==="roll" && x.text.includes("Цепная молния"));
+  assert.equal(rolls.length,1);
+  assert.equal(rolls[0].result?.rolls?.length ?? 10,10);
+});
+
+
+test("2024 Chain Lightning damages an object and creature with the same ten dice",()=>{
+  const e=setup();const u=e.unit("ena");u.casting.level=11;
+  e.s.objects.crate={id:"crate",name:"Ящик",owner:"hunter_a",x:6,y:4,
+    hp:100,max:100,ac:15,dc:10,createdTurn:0};
+  e.s.random.tape=[...Array(10).fill(5),1];
+  cast(e,"chainLightning",{level:6,targets:["hunter_a","object:crate"]});
+  assert.equal(e.s.objects.crate.hp,45);
+  assert.equal(e.unit("hunter_a").hp,145);
+  assert(e.s.events.some(x=>x.type==="objectDamage"&&x.object==="crate"&&x.amount===55));
+  assert.equal(e.s.events.filter(x=>x.type==="roll"&&x.text.includes("Цепная молния")).length,1);
+});
+test("2024 Chain Lightning may start at an object and leap to a creature",()=>{
+  const e=setup(),u=e.unit("ena");u.casting.level=11;
+  e.s.objects.crate={id:"crate",name:"Ящик",owner:"hunter_a",x:6,y:3,
+    hp:100,max:100,ac:15,dc:10,createdTurn:0};
+  e.s.random.tape=[...Array(10).fill(5),1];
+  cast(e,"chainLightning",{level:6,targets:["object:crate","hunter_b"]});
+  assert.equal(e.s.objects.crate.hp,45);
+  assert.equal(e.unit("hunter_b").hp,145);
+});

@@ -103,6 +103,10 @@ class CombatRulesEngine {
       for (const flag of ["stable", "dead"])
         if (u[flag] !== undefined && typeof u[flag] !== "boolean")
           throw Error("Неверное состояние жизни");
+      if (u.diedAtSeconds !== undefined &&
+          (!u.dead || !Number.isInteger(u.diedAtSeconds) ||
+            u.diedAtSeconds < 0 || u.diedAtSeconds > s.elapsed))
+        throw Error("Неверное время смерти");
       RulesContinuity.validateLife(RulesContinuity.life(u), u.hp);
       if (u.blockedCells !== undefined && (!Array.isArray(u.blockedCells) ||
           !u.blockedCells.every(p => p && Number.isInteger(p.x) && Number.isInteger(p.y) &&
@@ -2480,7 +2484,10 @@ class CombatRulesEngine {
           target.dead = true;
         target.reaction = 0;
         this.releaseGrapples();
-      } else if (amount > 0 && RulesMagic.concentrating(this, t.target))
+      }
+      if (target.dead && target.diedAtSeconds === undefined)
+        target.diedAtSeconds = s.elapsed;
+      if (target.hp !== 0 && amount > 0 && RulesMagic.concentrating(this, t.target))
         this.enqueue(
           this.saveTask(
             t.target,
@@ -2838,7 +2845,10 @@ class CombatRulesEngine {
       if (d !== 1 && t.result.total >= 10)
         u.deathSuccesses = (u.deathSuccesses || 0) + 1;
       else u.deathFailures = (u.deathFailures || 0) + (d === 1 ? 2 : 1);
-      if (u.deathFailures >= 3) u.dead = true;
+      if (u.deathFailures >= 3) {
+        u.dead = true;
+        u.diedAtSeconds ??= s.elapsed;
+      }
       if (u.deathSuccesses >= 3) u.stable = true;
       this.emit(
         "deathSave",

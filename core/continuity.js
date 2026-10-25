@@ -77,13 +77,14 @@ class CombatContinuity {
             "statuses",
             "objects",
             "zones",
+            "cauldron_vials",
             "life",
             "scene",
           ].includes(k),
         ),
       "Неверное продолжение эффектов",
     );
-    for (const key of ["effects", "units", "objects", "zones"])
+    for (const key of ["effects", "units", "objects", "zones", "cauldron_vials"])
       this.require(
         c[key] === undefined || Array.isArray(c[key]),
         "Повреждён список продолжения: " + key,
@@ -165,6 +166,9 @@ class CombatContinuity {
         "enlarge",
         "giantStrength",
         "climbing",
+        "comprehension",
+        "waterBreathing",
+        "potionResistance",
       ]);
     const effectFields = new Set([
       "id",
@@ -183,6 +187,11 @@ class CombatContinuity {
       "remaining_seconds",
       "expires_at",
       "noLethargy",
+      "castOrigin",
+      "potionKind",
+      "potionVariant",
+      "potionSource",
+      "damageType",
     ]);
     const point = (p, outside = false) =>
       this.object(p) &&
@@ -259,6 +268,23 @@ class CombatContinuity {
         );
       if (x.point !== undefined)
         this.require(point(x.point), "Неверная точка эффекта");
+      if (x.kind === "tashasBubblingCauldron")
+        this.require(Object.hasOwn(M.CAULDRON_POTIONS,x.potionKind) &&
+          this.integer(x.remaining,1,10) && x.point && x.concentration===false,
+          "Повреждены свойства котла");
+      if (x.potionSource !== undefined)
+        this.require(this.id(x.potionSource),"Неверный источник зелья");
+      if (x.damageType !== undefined)
+        this.require(["acid","cold","fire","force","lightning","necrotic",
+          "poison","psychic","radiant","thunder"].includes(x.damageType),
+          "Неверный тип сопротивления");
+      if (x.potionVariant !== undefined)
+        this.require(x.potionKind==="resistance" &&
+          ["acid","cold","fire","force","lightning","necrotic","poison",
+           "psychic","radiant","thunder"].includes(x.potionVariant),
+          "Неверный вариант зелья");
+      if (x.castOrigin !== undefined)
+        this.require(point(x.castOrigin), "Неверная исходная точка заклинания");
       if (x.weapon !== undefined)
         this.require(this.id(x.weapon), "Неверное оружие эффекта");
       if (x.remaining !== undefined)
@@ -394,6 +420,19 @@ class CombatContinuity {
           );
       }
     }
+    const vialIds=new Set();
+    for(const v of c.cauldron_vials || []) {
+      this.require(this.object(v) && this.id(v.id) && !vialIds.has(v.id) &&
+        actors.has(v.owner) && actors.has(v.holder) &&
+        this.id(v.sourceSpellId) &&
+        Object.hasOwn(M.CAULDRON_POTIONS,v.potionKind) &&
+        (v.potionVariant===undefined ||
+          v.potionKind==="resistance" &&
+          ["acid","cold","fire","force","lightning","necrotic","poison",
+           "psychic","radiant","thunder"].includes(v.potionVariant)),
+        "Повреждено перенесённое зелье котла");
+      vialIds.add(v.id);
+    }
     const objectIds = new Set();
     for (const o of c.objects || []) {
       this.require(
@@ -435,6 +474,7 @@ class CombatContinuity {
             "web",
             "zoneTruth",
             "stormSphere",
+            "globeInvulnerability",
           ].includes(z.kind) &&
           this.integer(z.radius, 0, 600) &&
           this.integer(z.remaining_seconds, 1, 86400) &&
