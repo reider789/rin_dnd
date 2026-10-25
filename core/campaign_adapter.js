@@ -395,6 +395,7 @@ class CombatCampaignAdapter {
                 ? x.kind
                 : "item",
             level: x.level,
+            castOrigin: x.castOrigin,
             targets: x.targets,
             offered: [],
           },
