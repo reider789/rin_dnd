@@ -510,11 +510,22 @@ class CombatAdvancedFeatures {
         const factor = t.critical ? 2 : 1;
         t.sneakCount -= factor;
         e.require(t.sneakCount >= 0, "Нет кубов Скрытой атаки");
-        t.cunning = c.choice;
+        // A level-11 rogue may pay for two DIFFERENT Cunning Strike effects.
+        // Keep the original single-effect field for old serialized combats.
+        t.cunningEffects = [...(t.cunningEffects || (t.cunning ? [t.cunning] : [])), c.choice];
+        t.cunning = t.cunningEffects[0];
         if (c.choice === "stealth") {
           u.hidden = true;
           u.stealthAttackTurn = e.s.turnSerial;
           e.status(p.actor, "invisible");
+        }
+        const remaining = p.options.filter(x =>
+          x !== "skip" && !t.cunningEffects.includes(x));
+        // Costs are applied to the un-doubled Sneak Attack dice, including crits.
+        if (u.features.improvedCunningStrike && t.cunningEffects.length < 2 &&
+            t.sneakCount >= factor && remaining.length) {
+          M.choice(e, p.actor, "cunning", ["skip", ...remaining], { attack: t });
+          return true;
         }
       }
       if (p.choice === "shieldBash") {
@@ -603,22 +614,27 @@ class CombatAdvancedFeatures {
           }),
         ),
       );
-    if (f.cunning === "poison" || f.cunning === "trip")
-      jobs.push(
-        e.saveTask(
-          t.target,
-          f.cunning === "trip" ? "DEX" : "CON",
-          u.features.cunningDC || 8 + u.proficiency + u.stats.DEX,
-          this.job(t.actor, "cunningSave", {
-            target: t.target,
-            mode: f.cunning,
-          }),
-        ),
-      );
-    if (f.cunning === "withdraw")
-      jobs.push(
-        this.job(t.actor, "strike", { target: t.target, mode: "withdraw" }),
-      );
+    // Legacy save files have one string in f.cunning; newer attacks retain
+    // the selected pair in f.cunningEffects. Never trigger the same rider twice.
+    const cunningEffects = f.cunningEffects || (f.cunning ? [f.cunning] : []);
+    for (const effect of cunningEffects) {
+      if (effect === "poison" || effect === "trip")
+        jobs.push(
+          e.saveTask(
+            t.target,
+            effect === "trip" ? "DEX" : "CON",
+            u.features.cunningDC || 8 + u.proficiency + u.stats.DEX,
+            this.job(t.actor, "cunningSave", {
+              target: t.target,
+              mode: effect,
+            }),
+          ),
+        );
+      if (effect === "withdraw")
+        jobs.push(
+          this.job(t.actor, "strike", { target: t.target, mode: "withdraw" }),
+        );
+    }
     if ((f.living || u.livingArmed) && f.spec.id === "leafBow") {
       u.livingArmed = false;
       if (!f.living) u.counters.living_arrow.current--;
