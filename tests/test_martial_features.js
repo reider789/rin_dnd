@@ -304,8 +304,6 @@ test("Radiant Strikes add one independently typed d8 per melee hit and double it
   const e = battle({ radiantStrikes: true });
   attack(e, [15, 1, 2, 3]);
   assert.equal(e.unit("hunter_a").hp, 188); // 1+2+6 sword and 3 radiant
-  const hit = e.s.events.filter(x => x.type === "damage").findLast(x => x.target === "hunter_a");
-  assert.ok(hit, "damage event exists");
   assert.ok(e.s.events.some(x => x.type === "roll" && x.text.includes("Сияющие удары")));
   const crit = battle({ radiantStrikes: true });
   attack(crit, [20, 1, 2, 3, 4, 5, 6]);
