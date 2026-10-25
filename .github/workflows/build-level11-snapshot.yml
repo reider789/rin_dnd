@@ -1,0 +1,33 @@
+name: Refresh shared core browser build for level 11
+on:
+  push:
+    branches: [feature/level11-radiant-strikes-20261025]
+    paths: ['.github/workflows/build-level11-snapshot.yml']
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Refresh compiled offline bundle from current sources
+        run: python tools/build_rin.py
+      - name: Run shared core and package regressions without browser
+        run: python tools/run_tests.py --suite combat
+      - name: Commit generated runtime and remove bootstrap workflow
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          rm .github/workflows/build-level11-snapshot.yml
+          git add index.html rin-build-manifest.json current-manifest.json entrypoint.json config/rin_runtime.json .github/workflows/build-level11-snapshot.yml
+          git commit -m 'build: refresh offline combat bundle for registered level-11 handlers [skip ci]'
+          git -c pull.rebase=true pull --rebase origin "$GITHUB_REF_NAME"
+          git push origin "HEAD:$GITHUB_REF_NAME"
