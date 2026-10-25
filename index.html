@@ -775,6 +775,7 @@ class CombatCapabilities {
     divineSmite: "boolean",
     radiantStrikes: "boolean",
     cunningStrike: "boolean",
+    improvedCunningStrike: "boolean",
     stealthAttack: "boolean",
     thiefHands: "boolean",
     climbSpeed: [5, 120],
@@ -1033,6 +1034,8 @@ class CombatActivities {
     fly: {"name": "Полёт", "level": 3, "cost": "action", "range": 5, "target": "allies", "school": "transmutation", "concentrationSeconds": 600},
     dimensionDoor: {"name": "Дверь в измерение", "level": 4, "cost": "action", "range": 500, "target": "point", "school": "conjuration"},
     greaterInvisibility: {"name": "Высшая невидимость", "level": 4, "cost": "action", "range": 5, "target": "ally", "school": "illusion", "concentrationSeconds": 60},
+    revivify: {"name": "Возрождение", "level": 3, "cost": "action", "range": 5, "target": "any", "school": "necromancy"},
+    globeInvulnerability: {"name": "Сфера неуязвимости", "level": 6, "cost": "action", "range": 0, "target": "self", "school": "abjuration", "concentrationSeconds": 60},
     chainLightning: {"name": "Цепная молния", "level": 6, "cost": "action", "range": 150, "target": "enemies", "school": "evocation"},
     coneCold: {"name": "Конус холода", "level": 5, "cost": "action", "range": 0, "target": "direction", "school": "evocation"},
     seeming: {"name": "Кажущаяся внешность", "level": 5, "cost": "action", "range": 30, "target": "allies", "school": "illusion"},
@@ -2939,6 +2942,19 @@ class CombatMagic {
   static label(kind) {
     return this.SPELLS[kind]?.[0] || this.LABELS[kind] || kind;
   }
+  // Stationary 2024 sphere: spells cast OUTSIDE at a lower level cannot
+  // affect anything INSIDE its 10-foot emanation. Weapon attacks are exempt.
+  static globeBlocked(e, frame, target) {
+    const v = e.s.units?.[target];
+    if (!v || !Number.isInteger(frame?.level)) return false;
+    const origin = frame.castOrigin || e.s.units?.[frame.actor];
+    if (!origin) return false;
+    const distance = (a,b) => Math.hypot(a.x-b.x,a.y-b.y)*5;
+    return (e.s.effects || []).some(x =>
+      x.kind === "globeInvulnerability" && x.until > e.s.elapsed &&
+      x.point && frame.level < x.level &&
+      distance(v,x.point) <= 10 && distance(origin,x.point) > 10);
+  }
   static catalogue(u) {
     return [
       ...new Set([
@@ -3103,6 +3119,7 @@ class CombatMagic {
     return (e.s.effects || []).filter(
       (x) =>
         x.kind === kind &&
+        !this.globeBlocked(e, {actor:x.owner, level:x.level, castOrigin:x.castOrigin}, id) &&
         (x.targets?.includes(id) ||
           (x.aura &&
             e.active(x.owner) &&
@@ -3139,6 +3156,7 @@ class CombatMagic {
       dc: e.unit(f.actor).casting?.dc || f.dc || 10,
       until: e.s.elapsed + duration,
       concentration: Boolean(this.SPELLS[f.spell]?.[6]),
+      castOrigin: f.castOrigin || { x: e.unit(f.actor).x, y: e.unit(f.actor).y },
       ...extra,
     };
     e.s.spellFrames[x.id] = { ...f, id: x.id };
@@ -3172,7 +3190,10 @@ class CombatMagic {
             if (before > 0 && u.hp === 0) {
               u.stable = false;
               u.reaction = 0;
-              if (!u.deathSaves) u.dead = true;
+              if (!u.deathSaves) {
+                u.dead = true;
+                u.diedAtSeconds ??= s.elapsed;
+              }
               for (const kind of ["unconscious","prone"])
                 if (!u.statuses.some(z => z.kind === kind)) u.statuses.push({kind});
               collapsed.add(id);
@@ -3479,7 +3500,8 @@ class CombatMagic {
         const origin = chainSecondary ? e.unit(targets[0]) : u;
         const reach = chainSecondary ? 30 : range;
         e.require(
-          !v.dead && e.distance(origin, v) <= reach && e.wallLOS(origin, v),
+          (c.spell === "revivify" || !v.dead) &&
+            e.distance(origin, v) <= reach && e.wallLOS(origin, v),
           "Цель вне дистанции / за стеной",
         );
         if (["enemy", "enemies", "attack"].includes(shape))
@@ -3554,6 +3576,24 @@ class CombatMagic {
         "Выбери одно состояние для восстановления",
       );
     }
+    if (c.spell === "revivify") {
+      e.require(targets.length === 1, "Возрождение требует одну цель");
+      const v = e.unit(targets[0]);
+      e.require(v.dead && v.hp === 0, "Цель Возрождения должна быть мертва");
+      e.require(Number.isInteger(v.diedAtSeconds) &&
+        v.diedAtSeconds >= 0 && v.diedAtSeconds <= e.s.elapsed &&
+        e.s.elapsed - v.diedAtSeconds <= 60,
+        "Смерть не подтверждена в течение последней минуты");
+      e.require(!v.deathOldAge && !v.missingVitalParts,
+        "Возрождение не устраняет старость и отсутствующие части тела");
+      const material = u.casting?.components?.revivify;
+      e.require(material && typeof material === "object" &&
+        typeof material.itemId === "string" &&
+        /^[A-Za-z0-9][A-Za-z0-9_.:-]{0,119}$/.test(material.itemId) &&
+        Number.isInteger(material.valueGp) && material.valueGp >= 300 &&
+        (u.items?.[material.itemId] || 0) > 0,
+        "Нужен подтверждённый алмаз ≥300 зм в инвентаре");
+    }
     if (c.spell === "wardingBond") {
       e.require(
         targets[0] !== id,
@@ -3596,6 +3636,7 @@ class CombatMagic {
       actor: id,
       spell: c.spell,
       level,
+      castOrigin: {x:u.x,y:u.y},
       targets,
       point: c.point,
       sculpt: c.sculpt || [],
@@ -4084,6 +4125,11 @@ class CombatMagic {
         ),
       );
     } else if (t.op === "apply") {
+      if (t.frame && this.globeBlocked(e, this.frame(e,t.frame), t.target)) {
+        e.emit("globeBlocked", t.actor, "Сфера неуязвимости блокирует эффект.",
+          {target:t.target});
+        return true;
+      }
       if (t.halfMiss) {
         this.apply(e, t, false);
         return true;
@@ -4305,6 +4351,8 @@ class CombatMagic {
   }
   static area(e, f, targets, count, sides, flat, effect) {
     this.init(e.s);
+    targets = targets.filter(id => !this.globeBlocked(e, f, id));
+    if (!targets.length) return;
     e.s.spellFrames[f.id] ??= f;
     e.enqueue({
       kind: "roll",
@@ -4362,7 +4410,9 @@ class CombatMagic {
       lv = f.level,
       dc = f.dc || u.casting?.dc || 10,
       ev = this.empowered(e, f),
-      targets = f.targets || [],
+      originalTargets = f.targets || [],
+      targets = ["magicMissile", "scorchingRay"].includes(f.spell)
+        ? originalTargets : originalTargets.filter(id => !this.globeBlocked(e, f, id)),
       t = targets[0],
       p = f.point;
     this.init(e.s);
@@ -4376,6 +4426,12 @@ class CombatMagic {
       origin: { x: u.x, y: u.y },
       target: f.target,
     });
+    if (originalTargets.length && !targets.length) {
+      e.emit("globeBlocked", f.actor, "Сфера неуязвимости блокирует заклинание.", {
+        spell:f.spell, targets:originalTargets,
+      });
+      return;
+    }
     if (f.spell === "counterspell") {
       const parent = this.frame(e, f.targetFrame);
       if (!parent.cancelled)
@@ -4396,6 +4452,41 @@ class CombatMagic {
       return;
     }
     switch (f.spell) {
+      case "revivify": {
+        const v = e.unit(t);
+        const material = u.casting?.components?.revivify;
+        e.require(v?.dead && v.hp === 0 &&
+          Number.isInteger(v.diedAtSeconds) &&
+          e.s.elapsed - v.diedAtSeconds >= 0 &&
+          e.s.elapsed - v.diedAtSeconds <= 60 &&
+          material?.valueGp >= 300 &&
+          (u.items?.[material.itemId] || 0) > 0,
+          "Возрождение: время смерти или компонент больше недействительны");
+        // Physical inventory is authoritative; the campaign report exports
+        // inventory_after, unlike mutable casting profile metadata.
+        u.items[material.itemId]--;
+        v.dead = false;
+        v.hp = 1;
+        v.stable = false;
+        v.deathSuccesses = 0;
+        v.deathFailures = 0;
+        delete v.diedAtSeconds;
+        e.removeStatus(t, "unconscious");
+        e.emit("revived", t, v.name + " возвращается к жизни с 1 ПЗ.",
+          {spell:"revivify", source:f.actor, target:t, hp:1,
+           consumed:{item:"diamond",itemId:material.itemId,valueGp:material.valueGp,count:1}});
+        e.checkEnd();
+        break;
+      }
+      case "globeInvulnerability": {
+        const fixed = {x:u.x,y:u.y};
+        const x = this.add(e, f, "globeInvulnerability", [f.actor], 60, {point:fixed});
+        // Treat this as a geometric field, not an aura that follows the caster.
+        e.s.zones.push({id:"zone-"+x.id, kind:"globeInvulnerability",
+          owner:f.actor, effect:x.id, x:fixed.x, y:fixed.y, radius:10,
+          until:x.until, concentration:true});
+        break;
+      }
       case "findSteed":
         this.finishSteed(e, f);
         break;
@@ -4707,6 +4798,18 @@ class CombatMagic {
       }
       case "dispelMagic": {
         const selected = f.dispelTarget || { kind: "creature", id: t };
+        const subject = selected.kind === "creature" ? e.s.units[selected.id] :
+          selected.kind === "object" ? e.s.objects[selected.id] :
+            e.s.effects.find(x=>x.id===selected.id)?.point;
+        const inside = subject && (e.s.effects || []).some(x =>
+          x.kind==="globeInvulnerability" && x.point && x.until>e.s.elapsed &&
+          lv < x.level && Math.hypot(subject.x-x.point.x,subject.y-x.point.y)*5<=10 &&
+          Math.hypot(u.x-x.point.x,u.y-x.point.y)*5>10);
+        if (inside) {
+          e.emit("globeBlocked",f.actor,"Сфера неуязвимости препятствует рассеиванию.",
+            {spell:f.spell,target:selected.id});
+          break;
+        }
         const effects = (e.s.effects || []).filter(
           (x) =>
             Object.hasOwn(this.SPELLS, x.kind) &&
@@ -4747,6 +4850,10 @@ class CombatMagic {
     }
   }
   static attack(e, f, target, a) {
+    if (this.globeBlocked(e,f,target)) {
+      e.emit("globeBlocked", f.actor, "Сфера неуязвимости отражает заклинание.", {spell:f.spell, target});
+      return;
+    }
     const u = e.unit(f.actor);
     e.enqueue({
       kind: "attackRoll",
@@ -4871,6 +4978,12 @@ class CombatMagic {
       e.unit(t.target).truthZone = t.effect;
   }
   static missile(e, t) {
+    const f = this.frame(e,t.frame);
+    if (this.globeBlocked(e,f,t.target)) {
+      e.emit("globeBlocked", t.actor, "Сфера неуязвимости отражает Волшебную стрелу.",
+        {spell:f.spell,target:t.target});
+      return;
+    }
     const u = e.unit(t.target);
     if (e.has(t.target, "shield")) {
       e.emit("shieldBlocked", t.target, "Щит блокирует Волшебную стрелу.");
@@ -5928,11 +6041,22 @@ class CombatAdvancedFeatures {
         const factor = t.critical ? 2 : 1;
         t.sneakCount -= factor;
         e.require(t.sneakCount >= 0, "Нет кубов Скрытой атаки");
-        t.cunning = c.choice;
+        // A level-11 rogue may pay for two DIFFERENT Cunning Strike effects.
+        // Keep the original single-effect field for old serialized combats.
+        t.cunningEffects = [...(t.cunningEffects || (t.cunning ? [t.cunning] : [])), c.choice];
+        t.cunning = t.cunningEffects[0];
         if (c.choice === "stealth") {
           u.hidden = true;
           u.stealthAttackTurn = e.s.turnSerial;
           e.status(p.actor, "invisible");
+        }
+        const remaining = p.options.filter(x =>
+          x !== "skip" && !t.cunningEffects.includes(x));
+        // Costs are applied to the un-doubled Sneak Attack dice, including crits.
+        if (u.features.improvedCunningStrike && t.cunningEffects.length < 2 &&
+            t.sneakCount >= factor && remaining.length) {
+          M.choice(e, p.actor, "cunning", ["skip", ...remaining], { attack: t });
+          return true;
         }
       }
       if (p.choice === "shieldBash") {
@@ -6021,22 +6145,27 @@ class CombatAdvancedFeatures {
           }),
         ),
       );
-    if (f.cunning === "poison" || f.cunning === "trip")
-      jobs.push(
-        e.saveTask(
-          t.target,
-          f.cunning === "trip" ? "DEX" : "CON",
-          u.features.cunningDC || 8 + u.proficiency + u.stats.DEX,
-          this.job(t.actor, "cunningSave", {
-            target: t.target,
-            mode: f.cunning,
-          }),
-        ),
-      );
-    if (f.cunning === "withdraw")
-      jobs.push(
-        this.job(t.actor, "strike", { target: t.target, mode: "withdraw" }),
-      );
+    // Legacy save files have one string in f.cunning; newer attacks retain
+    // the selected pair in f.cunningEffects. Never trigger the same rider twice.
+    const cunningEffects = f.cunningEffects || (f.cunning ? [f.cunning] : []);
+    for (const effect of cunningEffects) {
+      if (effect === "poison" || effect === "trip")
+        jobs.push(
+          e.saveTask(
+            t.target,
+            effect === "trip" ? "DEX" : "CON",
+            u.features.cunningDC || 8 + u.proficiency + u.stats.DEX,
+            this.job(t.actor, "cunningSave", {
+              target: t.target,
+              mode: effect,
+            }),
+          ),
+        );
+      if (effect === "withdraw")
+        jobs.push(
+          this.job(t.actor, "strike", { target: t.target, mode: "withdraw" }),
+        );
+    }
     if ((f.living || u.livingArmed) && f.spec.id === "leafBow") {
       u.livingArmed = false;
       if (!f.living) u.counters.living_arrow.current--;
@@ -6410,6 +6539,7 @@ class CombatContinuity {
       "remaining_seconds",
       "expires_at",
       "noLethargy",
+      "castOrigin",
     ]);
     const point = (p, outside = false) =>
       this.object(p) &&
@@ -6486,6 +6616,8 @@ class CombatContinuity {
         );
       if (x.point !== undefined)
         this.require(point(x.point), "Неверная точка эффекта");
+      if (x.castOrigin !== undefined)
+        this.require(point(x.castOrigin), "Неверная исходная точка заклинания");
       if (x.weapon !== undefined)
         this.require(this.id(x.weapon), "Неверное оружие эффекта");
       if (x.remaining !== undefined)
@@ -6662,6 +6794,7 @@ class CombatContinuity {
             "web",
             "zoneTruth",
             "stormSphere",
+            "globeInvulnerability",
           ].includes(z.kind) &&
           this.integer(z.radius, 0, 600) &&
           this.integer(z.remaining_seconds, 1, 86400) &&
@@ -6792,6 +6925,10 @@ class CombatRulesEngine {
       for (const flag of ["stable", "dead"])
         if (u[flag] !== undefined && typeof u[flag] !== "boolean")
           throw Error("Неверное состояние жизни");
+      if (u.diedAtSeconds !== undefined &&
+          (!u.dead || !Number.isInteger(u.diedAtSeconds) ||
+            u.diedAtSeconds < 0 || u.diedAtSeconds > s.elapsed))
+        throw Error("Неверное время смерти");
       RulesContinuity.validateLife(RulesContinuity.life(u), u.hp);
       if (u.blockedCells !== undefined && (!Array.isArray(u.blockedCells) ||
           !u.blockedCells.every(p => p && Number.isInteger(p.x) && Number.isInteger(p.y) &&
@@ -9169,7 +9306,10 @@ class CombatRulesEngine {
           target.dead = true;
         target.reaction = 0;
         this.releaseGrapples();
-      } else if (amount > 0 && RulesMagic.concentrating(this, t.target))
+      }
+      if (target.dead && target.diedAtSeconds === undefined)
+        target.diedAtSeconds = s.elapsed;
+      if (target.hp !== 0 && amount > 0 && RulesMagic.concentrating(this, t.target))
         this.enqueue(
           this.saveTask(
             t.target,
@@ -9527,7 +9667,10 @@ class CombatRulesEngine {
       if (d !== 1 && t.result.total >= 10)
         u.deathSuccesses = (u.deathSuccesses || 0) + 1;
       else u.deathFailures = (u.deathFailures || 0) + (d === 1 ? 2 : 1);
-      if (u.deathFailures >= 3) u.dead = true;
+      if (u.deathFailures >= 3) {
+        u.dead = true;
+        u.diedAtSeconds ??= s.elapsed;
+      }
       if (u.deathSuccesses >= 3) u.stable = true;
       this.emit(
         "deathSave",
@@ -11214,6 +11357,8 @@ class CombatVisualFX {
     fireBolt: ["fire", "attack"], rayFrost: ["ice", "attack"],
     scorchingRay: ["fire", "attack"], mindSliver: ["mind", "targets"],
     magicMissile: ["arcane", "missiles"], fireball: ["fire", "circle", 20],
+    revivify: ["holy", "healing"],
+    globeInvulnerability: ["arcane", "circle", 10],
     chainLightning: ["storm", "targets"],
     burningHands: ["fire", "cone", 15], coneCold: ["ice", "cone", 60],
     thunderwave: ["storm", "cone", 15], drainingWave: ["shadow", "cone", 30],
@@ -11284,8 +11429,9 @@ class CombatVisualFX {
         const elemental = e.components?.find(p => this.school(p.damageType) !== "steel" && p.amount > 0);
         out.push({...base,kind:"damage",target:e.actor,source:e.source,
           school:this.school(elemental?.damageType || e.damageType),amount:e.amount});
-      } else if (e.type === "heal") {
-        if (e.amount !== 0) out.push({...base,kind:"heal",target:e.actor,school:"holy",amount:e.amount});
+      } else if (e.type === "heal" || e.type === "revived") {
+        const amount = e.type === "revived" ? 1 : e.amount;
+        if (amount !== 0) out.push({...base,kind:"heal",target:e.actor,school:"holy",amount});
       } else if (e.type === "cast") {
         out.push({...base,kind:"cast",spell:e.spell,school:this.SPELLS[e.spell]?.[0] || "arcane"});
         if (e.spell === "darkness" || e.resolved)
