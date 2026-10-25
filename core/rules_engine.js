@@ -94,6 +94,12 @@ class CombatRulesEngine {
       s.terrain.height > 40
     )
       throw Error("Неверный размер поля");
+    if (s.terrain.elevation !== undefined &&
+        (!s.terrain.elevation || typeof s.terrain.elevation !== "object" || Array.isArray(s.terrain.elevation) ||
+         !Object.entries(s.terrain.elevation).every(([key,feet]) =>
+           /^\d+,\d+$/.test(key) && key.split(",").every((n,i) => Number(n) < (i ? s.terrain.height : s.terrain.width)) &&
+           Number.isInteger(feet) && feet>=0 && feet<=60 && feet%5===0)))
+      throw Error("Повреждена карта высот");
     s.events.forEach(event => RulesJournal.validateEvent(event));
     const cells = new Map(),
       movingActor =
@@ -108,6 +114,9 @@ class CombatRulesEngine {
             u.diedAtSeconds < 0 || u.diedAtSeconds > s.elapsed))
         throw Error("Неверное время смерти");
       RulesContinuity.validateLife(RulesContinuity.life(u), u.hp);
+      if (u.exhaustion !== undefined && (!Number.isInteger(u.exhaustion) || u.exhaustion < 0 || u.exhaustion > 6 ||
+          (u.exhaustion === 6 && (!u.dead || u.hp !== 0))))
+        throw Error("Шестой уровень истощения означает смерть персонажа");
       if (u.blockedCells !== undefined && (!Array.isArray(u.blockedCells) ||
           !u.blockedCells.every(p => p && Number.isInteger(p.x) && Number.isInteger(p.y) &&
             p.x >= 0 && p.y >= 0 && p.x < s.terrain.width && p.y < s.terrain.height &&
@@ -441,7 +450,10 @@ class CombatRulesEngine {
     return u;
   }
   distance(a, b) {
-    return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y)) * 5;
+    const horizontal = Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y)) * 5;
+    const vertical = Math.abs((this.s.terrain.elevation?.[a.x + "," + a.y] || 0) -
+      (this.s.terrain.elevation?.[b.x + "," + b.y] || 0));
+    return Math.max(horizontal, vertical);
   }
   has(id, kind) {
     return (
@@ -1251,6 +1263,10 @@ class CombatRulesEngine {
     }
     if (c.kind === "healPotion") {
       const item = c.item || "healing";
+      const recipient = c.target || id;
+      const patient = this.unit(recipient);
+      this.require(this.distance(u, patient) <= 5 && !patient.dead,
+        "Для передачи зелья нужна живая цель в пределах 5 футов");
       this.require(
         u.bonus > 0 &&
           u.itemTypes?.[item] === "healing" &&
@@ -1268,7 +1284,7 @@ class CombatRulesEngine {
         next: {
           kind: "healingResult",
           actor: id,
-          target: id,
+          target: recipient,
           maxHealing:
             healing.count * healing.sides + healing.bonus,
         },
@@ -1361,13 +1377,21 @@ class CombatRulesEngine {
     );
     return cost;
   }
+  elevationAt(point) {
+    return this.s.terrain.elevation?.[point.x + "," + point.y] || 0;
+  }
   movementStep(id, from, to, {stop = false, knowledge = "observed", forced = false} = {}) {
     const fail = reason => ({allowed: false, canStop: false, cost: 0, reason});
-    if (!to || !this.inside(to) || this.wall(to) || this.distance(from, to) !== 5)
+    const neighboring = to && Math.max(Math.abs(from.x - to.x), Math.abs(from.y - to.y)) === 1;
+    if (!to || !this.inside(to) || this.wall(to) || !neighboring)
       return fail("Маршрут перекрыт");
     if (from.x !== to.x && from.y !== to.y &&
         (this.wall({x: from.x, y: to.y}) || this.wall({x: to.x, y: from.y})))
       return fail("Закрытый угол");
+    const rise = this.elevationAt(to) - this.elevationAt(from);
+    // A sheer drop or climb above one grid tier requires a GM-authored route.
+    // Never silently teleport between elevations or infer aerial movement.
+    if (Math.abs(rise) > 5) return fail("Слишком высокий уступ: нужен отдельный маршрут или решение мастера");
     if (!forced && !RulesMagic.canApproach(this, id, from, to, {observed: knowledge === "observed"}))
       return fail("Нельзя приближаться к источнику страха");
     const occupant = this.occupied(to.x, to.y, id);
@@ -1380,7 +1404,8 @@ class CombatRulesEngine {
       p.x === to.x && p.y === to.y && p.turn === this.s.turnSerial &&
       p.context === this.movementKnowledge(id)))
       return fail("Маршрут перекрыт");
-    return {allowed: true, canStop: !known, cost: this.stepCost(id, to), reason: ""};
+    return {allowed: true, canStop: !known,
+      cost: this.stepCost(id, to) + (rise > 0 && !this.unit(id).features.climbSpeed ? 5 : 0), reason: ""};
   }
   movementKnowledge(id) {
     const u = this.unit(id);
@@ -1732,13 +1757,12 @@ class CombatRulesEngine {
       "petrified",
     ].some((k) => this.has(id, k))
       ? 0
-      : RulesMagic.speed(
-          this,
-          id,
-          Math.max(
-            0,
-            u.speed - (this.has(id, "frost") || this.has(id, "slow") ? 10 : 0),
-          ),
+      : Math.max(
+          0,
+          RulesMagic.speed(
+            this, id,
+            Math.max(0, u.speed - (this.has(id, "frost") || this.has(id, "slow") ? 10 : 0)),
+          ) - 5 * (u.exhaustion || 0),
         );
   }
   adjustMovementBudget(id, delta) {
@@ -2701,7 +2725,7 @@ class CombatRulesEngine {
         }
       }
       const from = { x: u.x, y: u.y },
-        cost = this.stepCost(t.actor, p);
+        cost = step.cost;
       if (t.freeBudget !== undefined) t.freeBudget -= cost;
       else u.move -= cost;
       if (!t.forced && this.actorId === t.actor)
@@ -2876,13 +2900,17 @@ class CombatRulesEngine {
           : Math.min(...t.rolls)
         : t.rolls[0];
     const kept = t.sides === 20 ? Math.max(rawKept, t.minimum || 0) : rawKept;
+    // The 2024 exhaustion penalty affects every D20 Test, never damage dice.
+    const exhaustionPenalty = t.sides === 20 ? -2 * (this.unit(t.actor).exhaustion || 0) : 0;
+    const rollBonus = (t.bonus || 0) + exhaustionPenalty;
     const total =
         (t.sides === 20
           ? kept
           : t.rolls.reduce((a, b) => a + Math.max(b, t.minimumDie || 0), 0)) +
-        (t.bonus || 0),
+        rollBonus,
       success = !t.autoFail && total >= t.dc;
     const modifiers = t.modifiers ? structuredClone(t.modifiers) : undefined;
+    const bonusParts = [...(t.bonusParts || []), ...(exhaustionPenalty ? [{rule:"condition.exhaustion", label:"Истощение", amount:exhaustionPenalty}] : [])];
     if (modifiers && t.luckyUsed) modifiers.advantage.push("Удача");
     this.emit(
       "roll",
@@ -2893,21 +2921,21 @@ class CombatRulesEngine {
         " [" +
         t.rolls.join(", ") +
         "] " +
-        (t.bonus >= 0 ? "+" : "") +
-        (t.bonus || 0) +
+        (rollBonus >= 0 ? "+" : "") +
+        rollBonus +
         " = " +
         total +
         ".",
       {
         rolls: t.rolls,
         sides: t.sides,
-        bonus: t.bonus || 0,
+        bonus: rollBonus,
         total,
         mode: t.mode || 0,
         kept, rawKept, minimum: t.minimum || 0,
         ...(Number.isFinite(t.dc) ? {dc: t.dc} : {}),
         modifiers,
-        bonusParts: t.bonusParts,
+        bonusParts,
       },
     );
     this.enqueue({
@@ -2916,7 +2944,7 @@ class CombatRulesEngine {
         rolls: t.rolls,
         kept,
         total,
-        bonusParts: t.bonusParts,
+        bonusParts,
         dc: t.dc,
         success,
         lucky: Boolean(t.luckyUsed),

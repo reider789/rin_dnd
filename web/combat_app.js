@@ -1244,7 +1244,7 @@
         ...base,
         kind: op,
         target: b.dataset.target,
-        item: b.dataset.item,
+        item: b.dataset.item || b.dataset.potionItem,
       };
     if (op === "layOnHands" || op === "curePoison")
       return {
@@ -1416,6 +1416,7 @@
           (o) => o.x === x && o.y === y,
         ),
         rough = s.terrain.rubble.includes(x + "," + y),
+        heightFeet = engine.elevationAt(p),
         dark = s.zones.some(
           (z) => z.kind === "darkness" && engine.zoneAt(p, z),
         );
@@ -1423,6 +1424,7 @@
         "tile" +
         (wall ? " wall" : "") +
         (rough ? " rubble" : "") +
+        (heightFeet ? " elevated" : "") +
         (dark ? " dark" : "") +
         (s.zones.some(
           (z) =>
@@ -1445,6 +1447,8 @@
       b.title = visible
         ? a.name + " · " + a.hp + "/" + a.max + " ПЗ"
         : engine.cell(p);
+      if (heightFeet) b.title += " · Высота местности +" + heightFeet + " фт";
+      if (visible && a.exhaustion) b.title += " · Истощение " + a.exhaustion + " (−" + (2*a.exhaustion) + " к испытаниям d20)";
       if (objects.length)
         b.title +=
           " · " +
@@ -1462,6 +1466,7 @@
         '<span class="coord">' +
         engine.cell(p) +
         "</span>" +
+        (heightFeet ? '<span class="height-label">+' + heightFeet + ' фт</span>' : '') +
         (visible
           ? '<span class="token ' +
             (a.team === "enemies" ? "enemy " : "") +
@@ -1471,6 +1476,7 @@
             asset(key) +
             "')\"><b>" +
             esc(a.name.split(" ")[0]) +
+            (a.exhaustion ? " <span class=\"exhaustion-indicator\" title=\"Истощение\">И" + a.exhaustion + "</span>" : "") +
             " " +
             a.hp +
             '</b><span class="hpbar"><i style="width:' +
@@ -1642,29 +1648,18 @@
     const aid = [];
     for (const item of Object.keys(u.itemTypes || {})) {
       if (u.itemTypes[item] !== "healing") continue;
-      const availability = engine.availableAction({
-        kind: "healPotion",
-        actor: id,
-        item,
-      });
-      const label =
-        runtime.characters[id]?.inventory?.find((i) => i.id === item)?.name ||
-        "Лечебное зелье";
-      aid.push(
-        button(
-          "healPotion",
-          esc(label) +
-            " · " +
-            (u.items[item] || 0) +
-            "<small>Бонусное действие</small>",
+      const label = runtime.characters[id]?.inventory?.find((i) => i.id === item)?.name || "Лечебное зелье";
+      for (const recipient of s.order.filter(k => {
+        const patient = engine.unit(k);
+        return patient.team === u.team && !patient.dead && engine.distance(u, patient) <= 5;
+      })) {
+        const availability = engine.availableAction({kind: "healPotion", actor: id, item, target: recipient});
+        aid.push(button("healPotion", esc(label) + " → " + esc(engine.unit(recipient).name) +
+          " · " + (u.items[item] || 0) + "<small>Бонусное действие</small>",
           !play || !availability.enabled,
-          'data-item="' +
-            esc(item) +
-            '" title="' +
-            esc(availability.reason) +
-            '"',
-        ),
-      );
+          (recipient === id ? 'data-item="' : 'data-potion-item="') + esc(item) + '" data-target="' + esc(recipient) +
+          '" title="' + esc(availability.reason) + '"'));
+      }
     }
     for (const targetId of s.order.filter(
       (k) =>

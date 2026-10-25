@@ -79,6 +79,8 @@ def prepare_report(report,state,build_result,state_hash):
             vials=[dict(v) for v in continuity.get('cauldron_vials',[]) if v['owner']==cid]
             if vials or state['characters'][cid].get('combat_continuity',{}).get('cauldron_vials'):
                 value['cauldron_vials']=vials
+            if 'exhaustion' in continuity or 'exhaustion' in state['characters'][cid].get('combat_continuity',{}):
+                value['exhaustion']=continuity.get('exhaustion',{}).get(cid,0)
             if cid in continuity.get('life',{}):value['life']=continuity['life'][cid]
             if 'scene' in continuity:value['scene']=continuity['scene']
             for summon in value['summons']:

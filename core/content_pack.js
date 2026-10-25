@@ -125,11 +125,12 @@ class CombatContentPack {
           "conditionImmunities",
           "tactics",
           "tokenKey",
-          "size", "casting", "equipment", "reference", "summoner", "summonLevel", "summonDC", "creatureType", "powerAvailable", "initialHP",
+          "size", "casting", "equipment", "exhaustion", "reference", "summoner", "summonLevel", "summonDC", "creatureType", "powerAvailable", "initialHP",
         ],
         key,
       );
       C.require(p.initialHP===undefined||(Number.isInteger(p.initialHP)&&p.initialHP>=0&&p.initialHP<=p.hp),"Неверные текущие ПЗ профиля");
+      C.require(p.exhaustion===undefined||(Number.isInteger(p.exhaustion)&&p.exhaustion>=0&&p.exhaustion<=5),"Неверное истощение профиля");
       p.features ??= {};
       C.require(
         p.size === undefined ||

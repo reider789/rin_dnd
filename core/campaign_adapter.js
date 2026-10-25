@@ -43,6 +43,7 @@ class CombatCampaignAdapter {
       max: r.hp?.max ?? p.hp ?? 11,
       ac: p.ac ?? 12,
       speed: p.speed ?? 30,
+      exhaustion: p.exhaustion ?? 0,
       size: p.size ?? 2,
       summoner: p.summoner || null,
       summonLevel: p.summonLevel || null,
@@ -136,6 +137,12 @@ class CombatCampaignAdapter {
       throw Error("Несовместимая версия правил снимка");
     const width = scene.width || 11,
       height = scene.height || 8,
+      elevation = Object.fromEntries(Object.entries(scene.elevation || {}).map(([cell, feet]) => {
+        const p = this.cell(cell);
+        if (p.x >= width || p.y >= height || !Number.isInteger(feet) || feet < 0 || feet > 60 || feet % 5)
+          throw Error("Некорректная высота клетки: " + cell);
+        return [p.x + "," + p.y, feet];
+      })),
       units = {},
       initiative = {},
       baseline = {},
@@ -170,6 +177,7 @@ class CombatCampaignAdapter {
         JSON.stringify([...previous.rubble].sort()) ===
           JSON.stringify(cells(scene.rubble)) &&
         sorted(previous.cover) === sorted(cover) &&
+        sorted(previous.elevation || {}) === sorted(elevation) &&
         (scene.scene_id || scene.id || scene.battle_id || scene.name) ===
           previous.id;
       if (!same)
@@ -191,7 +199,7 @@ class CombatCampaignAdapter {
         Math.floor((randomValue / 4294967296) * 20) +
         1 +
         u.stats.DEX +
-        (u.features.alert ? u.proficiency : 0)
+        (u.features.alert ? u.proficiency : 0) - 2 * (u.exhaustion || 0)
       );
     };
     for (const [id, r] of Object.entries(scene.heroes)) {
@@ -226,6 +234,7 @@ class CombatCampaignAdapter {
           .filter((v) => v.combat_available && v.consumable_type)
           .map((v) => [v.id, v.consumable_type]),
       );
+      units[id].exhaustion = continuity.exhaustion?.[id] ?? units[id].exhaustion;
       units[id].temp = continuity.temporary_hp?.[id] || 0;
       units[id].tempSource = continuity.temp_sources?.[id] || null;
       units[id].statuses = structuredClone(continuity.statuses?.[id] || []);
@@ -350,6 +359,7 @@ class CombatCampaignAdapter {
             return [p.x + "," + p.y, v];
           }),
         ),
+        ...(Object.keys(elevation).length ? {elevation} : {}),
       },
       units,
       order,
@@ -489,6 +499,9 @@ class CombatCampaignAdapter {
         ]),
       ),
       continuity: {
+        ...(retained.size && [...retained].some(id => (s.units[id].exhaustion || 0) > 0)
+          ? {exhaustion: Object.fromEntries([...retained].map(id => [id, s.units[id].exhaustion || 0]))}
+          : {}),
         cauldron_vials: (s.cauldronVials || []).filter(v =>
           retained.has(v.owner) && retained.has(v.holder)).map(v=>structuredClone(v)),
         scene: {
