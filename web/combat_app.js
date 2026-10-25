@@ -1642,29 +1642,18 @@
     const aid = [];
     for (const item of Object.keys(u.itemTypes || {})) {
       if (u.itemTypes[item] !== "healing") continue;
-      const availability = engine.availableAction({
-        kind: "healPotion",
-        actor: id,
-        item,
-      });
-      const label =
-        runtime.characters[id]?.inventory?.find((i) => i.id === item)?.name ||
-        "Лечебное зелье";
-      aid.push(
-        button(
-          "healPotion",
-          esc(label) +
-            " · " +
-            (u.items[item] || 0) +
-            "<small>Бонусное действие</small>",
+      const label = runtime.characters[id]?.inventory?.find((i) => i.id === item)?.name || "Лечебное зелье";
+      for (const recipient of s.order.filter(k => {
+        const patient = engine.unit(k);
+        return patient.team === u.team && !patient.dead && engine.distance(u, patient) <= 5;
+      })) {
+        const availability = engine.availableAction({kind: "healPotion", actor: id, item, target: recipient});
+        aid.push(button("healPotion", esc(label) + " → " + esc(engine.unit(recipient).name) +
+          " · " + (u.items[item] || 0) + "<small>Бонусное действие</small>",
           !play || !availability.enabled,
-          'data-item="' +
-            esc(item) +
-            '" title="' +
-            esc(availability.reason) +
-            '"',
-        ),
-      );
+          'data-item="' + esc(item) + '" data-target="' + esc(recipient) +
+          '" title="' + esc(availability.reason) + '"'));
+      }
     }
     for (const targetId of s.order.filter(
       (k) =>
