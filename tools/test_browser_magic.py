@@ -88,6 +88,24 @@ def run():
         page.locator('[data-tile="3,3"]').click()
         page.locator('[data-op="attackObject"]').click()
         assert page.evaluate(f'{API}.snapshot().objects["effect-999"].hp') == 45
+        # Tasha's cauldron must be operable from the real browser panel.
+        reset("""s.units.ena.casting.level=11;
+          s.units.ena.casting.prepared.push('tashasBubblingCauldron');
+          s.units.ena.casting.components={tashasBubblingCauldron:{itemId:'gildedLadle',valueGp:500}};
+          s.units.ena.items.gildedLadle=1;
+          s.units.ena.slots[6]={current:1,max:1};""")
+        page.locator('#magic-spell').select_option('tashasBubblingCauldron')
+        page.locator('#magic-cauldron-potion').select_option('greaterHealing')
+        page.locator('#magic-level').select_option('6')
+        page.locator('[data-op="cast"]').click()
+        assert page.evaluate(f"{API}.snapshot().effects.some(x=>x.kind==='tashasBubblingCauldron'&&x.remaining===5&&x.potionKind==='greaterHealing')")
+        page.locator('[data-op="cauldronDraw"]').click()
+        assert page.evaluate(f"{API}.snapshot().cauldronVials.length") == 1
+        page.evaluate(f"{API}.set(s=>{{s.units.ena.bonus=1;s.units.ena.hp=50;s.random.tape=[1,2,3,4];}})")
+        page.locator('[data-op="cauldronDrink"]').click()
+        assert page.evaluate(f"{API}.snapshot().units.ena.hp") == 64
+        assert page.evaluate(f"{API}.snapshot().cauldronVials.length") == 0
+
         assert not errors, errors
         browser.close()
         print('MAGIC DESKTOP OK: one-condition restoration, free/paid steed and type, passenger/map destinations, named concentration owners, object HP/selection/attack')
