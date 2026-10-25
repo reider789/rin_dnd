@@ -94,6 +94,12 @@ class CombatRulesEngine {
       s.terrain.height > 40
     )
       throw Error("Неверный размер поля");
+    if (s.terrain.elevation !== undefined &&
+        (!s.terrain.elevation || typeof s.terrain.elevation !== "object" || Array.isArray(s.terrain.elevation) ||
+         !Object.entries(s.terrain.elevation).every(([key,feet]) =>
+           /^\\d+,\\d+$/.test(key) && key.split(",").every((n,i) => Number(n) < (i ? s.terrain.height : s.terrain.width)) &&
+           Number.isInteger(feet) && feet>=0 && feet<=60 && feet%5===0)))
+      throw Error("Повреждена карта высот");
     s.events.forEach(event => RulesJournal.validateEvent(event));
     const cells = new Map(),
       movingActor =
@@ -1367,6 +1373,9 @@ class CombatRulesEngine {
     );
     return cost;
   }
+  elevationAt(point) {
+    return this.s.terrain.elevation?.[point.x + "," + point.y] || 0;
+  }
   movementStep(id, from, to, {stop = false, knowledge = "observed", forced = false} = {}) {
     const fail = reason => ({allowed: false, canStop: false, cost: 0, reason});
     if (!to || !this.inside(to) || this.wall(to) || this.distance(from, to) !== 5)
@@ -1374,6 +1383,10 @@ class CombatRulesEngine {
     if (from.x !== to.x && from.y !== to.y &&
         (this.wall({x: from.x, y: to.y}) || this.wall({x: to.x, y: from.y})))
       return fail("Закрытый угол");
+    const rise = this.elevationAt(to) - this.elevationAt(from);
+    // A sheer drop or climb above one grid tier requires a GM-authored route.
+    // Never silently teleport between elevations or infer aerial movement.
+    if (Math.abs(rise) > 5) return fail("Слишком высокий уступ: нужен отдельный маршрут или решение мастера");
     if (!forced && !RulesMagic.canApproach(this, id, from, to, {observed: knowledge === "observed"}))
       return fail("Нельзя приближаться к источнику страха");
     const occupant = this.occupied(to.x, to.y, id);
@@ -1386,7 +1399,8 @@ class CombatRulesEngine {
       p.x === to.x && p.y === to.y && p.turn === this.s.turnSerial &&
       p.context === this.movementKnowledge(id)))
       return fail("Маршрут перекрыт");
-    return {allowed: true, canStop: !known, cost: this.stepCost(id, to), reason: ""};
+    return {allowed: true, canStop: !known,
+      cost: this.stepCost(id, to) + (rise > 0 && !this.unit(id).features.climbSpeed ? 5 : 0), reason: ""};
   }
   movementKnowledge(id) {
     const u = this.unit(id);
