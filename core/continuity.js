@@ -77,13 +77,14 @@ class CombatContinuity {
             "statuses",
             "objects",
             "zones",
+            "cauldron_vials",
             "life",
             "scene",
           ].includes(k),
         ),
       "Неверное продолжение эффектов",
     );
-    for (const key of ["effects", "units", "objects", "zones"])
+    for (const key of ["effects", "units", "objects", "zones", "cauldron_vials"])
       this.require(
         c[key] === undefined || Array.isArray(c[key]),
         "Повреждён список продолжения: " + key,
@@ -184,6 +185,7 @@ class CombatContinuity {
       "expires_at",
       "noLethargy",
       "castOrigin",
+      "potionKind",
     ]);
     const point = (p, outside = false) =>
       this.object(p) &&
@@ -260,6 +262,10 @@ class CombatContinuity {
         );
       if (x.point !== undefined)
         this.require(point(x.point), "Неверная точка эффекта");
+      if (x.kind === "tashasBubblingCauldron")
+        this.require(["healing","greaterHealing"].includes(x.potionKind) &&
+          this.integer(x.remaining,1,10) && x.point && x.concentration===false,
+          "Повреждены свойства котла");
       if (x.castOrigin !== undefined)
         this.require(point(x.castOrigin), "Неверная исходная точка заклинания");
       if (x.weapon !== undefined)
@@ -396,6 +402,15 @@ class CombatContinuity {
             "Нет эффекта состояния",
           );
       }
+    }
+    const vialIds=new Set();
+    for(const v of c.cauldron_vials || []) {
+      this.require(this.object(v) && this.id(v.id) && !vialIds.has(v.id) &&
+        actors.has(v.owner) && actors.has(v.holder) &&
+        this.id(v.sourceSpellId) &&
+        ["healing","greaterHealing"].includes(v.potionKind),
+        "Повреждено перенесённое зелье котла");
+      vialIds.add(v.id);
     }
     const objectIds = new Set();
     for (const o of c.objects || []) {
