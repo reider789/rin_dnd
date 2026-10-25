@@ -1,18 +1,8 @@
 name: Sync Level-11 Draft Browser Bundle
 
+# Only manual recovery uses this workflow. Pull-request validation is the
+# sole automated writer of generated artifacts, avoiding competing pushes.
 on:
-  push:
-    branches: [feature/level11-radiant-strikes-20261025]
-    paths:
-      - 'core/**'
-      - 'web/**'
-      - 'tools/**'
-      - 'config/**'
-      - 'encounters/**'
-      - 'art/**'
-      - 'assets/**'
-      - 'tests/**'
-      - '.github/workflows/sync-level11-preview.yml'
   workflow_dispatch:
 
 permissions:
