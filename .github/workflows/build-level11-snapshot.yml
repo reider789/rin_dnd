@@ -1,4 +1,4 @@
-name: Refresh shared core browser build for level 11
+name: Refresh shared core browser build for level 11 (spell FX)
 on:
   push:
     branches: [feature/level11-radiant-strikes-20261025]
