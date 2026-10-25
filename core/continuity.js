@@ -96,7 +96,9 @@ class CombatContinuity {
         "Повреждена карта продолжения: " + key,
       );
     for (const [id, level] of Object.entries(c.exhaustion || {}))
-      this.require(party.has(id) && this.integer(level, 0, 5), "Недопустимое истощение в продолжении боя");
+      this.require(party.has(id) && this.integer(level, 0, 6) &&
+        (level < 6 || c.life?.[id]?.dead === true),
+        "Шестой уровень истощения требует подтверждённой смерти");
     const actors = new Set(party),
       summonIds = new Set();
     for (const u of c.units || []) {
