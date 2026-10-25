@@ -108,6 +108,8 @@ class CombatRulesEngine {
             u.diedAtSeconds < 0 || u.diedAtSeconds > s.elapsed))
         throw Error("Неверное время смерти");
       RulesContinuity.validateLife(RulesContinuity.life(u), u.hp);
+      if (u.exhaustion !== undefined && (!Number.isInteger(u.exhaustion) || u.exhaustion < 0 || u.exhaustion > 5))
+        throw Error("Недопустимый уровень истощения: нужен сюжетный разбор шестого уровня");
       if (u.blockedCells !== undefined && (!Array.isArray(u.blockedCells) ||
           !u.blockedCells.every(p => p && Number.isInteger(p.x) && Number.isInteger(p.y) &&
             p.x >= 0 && p.y >= 0 && p.x < s.terrain.width && p.y < s.terrain.height &&
@@ -1251,6 +1253,10 @@ class CombatRulesEngine {
     }
     if (c.kind === "healPotion") {
       const item = c.item || "healing";
+      const recipient = c.target || id;
+      const patient = this.unit(recipient);
+      this.require(this.distance(u, patient) <= 5 && !patient.dead,
+        "Для передачи зелья нужна живая цель в пределах 5 футов");
       this.require(
         u.bonus > 0 &&
           u.itemTypes?.[item] === "healing" &&
@@ -1268,7 +1274,7 @@ class CombatRulesEngine {
         next: {
           kind: "healingResult",
           actor: id,
-          target: id,
+          target: recipient,
           maxHealing:
             healing.count * healing.sides + healing.bonus,
         },
