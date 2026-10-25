@@ -27,6 +27,7 @@ class CombatActivities {
     dimensionDoor: {"name": "Дверь в измерение", "level": 4, "cost": "action", "range": 500, "target": "point", "school": "conjuration"},
     greaterInvisibility: {"name": "Высшая невидимость", "level": 4, "cost": "action", "range": 5, "target": "ally", "school": "illusion", "concentrationSeconds": 60},
     revivify: {"name": "Возрождение", "level": 3, "cost": "action", "range": 5, "target": "any", "school": "necromancy"},
+    tashasBubblingCauldron: {"name": "Кипящий котёл Таши", "level": 6, "cost": "action", "range": 5, "target": "point", "school": "conjuration"},
     globeInvulnerability: {"name": "Сфера неуязвимости", "level": 6, "cost": "action", "range": 0, "target": "self", "school": "abjuration", "concentrationSeconds": 60},
     chainLightning: {"name": "Цепная молния", "level": 6, "cost": "action", "range": 150, "target": "enemies", "school": "evocation"},
     coneCold: {"name": "Конус холода", "level": 5, "cost": "action", "range": 0, "target": "direction", "school": "evocation"},
