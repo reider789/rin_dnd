@@ -918,3 +918,25 @@ test("Chain Lightning upcast grows target cap but retains ten damage dice",()=>{
   assert.equal(rolls.length,1);
   assert.equal(rolls[0].result?.rolls?.length ?? 10,10);
 });
+
+
+test("2024 Chain Lightning damages an object and creature with the same ten dice",()=>{
+  const e=setup();const u=e.unit("ena");u.casting.level=11;
+  e.s.objects.crate={id:"crate",name:"Ящик",owner:"hunter_a",x:6,y:4,
+    hp:100,max:100,ac:15,dc:10,createdTurn:0};
+  e.s.random.tape=[...Array(10).fill(5),1];
+  cast(e,"chainLightning",{level:6,targets:["hunter_a","object:crate"]});
+  assert.equal(e.s.objects.crate.hp,50);
+  assert.equal(e.unit("hunter_a").hp,145);
+  assert(e.s.events.some(x=>x.type==="objectDamage"&&x.object==="crate"&&x.amount===50));
+  assert.equal(e.s.events.filter(x=>x.type==="roll"&&x.text.includes("Цепная молния")).length,1);
+});
+test("2024 Chain Lightning may start at an object and leap to a creature",()=>{
+  const e=setup(),u=e.unit("ena");u.casting.level=11;
+  e.s.objects.crate={id:"crate",name:"Ящик",owner:"hunter_a",x:6,y:3,
+    hp:100,max:100,ac:15,dc:10,createdTurn:0};
+  e.s.random.tape=[...Array(10).fill(5),1];
+  cast(e,"chainLightning",{level:6,targets:["object:crate","hunter_b"]});
+  assert.equal(e.s.objects.crate.hp,50);
+  assert.equal(e.unit("hunter_b").hp,145);
+});
