@@ -114,8 +114,9 @@ class CombatRulesEngine {
             u.diedAtSeconds < 0 || u.diedAtSeconds > s.elapsed))
         throw Error("Неверное время смерти");
       RulesContinuity.validateLife(RulesContinuity.life(u), u.hp);
-      if (u.exhaustion !== undefined && (!Number.isInteger(u.exhaustion) || u.exhaustion < 0 || u.exhaustion > 5))
-        throw Error("Недопустимый уровень истощения: нужен сюжетный разбор шестого уровня");
+      if (u.exhaustion !== undefined && (!Number.isInteger(u.exhaustion) || u.exhaustion < 0 || u.exhaustion > 6 ||
+          (u.exhaustion === 6 && (!u.dead || u.hp !== 0))))
+        throw Error("Шестой уровень истощения означает смерть персонажа");
       if (u.blockedCells !== undefined && (!Array.isArray(u.blockedCells) ||
           !u.blockedCells.every(p => p && Number.isInteger(p.x) && Number.isInteger(p.y) &&
             p.x >= 0 && p.y >= 0 && p.x < s.terrain.width && p.y < s.terrain.height &&
