@@ -743,7 +743,8 @@ test("Revivify restores one HP only to a confirmed recent dead target and consum
   const dead=e.unit("tal"), caster=e.unit("ena");
   dead.hp=0; dead.dead=true; dead.diedAtSeconds=e.s.elapsed;
   dead.statuses.push({kind:"unconscious"});
-  caster.casting.components.revivify={count:2,valueGp:300};
+  caster.casting.components.revivify={itemId:"diamond300",valueGp:300};
+  caster.items.diamond300=2;
   const before=caster.slots[3].current;
   e=reload(e);
   cast(e,"revivify",{level:3,target:"tal"});
@@ -751,15 +752,17 @@ test("Revivify restores one HP only to a confirmed recent dead target and consum
   assert.equal(e.unit("tal").dead,false);
   assert.equal(e.unit("tal").diedAtSeconds,undefined);
   assert(!e.has("tal","unconscious"));
-  assert.equal(e.unit("ena").casting.components.revivify.count,1);
+  assert.equal(e.unit("ena").items.diamond300,1);
+  assert.equal(e.s.events.find(x=>x.type==="revived").consumed.itemId,"diamond300");
   assert.equal(e.unit("ena").slots[3].current,before-1);
   assert(e.s.events.some(x=>x.type==="revived" && x.target==="tal"));
 });
 test("Revivify refuses missing, undervalued or spent diamonds without charging spell slots", () => {
-  for(const component of [undefined,{count:0,valueGp:300},{count:1,valueGp:299}]) {
+  for(const component of [undefined,{itemId:"diamond300",valueGp:300},{itemId:"diamond300",valueGp:299}]) {
     const e=setup(), u=e.unit("ena"), v=e.unit("tal");
     v.hp=0;v.dead=true;v.diedAtSeconds=e.s.elapsed;
     u.casting.components.revivify=component;
+    u.items.diamond300=component?.valueGp===299 ? 1 : 0;
     const before=JSON.stringify(e.s);
     assert.throws(()=>cast(e,"revivify",{level:3,target:"tal"}),/алмаз/);
     assert.equal(JSON.stringify(e.s),before);
@@ -770,7 +773,8 @@ test("Revivify rejects deaths older than one minute or with unknown death time",
     const e=setup(),v=e.unit("tal");
     e.s.elapsed=61;v.hp=0;v.dead=true;
     if(stamp!==undefined)v.diedAtSeconds=stamp;
-    e.unit("ena").casting.components.revivify={count:1,valueGp:300};
+    e.unit("ena").casting.components.revivify={itemId:"diamond300",valueGp:300};
+    e.unit("ena").items.diamond300=1;
     const before=JSON.stringify(e.s);
     assert.throws(()=>cast(e,"revivify",{level:3,target:"tal"}),/минуты/);
     assert.equal(JSON.stringify(e.s),before);
