@@ -235,6 +235,8 @@ class CombatRulesEngine {
       "applyAttackCondition",
       "vineGrapple",
       "constrictResult",
+      "vineCutHit",
+      "vineCutDamage",
       "damageResult",
       "sneakResult",
       "damage",
@@ -850,6 +852,30 @@ class CombatRulesEngine {
         bonus: spec.bonus,
         next: { kind: "emptyAttackResult", actor: id, point: p, spec },
       });
+      return;
+    }
+    if (c.kind === "cutVine") {
+      const spec = this.attackSpec(id, c.weapon);
+      const victim = this.unit(c.target);
+      const vine = victim.statuses.find(z =>
+        z.kind === "grappled" && z.vineHP > 0 &&
+        z.source && this.active(z.source));
+      this.require(
+        vine && this.active(c.target) && victim.team === u.team &&
+          spec.kind === "melee" && spec.damageType === "slashing" &&
+          !spec.unarmed && this.distance(u, victim) <= spec.range &&
+          (u.action > 0 || u.surgeAction > 0 || u.attacksLeft > 0),
+        "Чтобы рассечь лозу, выбери захваченного союзника и рубящее оружие в пределах досягаемости",
+      );
+      if (u.attacksLeft > 0) u.attacksLeft--;
+      else {
+        this.spendAction(id);
+        u.attacksLeft = (u.features.extraAttack || 1) - 1;
+      }
+      this.enqueue({kind:"roll",actor:id,label:"Рассечь лозу → " + victim.name,
+        count:1,sides:20,bonus:spec.bonus,
+        next:{kind:"vineCutHit",actor:id,target:c.target,
+          source:vine.source,spec,ac:vine.vineAC || 14}});
       return;
     }
     if (c.kind === "constrict") {
@@ -2350,6 +2376,43 @@ class CombatRulesEngine {
           this.saveTask(t.target, effect.save.stat, effect.save.dc, next),
         );
       else this.enqueue(next);
+      return;
+    }
+    if (t.kind === "vineCutHit") {
+      const hit = t.result.kept === 20 ||
+        (t.result.kept !== 1 && t.result.total >= t.ac);
+      this.emit("attack",t.actor,this.name(t.actor)+
+        ": удар по отдельной лозе у "+this.name(t.target)+
+        "; бросок "+t.result.rolls.join(", ")+" +"+
+        (t.result.total-t.result.kept)+" = "+t.result.total+
+        " против КД "+t.ac+(hit?" — попадание.":" — промах."),
+        {target:t.target,hit,weapon:t.spec.id,rolls:t.result.rolls,
+          targetAC:t.ac});
+      if (!hit) return;
+      const crit=t.result.kept===20;
+      this.enqueue({kind:"roll",actor:t.actor,label:"Рубящий урон отдельной лозе",
+        count:t.spec.count*(crit?2:1),sides:t.spec.die,
+        minimumDie:this.unit(t.actor).features.greatWeaponFighting &&
+          t.spec.heavy?3:undefined,
+        bonus:t.spec.flat,
+        next:{kind:"vineCutDamage",actor:t.actor,target:t.target,
+          source:t.source}});
+      return;
+    }
+    if (t.kind === "vineCutDamage") {
+      const victim=this.unit(t.target);
+      const vine=victim.statuses.find(z=>z.kind==="grappled" &&
+        z.source===t.source && z.vineHP>0);
+      if (!vine) return;
+      const damage=Math.max(0,t.result.total);
+      vine.vineHP=Math.max(0,vine.vineHP-damage);
+      this.emit("damage",t.actor,this.name(t.actor)+
+        ": "+damage+" рубящего урона отдельной лозе; "+
+        (vine.vineHP>0?"осталось "+vine.vineHP+" прочности.":"лоза перерублена, захват прекращён."),
+        {target:t.target,amount:damage,damageType:"slashing",
+          distinctVine:true,remainingVineHP:vine.vineHP});
+      if (vine.vineHP===0) this.removeStatus(t.target,"grappled");
+      // Урон по лозе не уменьшает ПЗ самого растения.
       return;
     }
     if (t.kind === "vineGrapple") {
