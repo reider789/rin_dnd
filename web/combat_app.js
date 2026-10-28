@@ -1271,6 +1271,7 @@
         "hide",
         "search",
         "grapple",
+        "cutVine",
         "shove",
         "helpAttack",
         "stand",
@@ -1617,6 +1618,11 @@
       '</div><details class="additional"><summary>Другие действия</summary><div class="choices">' +
       button("search", "Поиск", !play || u.action + (u.surgeAction || 0) <= 0) +
       button("grapple", "Захват", !play || !target) +
+      (selected && engine.unit(selected)?.team === u.team &&
+        engine.unit(selected).statuses?.some(z => z.kind === "grappled" && z.vineHP > 0)
+        ? button("cutVine", "Перерубить удерживающую лозу<small>Отдельная цель · КД лозы 14 · рубящее оружие</small>",
+          !play || !u.attacks.some(a=>a.id===weapon && a.damageType==="slashing" && a.kind==="melee"))
+        : "") +
       button("shove", "Опрокинуть", !play || !target) +
       button(
         "helpAttack",
