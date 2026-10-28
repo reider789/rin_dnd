@@ -233,6 +233,8 @@ class CombatRulesEngine {
       "attackResult",
       "attackEffects",
       "applyAttackCondition",
+      "vineGrapple",
+      "constrictResult",
       "damageResult",
       "sneakResult",
       "damage",
@@ -848,6 +850,29 @@ class CombatRulesEngine {
         bonus: spec.bonus,
         next: { kind: "emptyAttackResult", actor: id, point: p, spec },
       });
+      return;
+    }
+    if (c.kind === "constrict") {
+      const attack = u.attacks.find(a => a.constrict && a.grappleOnHit);
+      this.require(attack && (u.action > 0 || u.surgeAction > 0),
+        "Нет действия или способности сжатия");
+      const captives = this.s.order.filter(key =>
+        this.active(key) && this.unit(key).statuses.some(z =>
+          z.kind === "grappled" && z.source === id &&
+          this.distance(u, this.unit(key)) <= (z.reach || 5)));
+      this.require(captives.length > 0, "Нет удерживаемых существ для сжатия");
+      this.spendAction(id);
+      for (const target of captives) {
+        this.enqueue({
+          kind: "roll", actor: id, label: "Сжатие → " + this.name(target),
+          count: attack.constrict.count, sides: attack.constrict.die,
+          bonus: attack.constrict.flat,
+          next: {kind: "constrictResult", actor: id, target,
+            damageType: attack.constrict.damageType},
+        });
+      }
+      this.emit("ability", id, this.name(id) +
+        " сжимает удерживаемые цели вместо новых ударов лозами.");
       return;
     }
     if (c.kind === "attack") {
@@ -2261,6 +2286,9 @@ class CombatRulesEngine {
         return;
       }
       if (t.magicObject) this.s.objects[t.magicObject].empoweredUsed = true;
+      if (t.spec.grappleOnHit)
+        this.enqueue({kind: "vineGrapple", actor: t.actor, target: t.target,
+          grapple: structuredClone(t.spec.grappleOnHit)});
       if (t.spec.effects?.length)
         this.enqueue({
           kind: "attackEffects",
@@ -2322,6 +2350,34 @@ class CombatRulesEngine {
           this.saveTask(t.target, effect.save.stat, effect.save.dc, next),
         );
       else this.enqueue(next);
+      return;
+    }
+    if (t.kind === "vineGrapple") {
+      const g = t.grapple, target = this.unit(t.target);
+      if (!this.active(t.actor) || !this.active(t.target) ||
+          this.conditionImmune(t.target, "grappled") ||
+          this.size(t.target) > 3 ||
+          this.distance(this.unit(t.actor), target) > g.reach) return;
+      if (target.statuses.some(z => z.kind === "grappled" && z.source === t.actor))
+        return;
+      const n = this.s.order.filter(key =>
+        this.unit(key).statuses.some(z => z.kind === "grappled" &&
+          z.source === t.actor)).length;
+      if (n >= g.maxTargets) return;
+      this.status(t.target, "grappled", {source: t.actor, dc: g.dc,
+        reach: g.reach, vineHP: g.vineHP, vineAC: g.vineAC});
+      this.emit("condition", t.target, this.name(t.target) +
+        " захвачен(а) лозой " + this.name(t.actor) +
+        " (СЛ освобождения " + g.dc + ").", {
+          condition:"grappled", source:t.actor, dc:g.dc, reach:g.reach});
+      return;
+    }
+    if (t.kind === "constrictResult") {
+      if (!this.active(t.actor) || !this.active(t.target) ||
+          !this.unit(t.target).statuses.some(z => z.kind === "grappled" &&
+            z.source === t.actor)) return;
+      this.enqueue({kind:"damage",actor:t.actor,target:t.target,
+        amount:Math.max(0,t.result.total),damageType:t.damageType,attack:null});
       return;
     }
     if (t.kind === "applyAttackCondition") {
@@ -3300,7 +3356,7 @@ class CombatRulesEngine {
           (z.source &&
             this.active(z.source) &&
             !this.incapacitated(z.source) &&
-            this.distance(this.unit(id), this.unit(z.source)) <= 5),
+            this.distance(this.unit(id), this.unit(z.source)) <= (z.reach || 5)),
       );
       this.adjustMovementForSpeed(id, previous);
     }
