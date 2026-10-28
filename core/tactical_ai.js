@@ -203,6 +203,15 @@ class CombatTacticalAI {
       role = u.tactics?.role || "skirmisher",
       done = { kind: "endTurn", actor: id };
     if (e.incapacitated(id) || !e.active(id)) return done;
+    // A grappling plant must choose between constricting current prey and
+    // lashing out again; the choice is based only on its own active grapples.
+    if (u.action + (u.surgeAction || 0) > 0 &&
+        u.attacks.some(a => a.constrict && a.grappleOnHit) &&
+        s.order.some(key => e.active(key) &&
+          e.unit(key).statuses.some(z => z.kind === "grappled" &&
+            z.source === id &&
+            e.distance(u, e.unit(key)) <= (z.reach || 5))))
+      return {kind: "constrict", actor: id};
     if (
       u.features.secondWind &&
       u.bonus > 0 &&
