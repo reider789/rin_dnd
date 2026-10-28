@@ -4,7 +4,7 @@ const {createBattle,CombatTacticalAI,CombatRulesEngine}=require("../sdk");
 const original=require("../examples/portable/border-watch.json");
 function make(){
  const pack=structuredClone(original);
- pack.profiles.vine={name:"Нитяной удушитель",hp:91,ac:14,speed:10,proficiency:3,size:3,
+ pack.profiles.vine={name:"Нитяной удушитель",hp:91,ac:14,speed:10,proficiency:3,size:3,footprint:2,
    scores:{STR:18,DEX:10,CON:16,INT:1,WIS:12,CHA:3},
    conditionImmunities:["charmed","frightened"],senses:{blindsight:30},
    features:{extraAttack:2},attacks:[{id:"vines",name:"Лозы",kind:"melee",bonus:7,
@@ -20,6 +20,16 @@ function make(){
  e.s.index=e.s.order.indexOf("hunter_a");
  e.enqueue({kind:"startTurn"});e.run();return e;
 }
+test("Large strangler occupies four squares and uses nearest edge for reach",()=>{
+ const e=make(),a=e.unit("hunter_a");
+ assert.equal(e.occupied(a.x,a.y),"hunter_a");
+ assert.equal(e.occupied(a.x+1,a.y),"hunter_a");
+ assert.equal(e.occupied(a.x,a.y+1),"hunter_a");
+ assert.equal(e.occupied(a.x+1,a.y+1),"hunter_a");
+ assert.equal(e.distance(a,{x:a.x+2,y:a.y}),5);
+ assert.equal(e.movementStep("hunter_a",{x:9,y:4},{x:10,y:4}).allowed,false,
+   "cannot push 2x2 actor beyond east edge");
+});
 test("strangler attack +7 deals 1d8+4 and grapples target up to 15 ft",()=>{
  const e=make();e.s.random.tape=[19,6];
  e.dispatch({kind:"attack",actor:"hunter_a",target:"ena",weapon:"vines"});
