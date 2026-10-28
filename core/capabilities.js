@@ -282,6 +282,8 @@ class CombatCapabilities {
           "spellKey",
           "potent",
           "magicAdvantage",
+          "grappleOnHit",
+          "constrict",
         ].includes(k),
       ),
       "Неподдержанное поле атаки",
@@ -292,6 +294,32 @@ class CombatCapabilities {
       "Неверный набор эффектов атаки",
     );
     for (const effect of attack.effects || []) this.effect(effect);
+    if (attack.grappleOnHit !== undefined) {
+      const g = attack.grappleOnHit;
+      this.require(
+        g && typeof g === "object" && !Array.isArray(g) &&
+          Object.keys(g).every(k => ["dc", "maxTargets", "reach", "vineHP", "vineAC"].includes(k)) &&
+          Number.isInteger(g.dc) && g.dc >= 1 && g.dc <= 30 &&
+          Number.isInteger(g.maxTargets) && g.maxTargets >= 1 && g.maxTargets <= 4 &&
+          Number.isInteger(g.reach) && g.reach >= 5 && g.reach <= attack.range &&
+          Number.isInteger(g.vineHP) && g.vineHP >= 1 && g.vineHP <= 100 &&
+          Number.isInteger(g.vineAC) && g.vineAC >= 1 && g.vineAC <= 40 &&
+          attack.kind === "melee",
+        "Неверные параметры захватывающей лозы",
+      );
+    }
+    if (attack.constrict !== undefined) {
+      const c = attack.constrict;
+      this.require(
+        c && typeof c === "object" && !Array.isArray(c) &&
+          Object.keys(c).every(k => ["count", "die", "flat", "damageType"].includes(k)) &&
+          Number.isInteger(c.count) && c.count >= 1 && c.count <= 12 &&
+          [4, 6, 8, 10, 12, 20].includes(c.die) &&
+          Number.isInteger(c.flat) && c.flat >= 0 && c.flat <= 30 &&
+          c.damageType === "bludgeoning" && attack.grappleOnHit,
+        "Неверные параметры сжатия захваченных целей",
+      );
+    }
     this.require(
       attack.meleeWeapon === undefined ||
         (typeof attack.meleeWeapon === "boolean" &&
