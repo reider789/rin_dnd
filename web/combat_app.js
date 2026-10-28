@@ -1421,8 +1421,10 @@
         dark = s.zones.some(
           (z) => z.kind === "darkness" && engine.zoneAt(p, z),
         );
+      const extendedBody=Boolean(visible && a && (a.footprint||1)>1 && (a.x!==x || a.y!==y));
       b.className =
         "tile" +
+        (extendedBody ? " large-footprint-body" : "") +
         (wall ? " wall" : "") +
         (rough ? " rubble" : "") +
         (heightFeet ? " elevated" : "") +
@@ -1469,7 +1471,10 @@
         "</span>" +
         (heightFeet ? '<span class="height-label">+' + heightFeet + ' фт</span>' : '') +
         (visible
-          ? '<span class="token ' +
+          ? (extendedBody
+              ? '<span class="large-body-marker" title="' + esc(a.name) +
+                ' · занимает 2×2 клетки">◆</span>'
+              : '<span class="token ' +
             (a.team === "enemies" ? "enemy " : "") +
             (occupant === id ? "current " : "") +
             (engine.incapacitated(occupant) ? "down" : "") +
@@ -1482,7 +1487,7 @@
             a.hp +
             '</b><span class="hpbar"><i style="width:' +
             (100 * a.hp) / a.max +
-            '%"></i></span></span>'
+            '%"></i></span></span>')
           : objects.length
             ? '<span class="object-label">Рука<br>' +
               objects[0].hp +
