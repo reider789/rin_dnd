@@ -45,6 +45,7 @@ class CombatCampaignAdapter {
       speed: p.speed ?? 30,
       exhaustion: p.exhaustion ?? 0,
       size: p.size ?? 2,
+      footprint: p.footprint || 1,
       summoner: p.summoner || null,
       summonLevel: p.summonLevel || null,
       summonDC: p.summonDC || null,
